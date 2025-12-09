@@ -105,6 +105,18 @@ function checkKFormation(kappa, eta, R) {
   return (kappa >= KAPPA_MIN && eta > ETA_MIN && R >= R_MIN);
 }
 
+// Coherence proxy η from z via lens‑weight: η = s(z)^α
+function computeEta(z, alpha = 1.0, sigma = LENS_SIGMA) {
+  const s = computeDeltaSNeg(z, sigma, Z_CRITICAL);
+  return Math.pow(s, Math.max(0, alpha));
+}
+
+// K‑formation gate using η derived from z (η := s(z)^α): gate η > φ^{-1}
+function checkKFormationFromZ(kappa, z, R, alpha = 1.0) {
+  const eta = computeEta(z, alpha, LENS_SIGMA);
+  return checkKFormation(kappa, eta, R);
+}
+
 // Time harmonic helper (delegates t6 to provided gate, default lens)
 function getTimeHarmonic(z, t6Gate = Z_CRITICAL) {
   if (z < Z_T1_MAX) return 't1';
@@ -198,6 +210,8 @@ module.exports = Object.freeze({
   distanceToCritical,
   checkKFormation,
   computeDeltaSNeg,
+  computeEta,
+  checkKFormationFromZ,
   // μ thresholds (optional classification)
   // By default, use μ_P = 0.600; can override via env `QAPL_MU_P_EXACT=1` to set μ_P = 2/φ^{5/2}
   get MU_P() {

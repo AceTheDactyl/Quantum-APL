@@ -293,6 +293,27 @@ def check_k_formation(kappa: float, eta: float, R: float) -> bool:
             R >= R_MIN)
 
 
+def compute_eta(z: float, alpha: float = 1.0, sigma: float | None = None) -> float:
+    """Coherence proxy η from z via lens‑weight: η = s(z)^α.
+
+    s(z) = exp(−σ (z − z_c)^2), using LENS_SIGMA by default.
+    α ≥ 0 controls sharpness; α=1 by default.
+    """
+    if sigma is None:
+        sigma = LENS_SIGMA
+    s = compute_delta_s_neg(z, sigma=sigma, z_c=Z_CRITICAL)
+    return float(s ** max(0.0, alpha))
+
+
+def check_k_formation_from_z(kappa: float, z: float, R: float, alpha: float = 1.0) -> bool:
+    """K‑formation gate using η derived from z: η := s(z)^α, gate η > φ⁻¹.
+
+    Returns True iff (κ ≥ KAPPA_MIN) and (η > PHI_INV) and (R ≥ R_MIN).
+    """
+    eta = compute_eta(z, alpha=alpha)
+    return check_k_formation(kappa=kappa, eta=eta, R=R)
+
+
 def get_time_harmonic(z: float, t6_gate: float | None = None) -> str:
     """Determine time harmonic zone for given z; delegate t6 to provided gate.
 

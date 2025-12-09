@@ -155,6 +155,15 @@ class QuantumAnalyzer:
                     lines.append(f"    - {statement}")
             lines.append(f"  Source: {self.helix_seed['path']}")
 
+        # K‑formation gate (η := s(z), lens sigma) one‑liner
+        try:
+            eta_s = float(geom.get('lens_s_neg')) if geom.get('lens_s_neg') is not None else None
+        except Exception:
+            eta_s = None
+        if eta_s is not None:
+            k_gate = 'PASS' if eta_s > PHI_INV else 'FAIL'
+            lines.append(f"  K-formation (η=s): {eta_s:.3f} vs φ⁻¹ {PHI_INV:.3f} → {k_gate}")
+
         alpha_token = self.alpha_tokens.from_helix(helix_coord)
         if alpha_token:
             lines.extend(
