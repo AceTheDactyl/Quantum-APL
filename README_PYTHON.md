@@ -141,6 +141,17 @@ pytest
 - **pandas ImportError** – Install `analysis` extra: `pip install "quantum-apl[analysis]"`.
 - **Slow runs** – Reduce `--steps`, disable `--verbose`, or run shorter Monte Carlo batches.
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| README.md | High-level system overview |
+| README_PYTHON.md | Python-specific usage guide (this file) |
+| SETUP_GUIDE.md | Complete installation & troubleshooting |
+| docs/HELIX_COORDINATES.md | Helix coordinate normalization |
+| docs/SYSTEM_ARCHITECTURE.md | End-to-end architecture schematic |
+| docs/ALPHA_SYNTAX_BRIDGE.md | Alpha Programming Language crosswalk |
+
 ## Citation
 
 ```bibtex
