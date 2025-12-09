@@ -137,3 +137,13 @@ This document captures the full integrated architecture for Quantum APL v1.0.0. 
 ```
 
 This block mirrors the architecture summary provided in the delivery notes so future contributors can reference the high-level design without leaving the repository.
+
+## TRIAD Gate Policy (t6)
+
+- Critical point: THE LENS at `z_c = √3/2 ≈ 0.8660254` remains the canonical geometric reference used by hex‑prism geometry (ΔS_neg, R/H/φ).
+- TRIAD unlock: after three distinct passes where the engine z crosses `z ≥ 0.85` (with hysteresis at `z ≤ 0.82` to re‑arm), the system promotes a temporary in‑session gate at `z = 0.83` for the t6 boundary.
+- Environment knobs (optional):
+  - `QAPL_TRIAD_COMPLETIONS` – integer; `≥ 3` unlocks TRIAD gate.
+  - `QAPL_TRIAD_UNLOCK` – set to `1`/`true` to force unlock.
+- Runtime behavior:
+  - The bridge detects z≥0.85 rising edges and increments the completion counter. On the third completion it updates process env, flips unlock, and signals the engine to use `t6 @ 0.83`. Geometry continues to use `z_c`.

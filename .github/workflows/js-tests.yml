@@ -1,0 +1,33 @@
+name: js-tests
+
+on:
+  push:
+    paths:
+      - 'QuantumClassicalBridge.js'
+      - 'src/quantum_apl_engine.js'
+      - 'tests/*.js'
+      - '.github/workflows/js-tests.yml'
+  pull_request:
+    paths:
+      - 'QuantumClassicalBridge.js'
+      - 'src/quantum_apl_engine.js'
+      - 'tests/*.js'
+
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run APL measurement tests
+        run: node tests/test_apl_measurements.js
+
+      - name: Run bridge tests
+        run: node tests/QuantumClassicalBridge.test.js
+

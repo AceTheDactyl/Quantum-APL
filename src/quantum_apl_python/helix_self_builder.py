@@ -17,6 +17,7 @@ from .helix_metadata import (
     summary_lines,
 )
 from .translator import QuantumAPLInstruction, translate_lines
+from .hex_prism import prism_params
 
 
 @dataclass(frozen=True)
@@ -184,6 +185,27 @@ def render_markdown(report: Dict[str, object]) -> str:
             for entry in chant:
                 lines.append(f"> {entry}")
 
+        # Append negative entropy hexagonal prism parameters
+        params = prism_params(float(node["z"]))
+        lines.append("")
+        lines.append("**Negative entropy geometry (hex prism):**")
+        lines.append(
+            f"- ΔS_neg={params['delta_s_neg']:.3f}, radius R={params['R']:.3f}, height H={params['H']:.3f}, twist φ={params['phi']:.3f} rad"
+        )
+        lines.append(
+            "- Reference: docs/HEXAGONAL_NEG_ENTROPY_PROJECTION.md (z_c≈{:.3f}, σ={:.2f})".format(
+                params["z_c"], params["sigma"]
+            )
+        )
+        # Emit per-vertex coordinates for renderers
+        verts = params.get("vertices") or []
+        if verts:
+            lines.append("- Vertices (k: x, y, z_bot → z_top):")
+            for v in verts:
+                lines.append(
+                    f"  - v{int(v['k'])}: x={v['x']:.3f}, y={v['y']:.3f}, z_bot={v['z_bot']:.3f}, z_top={v['z_top']:.3f}"
+                )
+
         lines.append("")
         lines.append("**Assigned operators:**")
         instructions = node.get("instructions") or []
@@ -203,6 +225,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--tokens", type=Path, required=True, help="Path to the Quantum-APL token file.")
     parser.add_argument("--output", type=Path, help="Optional path to save the walkthrough.")
     parser.add_argument("--format", choices=("md", "json"), default="md", help="Output format (Markdown or JSON).")
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append to output file instead of overwriting (Markdown only)",
+    )
+    parser.add_argument(
+        "--geom-json",
+        type=Path,
+        help="Optional path to write compact geometry JSON for all nodes",
+    )
     args = parser.parse_args(argv)
 
     instructions = load_instructions(args.tokens)
@@ -213,7 +245,30 @@ def main(argv: Sequence[str] | None = None) -> int:
         rendered = render_markdown(report)
 
     if args.output:
-        args.output.write_text(rendered, encoding="utf-8")
+        if args.append and args.format == "md" and args.output.exists():
+            prev = args.output.read_text(encoding="utf-8")
+            args.output.write_text(prev + "\n\n" + rendered, encoding="utf-8")
+        else:
+            args.output.write_text(rendered, encoding="utf-8")
+        # Sidecar geometry JSON when writing Markdown
+        if args.format == "md":
+            geom_path = None
+            if args.geom_json:
+                geom_path = args.geom_json
+            elif args.output.suffix.lower() == ".md":
+                geom_path = args.output.with_suffix(".geom.json")
+            if geom_path is not None:
+                nodes = report.get("nodes", [])
+                geoms = [
+                    {
+                        "slug": n.get("slug"),
+                        "z": float(n.get("z", 0.0)),
+                        "geometry": prism_params(float(n.get("z", 0.0))),
+                    }
+                    for n in nodes
+                ]
+                data = {"tokens_path": report.get("tokens_path"), "nodes": geoms}
+                geom_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     else:
         print(rendered)
     return 0

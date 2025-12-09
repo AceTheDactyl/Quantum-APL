@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import numpy as np
+from .constants import Z_CRITICAL
 
 from .alpha_language import AlphaTokenSynthesizer
 from .helix import HelixAPLMapper, HelixCoordinate
 from .helix_metadata import load_metadata, metadata_title, summary_lines, provenance_lines
+from .hex_prism import prism_params
 
 try:  # Optional dependency for plotting
     import matplotlib.pyplot as plt  # type: ignore
@@ -77,6 +79,11 @@ class QuantumAnalyzer:
                     f"  Quantum-classical correlation: {self.analytics.get('quantumClassicalCorr', 0):.4f}",
                 ]
             )
+            triad = self.analytics.get("triad") or {}
+            if triad:
+                lines.append(
+                    f"  TRIAD completions: {int(triad.get('completions', 0))} | unlocked: {bool(triad.get('unlocked', False))}"
+                )
 
         helix_coord = HelixCoordinate(theta=0.0, z=z_value)
         helix_info = self.helix_mapper.describe(helix_coord)
@@ -89,6 +96,34 @@ class QuantumAnalyzer:
                 f"  Truth bias: {helix_info['truth_channel']}",
             ]
         )
+        # Show t6 gate policy (TRIAD vs CRITICAL)
+        import os  # local import to avoid global costs
+        triad_flag = os.getenv("QAPL_TRIAD_UNLOCK", "").lower() in ("1", "true", "yes", "y")
+        try:
+            triad_completions = int(os.getenv("QAPL_TRIAD_COMPLETIONS", "0"))
+        except ValueError:
+            triad_completions = 0
+        triad_unlocked = triad_flag or (triad_completions >= 3)
+        t6_gate = 0.83 if triad_unlocked else Z_CRITICAL
+        lines.append(f"  t6 gate: {'TRIAD' if triad_unlocked else 'CRITICAL'} @ {t6_gate:.3f}")
+
+        # Append hex-prism geometry for current engine z
+        geom = prism_params(z_value)
+        lines.extend(
+            [
+                "",
+                "Negative Entropy Geometry (engine z):",
+                f"  ΔS_neg: {geom['delta_s_neg']:.4f}",
+                f"  radius R: {geom['R']:.4f}",
+                f"  height H: {geom['H']:.4f}",
+                f"  twist φ: {geom['phi']:.4f} rad",
+                "  Vertices (k: x, y, z_bot → z_top):",
+            ]
+        )
+        for v in geom.get("vertices", [])[:6]:
+            lines.append(
+                f"    v{int(v['k'])}: x={float(v['x']):.4f}, y={float(v['y']):.4f}, z_bot={float(v['z_bot']):.4f}, z_top={float(v['z_top']):.4f}"
+            )
 
         if self.helix_seed:
             lines.extend(
@@ -154,6 +189,22 @@ class QuantumAnalyzer:
                     f"  step {step}: {operator} ({probability:.3f}) → {harmonic} / {truth} @ z={z_text}"
                 )
 
+        # Recent APL measurement tokens (if any were recorded)
+        apl_entries = [(e.get("aplToken"), e.get("aplProb", e.get("probability"))) for e in operator_history if e.get("aplToken")]
+        if apl_entries:
+            lines.append("")
+            lines.append("Recent Measurements (APL tokens):")
+            for tok, p in apl_entries[-5:]:
+                if tok:
+                    if isinstance(p, (int, float)):
+                        lines.append(f"  {tok}  (p={p:.3f})")
+                    else:
+                        lines.append(f"  {tok}")
+        else:
+            lines.append("")
+            lines.append("Recent Measurements (APL tokens):")
+            lines.append("  (none)")
+
         lines.append("=" * 70)
         return "\n".join(lines)
 
@@ -209,7 +260,7 @@ class QuantumAnalyzer:
         if z_history:
             ax = axes[0, 0]
             ax.plot(z_history, "g-", linewidth=2)
-            ax.axhline(y=np.sqrt(3) / 2, color="m", linestyle="--", label="z_c")
+            ax.axhline(y=Z_CRITICAL, color="m", linestyle="--", label="z_c")
             ax.set_xlabel("Step")
             ax.set_ylabel("z")
             ax.legend()

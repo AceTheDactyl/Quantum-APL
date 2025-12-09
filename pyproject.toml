@@ -53,6 +53,8 @@ all = [
 qapl-run = "quantum_apl_python.cli:run_simulation"
 qapl-test = "quantum_apl_python.cli:run_tests"
 qapl-analyze = "quantum_apl_python.cli:analyze"
+qapl-widget = "quantum_apl_python.widgets:run_hex_prism_widget"
+qapl-measure = "quantum_apl_python.measure:run"
 
 [project.urls]
 Homepage = "https://github.com/consciousness-lab/quantum-apl"
