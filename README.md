@@ -178,6 +178,7 @@ schemas/                              # JSON schemas for sidecars and bundles
 Key docs
 - docs/Z_CRITICAL_LENS.md — lens authority and separation from TRIAD
 - docs/PHI_INVERSE.md — φ identities and role (K‑formation gate)
+- docs/APL_OPERATORS.md — all APL operator symbols, semantics, and code hooks
 - docs/MU_THRESHOLDS.md — μ hierarchy, barrier = φ⁻¹ by default
 - docs/CONSTANTS_ARCHITECTURE.md — inventory and maintenance policy
 
