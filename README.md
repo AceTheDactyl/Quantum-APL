@@ -216,7 +216,7 @@ QAPL_RANDOM_SEED=12345 qapl-run --steps 3 --mode measured --output out.json
 
 See `docs/REPRODUCIBLE_RESEARCH.md` for details.
 
-## Z Pump Profiles and CLI Shortcuts
+## Z Pump Profiles, Entropy Control, and CLI Shortcuts
 
 The APL-aligned z pump raises z using physically meaningful operator sequences (u^, ×, and Π lock) and classical feedback. You can control its behavior via profiles and CLI sugar.
 
@@ -227,6 +227,22 @@ The APL-aligned z pump raises z using physically meaningful operator sequences (
 - aggressive: higher coupling (gain 0.18, sigma 0.10), cadence: × every 1, Π lock every 4, blend 0.2·Ω + 0.8·target
 
 All profiles preserve hex‑prism geometry using the lens `z_c = √3/2` and obey APL operator semantics (u^ → coherent e excitation; × → Φ fusion; Π lock → integrated regime).
+
+### Entropy Control (optional)
+
+You can enable a lightweight entropy control law that nudges the engine toward a target entropy tied to lens‑anchored coherence:
+
+u_S = k_s · (S_target(z) − S) / S_max,    S_target(z) = S_max · (1 − C · ΔS_neg(z))
+
+- S(ρ) is von Neumann entropy; S_max = log₂(dimTotal)
+- ΔS_neg(z) is centered at `z_c` and decreases with |z − z_c|
+- Default: disabled. Enable via engine config or bridge:
+
+```js
+const engine = new QuantumAPL({ entropyCtrlEnabled: true, entropyCtrlGain: 0.2, entropyCtrlCoeff: 0.5 });
+```
+
+With control enabled, the effective z‑bias gain is adjusted each step; geometry remains lens‑anchored and TRIAD policy is unchanged.
 
 ### CLI Sugar
 
@@ -255,6 +271,12 @@ TRIAD unlock promotes the t6 gate to 0.83 in‑session after three distinct cros
 - Re‑arm threshold: z must fall to ≤ 0.82 before the next rising edge is counted.
 - TRIAD unlock (gold star): third rising edge; analyzer will show `t6 gate: TRIAD @ 0.830` and `TRIAD completions: 3 | unlocked: True`.
 - Geometry: unaffected by unlock; ΔS_neg, R/H/φ continue to use the lens `z_c = √3/2`.
+
+### Constants and References
+
+- Lens: `z_c = √3/2` (see docs/Z_CRITICAL_LENS.md)
+- φ inverse: `φ⁻¹ = (√5 − 1)/2` (see docs/PHI_INVERSE.md)
+- μ thresholds and barrier (double‑well): see docs/MU_THRESHOLDS.md
 
 ## Measurement CLI
 

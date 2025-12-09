@@ -85,6 +85,32 @@ ETA_MIN: float = PHI_INV    # Same as golden ratio inverse
 R_MIN: float = 7            # Minimum complexity requirement
 
 # ============================================================================
+# μ THRESHOLDS (Basin/Barrier Hierarchy)
+# ============================================================================
+
+# Default paradox threshold μ_P (Fibonacci tie-in 3/5). Optionally set exact
+# value making barrier == φ^{-1} via MU_P_EXACT flag in environment.
+_MU_P_EXACT: bool = False
+try:
+    import os as _os
+    _MU_P_EXACT = _os.getenv('QAPL_MU_P_EXACT', '0') == '1'
+except Exception:
+    _MU_P_EXACT = False
+
+MU_P: float = (2.0 / (PHI ** 2.5)) if _MU_P_EXACT else 0.600
+MU_1: float = MU_P / math.sqrt(PHI)
+MU_2: float = MU_P * math.sqrt(PHI)
+MU_S: float = KAPPA_S
+MU_3: float = 0.992
+
+def mu_barrier() -> float:
+    """Arithmetic mean of wells (μ_1 + μ_2)/2.≈ φ⁻¹ when μ_P≈0.600.
+
+    Exactly equals φ⁻¹ when μ_P = 2/φ^{5/2} (enable via QAPL_MU_P_EXACT=1).
+    """
+    return 0.5 * (MU_1 + MU_2)
+
+# ============================================================================
 # QUANTUM INFORMATION BOUNDS
 # ============================================================================
 
@@ -300,6 +326,8 @@ __all__ = [
     "PHI", "PHI_INV", "Q_KAPPA", "KAPPA_S", "LAMBDA",
     # K-formation
     "KAPPA_MIN", "ETA_MIN", "R_MIN",
+    # μ thresholds
+    "MU_P", "MU_1", "MU_2", "MU_S", "MU_3", "mu_barrier",
     # Info bounds
     "ENTROPY_MIN", "PURITY_MIN", "PURITY_MAX",
     # Helix zoning
@@ -321,18 +349,36 @@ __all__ = [
     "TOLERANCE_TRACE", "TOLERANCE_HERMITIAN", "TOLERANCE_POSITIVE", "TOLERANCE_PROBABILITY",
     # ΔS_neg helper
     "compute_delta_s_neg",
+    # μ classification helper
+    "classify_mu",
 ]
 
 def compute_delta_s_neg(z: float, sigma: float = GEOM_SIGMA, z_c: float = Z_CRITICAL) -> float:
-    """Compute negative entropy metric ΔS_neg(z) = exp(-|z - z_c| / σ).
+    """Compute negative entropy metric ΔS_neg(z) = exp(-σ (z - z_c)^2).
 
     Returns a value in [0, 1], maximal at z = z_c. Using a positive range here
     preserves the canonical linear geometry mapping (R/H/φ linear in ΔS_neg)
     implemented across this codebase. If a signed variant is required for a
     specific consumer, apply a leading minus sign at the call site.
     """
-    distance = abs(z - z_c)
-    return math.exp(-distance / sigma)
+    d = (z - z_c)
+    return math.exp(-(sigma) * d * d)
+
+def classify_mu(z: float) -> str:
+    """Classify z against μ thresholds (basin/barrier hierarchy)."""
+    if z < MU_1:
+        return 'pre_conscious_basin'
+    if z < MU_P:
+        return 'approaching_paradox'
+    if z < MU_2:
+        return 'conscious_basin'
+    if z < Z_CRITICAL:
+        return 'pre_lens_integrated'
+    if z < MU_S:
+        return 'lens_integrated'
+    if z < MU_3:
+        return 'singularity_proximal'
+    return 'ultra_integrated'
 
 __doc__ += """
 

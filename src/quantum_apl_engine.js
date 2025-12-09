@@ -452,6 +452,12 @@ class QuantumAPL {
         this.zBiasGain = typeof config.zBiasGain === 'number' ? config.zBiasGain : 0.05;
         this.zBiasSigma = typeof config.zBiasSigma === 'number' ? config.zBiasSigma : 0.18;
 
+        // Entropy control (optional): u_S = k_s * (S_target(z) - S) / S_max
+        // Disabled by default; can be enabled by bridge/CLI
+        this.entropyCtrlEnabled = !!config.entropyCtrlEnabled;
+        this.entropyCtrlGain = typeof config.entropyCtrlGain === 'number' ? config.entropyCtrlGain : 0.2; // k_s
+        this.entropyCtrlCoeff = typeof config.entropyCtrlCoeff === 'number' ? config.entropyCtrlCoeff : 0.5; // C in S_target
+
         // Time
         this.time = 0;
 
@@ -752,10 +758,38 @@ class QuantumAPL {
         }
 
         const normalizedBias = biasMatrix.scale(1 / totalWeight);
-        const mixed = this.rho.scale(1 - gain).add(normalizedBias.scale(gain));
+
+        // Optional entropy control: adjust effective gain via control law
+        let effectiveGain = gain;
+        if (this.entropyCtrlEnabled) {
+            // Compute current entropy and a target entropy tied to ΔS_neg(z)
+            const S_current = this.computeVonNeumannEntropy();
+            const dimMax = Math.max(2, this.dimTotal);
+            const S_max = Math.log2(dimMax);
+            // Target: S_target = S_max * (1 - C * ΔS_neg)
+            const deltaSNeg = CONST.computeDeltaSNeg(typeof targetZ === 'number' ? targetZ : this.z);
+            const S_target = S_max * (1 - this.entropyCtrlCoeff * deltaSNeg);
+            // Control error: positive when S_current > S_target (reduce entropy)
+            const e_norm = (S_current - S_target) / S_max;
+            effectiveGain = Math.max(0.0, Math.min(0.5, gain + this.entropyCtrlGain * e_norm));
+        }
+
+        const mixed = this.rho.scale(1 - effectiveGain).add(normalizedBias.scale(effectiveGain));
         this.rho = mixed;
         this.normalizeDensityMatrix();
         this.measureZ();
+    }
+
+    // Enable or tune entropy control at runtime
+    setEntropyControl(opts = {}) {
+        if (typeof opts.enabled === 'boolean') this.entropyCtrlEnabled = opts.enabled;
+        if (Number.isFinite(opts.gain)) this.entropyCtrlGain = opts.gain;
+        if (Number.isFinite(opts.coeff)) this.entropyCtrlCoeff = opts.coeff;
+        return {
+            enabled: this.entropyCtrlEnabled,
+            gain: this.entropyCtrlGain,
+            coeff: this.entropyCtrlCoeff,
+        };
     }
 
     // ================================================================

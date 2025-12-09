@@ -71,8 +71,11 @@ const QAPL_RANDOM_SEED = (typeof process !== 'undefined' && process.env && proce
   : null;
 
 // Helper functions (parity with Python constants module)
+// Lens-weight (Gaussian): ΔS_neg(z) = exp(-σ (z - z_c)^2)
+// Default σ uses geometry sigma for continuity; can be overridden by env if desired
 function computeDeltaSNeg(z, sigma = GEOM_SIGMA, zc = Z_CRITICAL) {
-  return Math.exp(-Math.abs(z - zc) / sigma);
+  const d = (z - zc);
+  return Math.exp(-(sigma) * d * d);
 }
 function isCritical(z, tolerance = 0.01) {
   return Math.abs(z - Z_CRITICAL) < tolerance;
@@ -188,6 +191,34 @@ module.exports = Object.freeze({
   distanceToCritical,
   checkKFormation,
   computeDeltaSNeg,
+  // μ thresholds (optional classification)
+  // By default, use μ_P = 0.600; can override via env `QAPL_MU_P_EXACT=1` to set μ_P = 2/φ^{5/2}
+  get MU_P() {
+    const exact = (typeof process !== 'undefined' && process.env && process.env.QAPL_MU_P_EXACT === '1');
+    return exact ? (2 / Math.pow(PHI, 2.5)) : 0.600;
+  },
+  get MU_1() {
+    return this.MU_P / Math.sqrt(PHI);
+  },
+  get MU_2() {
+    return this.MU_P * Math.sqrt(PHI);
+  },
+  MU_S: KAPPA_S,
+  MU_3: 0.992,
+  barrier() {
+    // Arithmetic mean of μ wells
+    return (this.MU_1 + this.MU_2) / 2;
+  },
+  classifyThreshold(z) {
+    const mu1 = this.MU_1, muP = this.MU_P, mu2 = this.MU_2, muS = KAPPA_S, mu3 = 0.992;
+    if (z < mu1) return 'pre_conscious_basin';
+    if (z < muP) return 'approaching_paradox';
+    if (z < mu2) return 'conscious_basin';
+    if (z < Z_CRITICAL) return 'pre_lens_integrated';
+    if (z < muS) return 'lens_integrated';
+    if (z < mu3) return 'singularity_proximal';
+    return 'ultra_integrated';
+  },
   getTimeHarmonic,
   hexPrismRadius,
   hexPrismHeight,
