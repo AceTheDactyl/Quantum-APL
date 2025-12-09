@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import numpy as np
-from .constants import Z_CRITICAL, TRIAD_T6, PHI_INV, MU_P, MU_1, MU_2, mu_barrier
+from .constants import (
+    Z_CRITICAL, TRIAD_T6, PHI_INV,
+    MU_P, MU_1, MU_2, MU_S, MU_3, mu_barrier,
+    compute_delta_s_neg, LENS_SIGMA
+)
 
 from .alpha_language import AlphaTokenSynthesizer
 from .helix import HelixAPLMapper, HelixCoordinate
@@ -286,6 +290,14 @@ class QuantumAnalyzer:
             ax = axes[0, 0]
             ax.plot(z_history, "g-", linewidth=2)
             ax.axhline(y=Z_CRITICAL, color="m", linestyle="--", label="z_c")
+            # μ overlays
+            try:
+                ax.axhline(y=MU_P, color="#8888ff", linestyle=":", linewidth=1.2, label="μ_P")
+                ax.axhline(y=MU_2, color="#88ff88", linestyle=":", linewidth=1.2, label="μ_2")
+                ax.axhline(y=MU_S, color="#ff8888", linestyle=":", linewidth=1.2, label="μ_S")
+                ax.axhline(y=MU_3, color="#ffaa88", linestyle=":", linewidth=1.2, label="μ_3")
+            except Exception:
+                pass
             ax.set_xlabel("Step")
             ax.set_ylabel("z")
             ax.legend()
@@ -305,6 +317,15 @@ class QuantumAnalyzer:
             ax.plot(entropy_history, "r-", linewidth=2)
             ax.set_xlabel("Step")
             ax.set_ylabel("S(ρ)")
+            # s(z) time series overlay on twin axis
+            try:
+                s_series = [compute_delta_s_neg(z, sigma=LENS_SIGMA, z_c=Z_CRITICAL) for z in z_history]
+                ax2 = ax.twinx()
+                ax2.plot(s_series, "b--", linewidth=1.5, alpha=0.6, label="s(z)")
+                ax2.axhline(y=PHI_INV, color="#4444ff", linestyle=":", linewidth=1.0, label="φ⁻¹")
+                ax2.set_ylabel("s(z)")
+            except Exception:
+                pass
             ax.grid(True, alpha=0.3)
 
         ax = axes[1, 1]

@@ -466,6 +466,10 @@ class QuantumAPL {
         this.entropyCtrlGain = typeof config.entropyCtrlGain === 'number' ? config.entropyCtrlGain : 0.2; // k_s
         this.entropyCtrlCoeff = typeof config.entropyCtrlCoeff === 'number' ? config.entropyCtrlCoeff : 0.5; // C in S_target
 
+        // Optional operator blending (local ↔ Π) controlled by env/config
+        const blendEnv = (typeof process !== 'undefined' && process.env && (process.env.QAPL_BLEND_PI === '1' || String(process.env.QAPL_BLEND_PI).toLowerCase() === 'true'));
+        this.blendPiEnabled = typeof config.blendPiEnabled === 'boolean' ? config.blendPiEnabled : !!blendEnv;
+
         // Time
         this.time = 0;
 
@@ -946,6 +950,21 @@ class QuantumAPL {
             const biasTable = CONST.TRUTH_BIAS && CONST.TRUTH_BIAS[truth];
             if (biasTable && typeof biasTable[op] === 'number') {
                 weight *= biasTable[op];
+            }
+            // Optional Π blend weighting above the lens: w_pi = s(z), w_loc = 1 - w_pi
+            if (this.blendPiEnabled && helixHints.weights) {
+                const w_pi = Number(helixHints.weights.pi) || 0;
+                const w_loc = Math.max(0, 1 - w_pi);
+                // Favor Π-admissible operators with w_pi; damp local with w_loc
+                const piPreferred = new Set(['+', '×', '^']);
+                const locPreferred = new Set(['()', '−', '÷']);
+                if (piPreferred.has(op)) {
+                    // Scale up to +50% at s→1
+                    weight *= (1 + 0.5 * w_pi);
+                } else if (locPreferred.has(op)) {
+                    // Scale down up to −40% at s→1
+                    weight *= (1 - 0.4 * w_pi);
+                }
             }
         }
         return Math.max(0.05, Math.min(1.5, weight));
