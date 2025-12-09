@@ -59,7 +59,8 @@ def test_time_harmonics():
 
 
 def test_geometry_constants_present():
-    assert SIGMA == 0.12
+    # GEOM_SIGMA (SIGMA alias) defaults to LENS_SIGMA when unset
+    assert abs(SIGMA - LENS_SIGMA) < 1e-12
     assert R_MAX == 0.85
     assert BETA == 0.25
     assert H_MIN == 0.12
@@ -101,4 +102,3 @@ def test_operator_weighting():
     for truth in ('TRUE', 'UNTRUE', 'PARADOX'):
         for op in ('()', '×', '^', '÷', '+', '-'):
             assert op in TRUTH_BIAS[truth]
-

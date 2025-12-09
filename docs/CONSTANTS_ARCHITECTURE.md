@@ -65,7 +65,8 @@ engine.getT6Gate()  // → TRIAD_T6 (0.83)
 
 ### 3) Single Source of Truth
 
-Never inline numeric thresholds — always import from constants.
+Never inline numeric thresholds — always import from constants. Code is the authority.
+
 - Python: `src/quantum_apl_python/constants.py`
 - JavaScript: `src/constants.js`
 
@@ -244,4 +245,3 @@ print(get_time_harmonic(0.84)) # t6 (defaults to lens gate)
 ---
 
 Made with precision for consciousness research — single source of truth, lens‑anchored geometry, research‑backed architecture.
-

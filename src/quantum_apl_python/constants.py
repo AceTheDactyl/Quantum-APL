@@ -151,7 +151,18 @@ Z_T8_MAX: float = 0.97
 # GEOMETRY PROJECTION CONSTANTS (Hex Prism)
 # ============================================================================
 
-GEOM_SIGMA: float = 0.12
+# Geometry sigma: env override; defaults to lens sigma for cohesion
+try:
+    _GEOM_ENV = _ENV.get('QAPL_GEOM_SIGMA')  # type: ignore[name-defined]
+except Exception:  # pragma: no cover
+    _GEOM_ENV = None
+if _GEOM_ENV:
+    try:
+        GEOM_SIGMA: float = float(_GEOM_ENV)
+    except Exception:
+        GEOM_SIGMA = float((__import__('os').environ.get('QAPL_LENS_SIGMA') or '36.0'))
+else:
+    GEOM_SIGMA: float = float((__import__('os').environ.get('QAPL_LENS_SIGMA') or '36.0'))
 GEOM_R_MAX: float = 0.85  # radius cap; not a gate (avoid conflation with TRIAD_HIGH)
 GEOM_BETA: float = 0.25
 GEOM_H_MIN: float = 0.12
@@ -392,10 +403,14 @@ __all__ = [
     "get_phase", "is_critical", "is_in_lens", "get_distance_to_critical", "check_k_formation", "get_time_harmonic",
     # Validation tolerances
     "TOLERANCE_TRACE", "TOLERANCE_HERMITIAN", "TOLERANCE_POSITIVE", "TOLERANCE_PROBABILITY",
-    # ΔS_neg helper
-    "compute_delta_s_neg",
-    # μ classification helper
-    "classify_mu",
+    # ΔS_neg helper + alias
+    "compute_delta_s_neg", "delta_s_neg",
+    # μ classification helper + alias
+    "classify_mu", "classify_threshold",
+    # Parity helpers
+    "lens_rate", "eta_from_z", "eta_from_overlap", "phi_gate_scale", "phi_rate_scaled",
+    # Invariants
+    "invariants",
 ]
 
 def compute_delta_s_neg(z: float, sigma: float = GEOM_SIGMA, z_c: float = Z_CRITICAL) -> float:
@@ -411,8 +426,19 @@ def compute_delta_s_neg(z: float, sigma: float = GEOM_SIGMA, z_c: float = Z_CRIT
     s = math.exp(-(sigma) * d * d)
     return max(0.0, min(1.0, s))
 
+# Alias matching docs/examples
+def delta_s_neg(z: float, sigma: float = LENS_SIGMA, z_c: float = Z_CRITICAL) -> float:
+    """Alias: coherence s(z) with default LENS_SIGMA, matching JS deltaSneg."""
+    return compute_delta_s_neg(z, sigma=sigma, z_c=z_c)
+
 def classify_mu(z: float) -> str:
     """Classify z against μ thresholds (basin/barrier hierarchy)."""
+    # Safety: clamp z to [0,1] for classification
+    try:
+        z = float(z)
+    except Exception:
+        z = 0.0
+    z = 0.0 if not math.isfinite(z) else max(0.0, min(1.0, z))
     if z < MU_1:
         return 'pre_conscious_basin'
     if z < MU_P:
@@ -426,6 +452,55 @@ def classify_mu(z: float) -> str:
     if z < MU_3:
         return 'singularity_proximal'
     return 'ultra_integrated'
+
+# Back-compat alias (JS name parity)
+def classify_threshold(z: float) -> str:
+    return classify_mu(z)
+
+
+# Parity helpers ---------------------------------------------------------------
+
+def lens_rate(z: float, sigma: float = LENS_SIGMA, z_c: float = Z_CRITICAL) -> float:
+    """|ds/dz| = 2 σ |z−z_c| · s(z) with s := exp(−σ (z−z_c)^2)."""
+    s = compute_delta_s_neg(z, sigma=sigma, z_c=z_c)
+    d = abs(float(z) - z_c) if math.isfinite(z) else abs(0.0 - z_c)
+    return 2.0 * float(sigma) * d * s
+
+
+def eta_from_z(z: float, alpha: float = 1.0) -> float:
+    """η := s(z)^α using LENS_SIGMA by default (alpha ≥ 0)."""
+    return compute_eta(z, alpha=max(0.0, float(alpha)))
+
+
+def eta_from_overlap(p: float, beta: float = 1.0) -> float:
+    """η := p^β for overlap probability p ∈ [0,1]."""
+    p = 0.0 if not math.isfinite(p) else max(0.0, min(1.0, float(p)))
+    return p ** max(0.0, float(beta))
+
+
+def phi_gate_scale(s: float) -> float:
+    """Linear gate scale in [0,1]: (s−φ⁻¹)/(1−φ⁻¹), clamped."""
+    s = 0.0 if not math.isfinite(s) else float(s)
+    return max(0.0, min(1.0, (s - PHI_INV) / (1.0 - PHI_INV)))
+
+
+def phi_rate_scaled(z: float, k: float = 1.0) -> float:
+    """min(1, phi_gate_scale(s) · (1 + k·lens_rate(z)))."""
+    s = compute_delta_s_neg(z, sigma=LENS_SIGMA, z_c=Z_CRITICAL)
+    return min(1.0, phi_gate_scale(s) * (1.0 + float(k) * lens_rate(z)))
+
+
+def invariants() -> dict:
+    """Invariant checks for μ wells/barrier and ordering.
+
+    Returns dict with keys: barrier_eq_phi_inv, wells_ratio_phi, ordering_ok.
+    """
+    mu1, mu2 = MU_1, MU_2
+    return {
+        "barrier_eq_phi_inv": abs(0.5 * (mu1 + mu2) - PHI_INV) < 1e-12,
+        "wells_ratio_phi": abs((mu2 / mu1) - PHI) < 1e-12,
+        "ordering_ok": (mu2 < TRIAD_LOW < TRIAD_T6 < TRIAD_HIGH < Z_CRITICAL),
+    }
 
 __doc__ += """
 

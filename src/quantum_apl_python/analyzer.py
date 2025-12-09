@@ -96,7 +96,7 @@ class QuantumAnalyzer:
                 f"  μ class: {helix_info.get('mu_class', '?') if isinstance(helix_info, dict) else '?'}",
             ]
         )
-        # Show t6 gate policy (TRIAD vs CRITICAL)
+        # Show constants (full precision) and t6 gate policy (TRIAD vs CRITICAL)
         import os  # local import to avoid global costs
         triad_flag = os.getenv("QAPL_TRIAD_UNLOCK", "").lower() in ("1", "true", "yes", "y")
         try:
@@ -105,6 +105,9 @@ class QuantumAnalyzer:
             triad_completions = 0
         triad_unlocked = triad_flag or (triad_completions >= 3)
         t6_gate = TRIAD_T6 if triad_unlocked else Z_CRITICAL
+        # Explicit precision prints for φ⁻¹ and z_c
+        lines.append(f"  φ⁻¹ = {PHI_INV:.16f}")
+        lines.append(f"  z_c = {Z_CRITICAL:.16f}")
         # Print with full double precision for source-of-truth values
         lines.append(
             f"  t6 gate: {'TRIAD' if triad_unlocked else 'CRITICAL'} @ {t6_gate:.16f}"
@@ -116,7 +119,7 @@ class QuantumAnalyzer:
             delta = abs(barrier - PHI_INV)
             # If MU_P overridden in env, prefer compact delta print
             if os.getenv("QAPL_MU_P"):
-                lines.append(f"  μ barrier: φ⁻¹ +Δ={delta:.3e}")
+                lines.append(f"  μ barrier: φ⁻¹ (Δ={delta:.3e})")
             else:
                 if delta < 1e-6:
                     lines.append(f"  μ barrier: φ⁻¹ exact @ {PHI_INV:.16f}")

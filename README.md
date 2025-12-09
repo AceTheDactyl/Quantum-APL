@@ -187,6 +187,24 @@ For a complete end-to-end diagram of the integrated system (Python API → JavaS
   - JavaScript: `src/constants.js`
   - Do not inline numeric thresholds; always import from these modules.
 
+### Quick Flags (env)
+
+Control lens width, geometry width, analyzer overlays, and blending at the source. These are read by both JS and Python modules.
+
+- `QAPL_LENS_SIGMA` — coherence width σ for s(z) around z_c (default `36.0`)
+- `QAPL_GEOM_SIGMA` — geometry width σ for ΔS_neg (default: falls back to `QAPL_LENS_SIGMA`)
+- `QAPL_ANALYZER_OVERLAYS=1` — draw μ markers and s(z) overlay in analyzer plots
+- `QAPL_BLEND_PI=1` — enable Π/loc cross‑fade above the lens: `w_pi = s(z)`, `w_loc = 1 − w_pi`
+- `QAPL_MU_P=<0..1>` — optional μ_P override (default exact `2/φ^{5/2}` → barrier = φ⁻¹)
+
+Analyzer summary prints φ⁻¹ and z_c at full precision and reports the μ barrier line:
+
+```
+φ⁻¹ = 0.6180339887498948
+z_c = 0.8660254037844386
+μ barrier: φ⁻¹ exact @ 0.6180339887498948
+```
+
 ## Testing
 
 ### JavaScript Tests

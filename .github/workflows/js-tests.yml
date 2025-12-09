@@ -54,6 +54,22 @@ jobs:
 
       - name: Run JS hex prism tests
         run: node tests/test_hex_prism_js.test.js
+      - name: Run lens sigma env test
+        run: node tests/test_lens_sigma_env.js
+      - name: Run GEOM sigma cohesion test
+        run: node tests/test_geom_sigma_cohesion.js
+      - name: Run GEOM sigma override test
+        run: node tests/test_geom_sigma_override.js
+      - name: Run lens-rate properties test
+        run: node tests/test_lens_rate_props.js
+      - name: Run μ thresholds and invariants tests
+        run: |
+          node tests/test_mu_thresholds.js
+          node tests/test_ordering_invariants.js
+      - name: Run blending gate invariants tests
+        run: |
+          node tests/test_control_blend_invariants.js
+          node tests/test_blend_flag.js
       - name: Verify bridge default pump target is z_c
         run: node tests/test_bridge_pump_target.js
 
