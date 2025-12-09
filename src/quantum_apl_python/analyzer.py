@@ -10,6 +10,7 @@ import numpy as np
 
 from .alpha_language import AlphaTokenSynthesizer
 from .helix import HelixAPLMapper, HelixCoordinate
+from .helix_metadata import load_metadata, metadata_title, summary_lines, provenance_lines
 
 try:  # Optional dependency for plotting
     import matplotlib.pyplot as plt  # type: ignore
@@ -41,16 +42,21 @@ class QuantumAnalyzer:
         self.helix_seed = self._load_helix_seed_context()
 
     def summary(self) -> str:
+        z_value = self._as_float(self.quantum.get("z", 0.0))
+        phi_value = self._as_float(self.quantum.get("phi", 0.0))
+        entropy_value = self._as_float(self.quantum.get("entropy", 0.0))
+        purity_value = self._as_float(self.quantum.get("purity", 0.0))
+
         lines = [
             "=" * 70,
             "QUANTUM-CLASSICAL SIMULATION RESULTS",
             "=" * 70,
             "",
             "Quantum State:",
-            f"  z-coordinate: {self.quantum.get('z', 0):.4f}",
-            f"  Integrated information (Φ): {self.quantum.get('phi', 0):.4f}",
-            f"  von Neumann entropy (S): {self.quantum.get('entropy', 0):.4f}",
-            f"  Purity: {self.quantum.get('purity', 0):.4f}",
+            f"  z-coordinate: {z_value:.4f}",
+            f"  Integrated information (Φ): {phi_value:.4f}",
+            f"  von Neumann entropy (S): {entropy_value:.4f}",
+            f"  Purity: {purity_value:.4f}",
             "",
             "Classical Engines:",
         ]
@@ -72,7 +78,7 @@ class QuantumAnalyzer:
                 ]
             )
 
-        helix_coord = HelixCoordinate(theta=0.0, z=self.quantum.get("z", 0.0))
+        helix_coord = HelixCoordinate(theta=0.0, z=z_value)
         helix_info = self.helix_mapper.describe(helix_coord)
         lines.extend(
             [
@@ -97,6 +103,10 @@ class QuantumAnalyzer:
                 lines.append("  Intent:")
                 for statement in self.helix_seed["summary"]:
                     lines.append(f"    - {statement}")
+            if self.helix_seed["provenance"]:
+                lines.append("  Provenance:")
+                for statement in self.helix_seed["provenance"]:
+                    lines.append(f"    - {statement}")
             lines.append(f"  Source: {self.helix_seed['path']}")
 
         alpha_token = self.alpha_tokens.from_helix(helix_coord)
@@ -114,13 +124,14 @@ class QuantumAnalyzer:
 
         runtime_helix = self.quantum.get("helix")
         if runtime_helix:
+            runtime_z = self._as_float(runtime_helix.get("z", 0.0))
             lines.extend(
                 [
                     "",
                     "Runtime Helix Hint:",
                     f"  Harmonic: {runtime_helix.get('harmonic', '?')}",
                     f"  Truth channel: {runtime_helix.get('truthChannel', '?')}",
-                    f"  z (engine): {runtime_helix.get('z', 0):.4f}",
+                    f"  z (engine): {runtime_z:.4f}",
                     f"  Operator window: {', '.join(runtime_helix.get('operators', [])) or 'n/a'}",
                 ]
             )
@@ -137,8 +148,8 @@ class QuantumAnalyzer:
                 helix = entry.get("helix") or {}
                 harmonic = helix.get("harmonic", "?")
                 truth = helix.get("truthChannel", "?")
-                z_val = helix.get("z")
-                z_text = f"{z_val:.4f}" if isinstance(z_val, (int, float)) else "?"
+                z_val = self._as_float(helix.get("z", 0.0))
+                z_text = f"{z_val:.4f}"
                 lines.append(
                     f"  step {step}: {operator} ({probability:.3f}) → {harmonic} / {truth} @ z={z_text}"
                 )
@@ -170,35 +181,11 @@ class QuantumAnalyzer:
         if not path.exists():
             return None
 
-        title, summary = self._parse_metadata_snippet(path)
-        return {"z": target[0], "title": title, "summary": summary, "path": target[1]}
-
-    def _parse_metadata_snippet(self, path: Path) -> (str, List[str]):
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        lines = text.splitlines()
-        title = "Unknown"
-        for line in lines:
-            if line.startswith("title:"):
-                title = line.split(":", 1)[1].strip().strip('"')
-                break
-
-        summary: List[str] = []
-        capture = False
-        for line in lines:
-            if line.startswith("description:"):
-                capture = True
-                continue
-            if capture:
-                if not line.strip():
-                    if summary:
-                        break
-                    continue
-                if not line.startswith("  "):
-                    break
-                summary.append(line.strip())
-                if len(summary) >= 5:
-                    break
-        return title, summary
+        metadata = load_metadata(path)
+        title = metadata_title(metadata)
+        summary = summary_lines(metadata)
+        provenance = provenance_lines(metadata)
+        return {"z": target[0], "title": title, "summary": summary, "provenance": provenance, "path": target[1]}
 
     def to_dataframe(self):
         if not HAS_PANDAS:
@@ -259,3 +246,9 @@ class QuantumAnalyzer:
             plt.savefig(save_path, dpi=150, bbox_inches="tight")
         else:
             plt.show()
+
+    @staticmethod
+    def _as_float(value: Optional[float]) -> float:
+        if isinstance(value, (int, float)):
+            return float(value)
+        return 0.0

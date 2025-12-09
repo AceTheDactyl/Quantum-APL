@@ -425,6 +425,9 @@ class QuantumAPL {
         // Measurement history
         this.measurementHistory = [];
         
+        this.zBiasGain = typeof config.zBiasGain === 'number' ? config.zBiasGain : 0.05;
+        this.zBiasSigma = typeof config.zBiasSigma === 'number' ? config.zBiasSigma : 0.18;
+        
         // Time
         this.time = 0;
 
@@ -662,6 +665,42 @@ class QuantumAPL {
         }
         
         return probs;
+    }
+
+    applyZBias(targetZ, gain = this.zBiasGain, sigma = this.zBiasSigma) {
+        if (!Number.isFinite(targetZ) || gain <= 0) {
+            return;
+        }
+
+        const denom = (this.dimPhi + this.dimE + this.dimPi - 3) || 1;
+        const sigmaSq = Math.max(1e-4, sigma * sigma);
+        const biasMatrix = new ComplexMatrix(this.dimTotal, this.dimTotal);
+        let totalWeight = 0;
+
+        for (let i = 0; i < this.dim; i++) {
+            const iPhi = Math.floor(i / (this.dimE * this.dimPi)) % this.dimPhi;
+            const iE = Math.floor(i / this.dimPi) % this.dimE;
+            const iPi = i % this.dimPi;
+            const zLevel = (iPhi + iE + iPi) / denom;
+            const delta = zLevel - targetZ;
+            const weight = Math.exp(-(delta * delta) / (2 * sigmaSq)) + 1e-9;
+            totalWeight += weight;
+
+            for (let t = 0; t < this.dimTruth; t++) {
+                const idx = i * this.dimTruth + t;
+                biasMatrix.set(idx, idx, new Complex(weight / this.dimTruth, 0));
+            }
+        }
+
+        if (totalWeight <= 1e-12) {
+            return;
+        }
+
+        const normalizedBias = biasMatrix.scale(1 / totalWeight);
+        const mixed = this.rho.scale(1 - gain).add(normalizedBias.scale(gain));
+        this.rho = mixed;
+        this.normalizeDensityMatrix();
+        this.measureZ();
     }
 
     // ================================================================
@@ -939,6 +978,7 @@ class QuantumAPL {
         
         // Temporarily add drive to Hamiltonian
         this.H = this.H.add(drive.scale(0.1));
+        this.applyZBias(z);
     }
 
     resetHamiltonian() {
