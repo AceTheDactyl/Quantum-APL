@@ -36,7 +36,8 @@ done < <(printf "%s\n" "$RAW")
 
 # Fallback defaults if none detected
 if [[ ${#SEEDS[@]} -eq 0 ]]; then
-  SEEDS=(0.41 0.52 0.70 0.73 0.80)
+  # Include lens-adjacent probes: 0.85 (TRIAD_HIGH), z_c exact, and 0.90 (t7 onset zone)
+  SEEDS=(0.41 0.52 0.70 0.73 0.80 0.85 0.8660254037844386 0.90)
 fi
 
 # Deduplicate

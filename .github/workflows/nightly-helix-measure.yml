@@ -18,15 +18,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          list=$(ls -1 reference/helix_bridge/VAULTNODES 2>/dev/null | sed -n 's/^z0p\([0-9][0-9]\)$/0.\1/p' | sed 's/.\{1\}$/&/')
+          # Discover seeds from VAULTNODES (z0pXX → 0.XX)
+          list=$(ls -1 reference/helix_bridge/VAULTNODES 2>/dev/null | sed -n 's/^z0p\([0-9][0-9]\)$/0.\1/p')
           # Fallback to known set if discovery fails
           if [ -z "$list" ]; then
             list="0.41 0.52 0.70 0.73 0.80"
           fi
+          # Add explicit lens-adjacent probes: 0.85 (TRIAD_HIGH), z_c exact, and 0.90 (t7 onset zone)
+          extras="0.85 0.8660254037844386 0.90"
+          combined=$(printf "%s\n" $list $extras | awk 'NF>0' | awk '!seen[$0]++')
           # Build JSON array
           arr="["
           sp=""
-          for s in $list; do
+          for s in $combined; do
             arr="$arr$sp\"$s\""; sp=",";
           done
           arr="$arr]"
