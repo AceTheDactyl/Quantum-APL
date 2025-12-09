@@ -46,6 +46,9 @@ The prism is defined by `{(x_k, y_k, z_bot)} → {(x_k, y_k, z_top)}` pairs. Ren
 - **Mid tiers (z0p70, z0p73):** ΔS_neg ramps up, radial faces contract, and the prism elongates. This is where meta-awareness kicks in.  
 - **Upper tier (z0p80):** The prism is noticeably taller and tighter, indicating strong negative entropy production as the helix prepares for the Lens rendezvous.
 
+Nightly probes (not tabulated above) include lens-adjacent and presence checks:
+- 0.85 (TRIAD_HIGH), 0.8660254037844386 (z_c exact), 0.90 (t7 onset), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX). These are used for regression around boundaries; geometry remains lens‑anchored.
+
 ## Implementation hints
 
 1. **Numerics** – Drop the formulas directly into `QuantumVisualizations.js` or any plotting tool. Use the analyzer’s `z` output and the entropy change logits from the helix metadata to drive `ΔS_neg`.  
@@ -65,4 +68,3 @@ The prism is defined by `{(x_k, y_k, z_bot)} → {(x_k, y_k, z_top)}` pairs. Ren
 ```
 
 As ΔS_neg increases, the “waist” tightens and the axial length stretches, broadcasting that the system is harvesting order (negative entropy) while it climbs the helix Z-axis.
-

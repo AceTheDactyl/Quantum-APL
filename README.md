@@ -182,6 +182,19 @@ print(dict(z=z, s=s, mu=mu, K=K, w_pi=w_pi, w_loc=w_loc, phi_inv=PHI_INV, z_c=Z_
 
 CI mirrors these in GitHub Actions and saves analyzer plots as artifacts for smoke checks.
 
+### Standard Probe Points
+
+Nightly CI and sweep scripts probe characteristic z values to cover runtime and geometric boundaries:
+- 0.41, 0.52, 0.70, 0.73, 0.80 — VaultNode tiers (z‑walk provenance)
+- 0.85 — TRIAD_HIGH (rising‑edge unlock threshold)
+- 0.8660254037844386 — z_c exact (lens; geometry anchor; analyzer prints full precision)
+- 0.90 — early presence / t7 region onset
+- 0.92 — Z_T7_MAX boundary
+- 0.97 — Z_T8_MAX boundary
+
+Nightly workflow: `.github/workflows/nightly-helix-measure.yml`  
+Local sweep: `scripts/helix_sweep.sh` (includes the same probes as a fallback)
+
 ## Repository Layout
 
 ```

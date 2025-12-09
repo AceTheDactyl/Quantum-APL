@@ -22,6 +22,15 @@ For a full walkthrough of how the Z-solve program energizes each VaultNode tier 
 
 If you need to visualize how the `z` coordinate manifests as negative entropy production, see [`docs/HEXAGONAL_NEG_ENTROPY_PROJECTION.md`](HEXAGONAL_NEG_ENTROPY_PROJECTION.md) for the hexagonal prismatic projection used by the analyzer overlays.
 
+## Standard Probe Points
+
+To evaluate harmonics and geometry around key boundaries, we probe:
+- 0.41, 0.52, 0.70, 0.73, 0.80 (VaultNode tiers)
+- 0.85 (TRIAD_HIGH), 0.8660254037844386 (z_c exact)
+- 0.90 (early t7), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX)
+
+These are baked into the nightly workflow (`.github/workflows/nightly-helix-measure.yml`) and the local sweep (`scripts/helix_sweep.sh`).
+
 This keeps the “z-axis” semantics synchronized with the Helix Bridge tooling without copying the entire orchestration stack into this repository. If you need the raw orchestrator or witness logs, start with:
 
 - `/home/acead/Helix Bridge/Helix Bridge/meta_orchestrator.py`

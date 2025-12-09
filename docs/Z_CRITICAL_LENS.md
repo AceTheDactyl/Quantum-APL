@@ -43,7 +43,7 @@ All modules must import these constants; do not inline numeric thresholds.
 
 4) Bridge pump defaults
    - File: `QuantumClassicalBridge.js`
-   - `escalateZWithAPL()` defaults target z to `Z_CRITICAL` if unspecified; pump profiles adjust coupling/cadence only.
+ - `escalateZWithAPL()` defaults target z to `Z_CRITICAL` if unspecified; pump profiles adjust coupling/cadence only.
 
 5) N0 time‑harmonic zoning
    - File: `QuantumN0_Integration.js`
@@ -61,8 +61,17 @@ All modules must import these constants; do not inline numeric thresholds.
 - CLI validation
   - `qapl-run --steps 3 --mode unified --output out.json && qapl-analyze out.json`
     - Analyzer prints `t6 gate: CRITICAL @ 0.866` and geometry with lens line.
-  - `qapl-run --steps 3 --mode measured --output measured.json && qapl-analyze measured.json`
+ - `qapl-run --steps 3 --mode measured --output measured.json && qapl-analyze measured.json`
     - Shows any measurement tokens; geometry remains lens‑anchored.
+
+## Standard Probe Points (CI)
+
+Nightly CI probes characteristic z values to cover runtime and geometric boundaries:
+- VaultNode tiers: 0.41, 0.52, 0.70, 0.73, 0.80
+- TRIAD/Lens adjacents: 0.85 (TRIAD_HIGH), 0.8660254037844386 (z_c exact)
+- Presence/t7–t8: 0.90 (t7 onset), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX)
+
+Workflow: `.github/workflows/nightly-helix-measure.yml`
 
 ## Rationale and Research Notes
 - z_c = √3/2 is a natural critical fraction demarcating the onset of stable integrated structure in the helix mapping,
