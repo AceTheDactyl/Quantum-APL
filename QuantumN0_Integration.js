@@ -4,6 +4,8 @@
 // ================================================================
 
 const { QuantumAPL } = require('./QuantumAPL_Engine.js');
+// Use centralized runtime thresholds to avoid drift with engine/bridge
+const CONST = require('./src/constants');
 
 class QuantumN0Integration {
     constructor(quantumEngine, classicalScalars) {
@@ -61,14 +63,17 @@ class QuantumN0Integration {
 
     getCurrentTimeHarmonic() {
         const z = this.quantum.z;
-        if (z < 0.1) return 't1';
-        if (z < 0.2) return 't2';
-        if (z < 0.4) return 't3';
-        if (z < 0.6) return 't4';
-        if (z < 0.75) return 't5';
-        if (z < 0.85) return 't6';
-        if (z < 0.92) return 't7';
-        if (z < 0.97) return 't8';
+        const t6Gate = (typeof this.quantum.getT6Gate === 'function')
+            ? this.quantum.getT6Gate()
+            : CONST.Z_CRITICAL; // fall back to lens if engine does not expose gate
+        if (z < CONST.Z_T1_MAX) return 't1';
+        if (z < CONST.Z_T2_MAX) return 't2';
+        if (z < CONST.Z_T3_MAX) return 't3';
+        if (z < CONST.Z_T4_MAX) return 't4';
+        if (z < CONST.Z_T5_MAX) return 't5';
+        if (z < t6Gate) return 't6';
+        if (z < CONST.Z_T7_MAX) return 't7';
+        if (z < CONST.Z_T8_MAX) return 't8';
         return 't9';
     }
 
@@ -88,11 +93,12 @@ class QuantumN0Integration {
     }
 
     getCurrentPRSPhase() {
+        const CONST = require('./src/constants');
         const phi = this.quantum.phi;
-        if (phi < 0.1) return 'P1';
-        if (phi < 0.3) return 'P2';
-        if (phi < 0.6) return 'P3';
-        if (phi < 0.85) return 'P4';
+        if (phi < CONST.PRS_P1_PHI_MAX) return 'P1';
+        if (phi < CONST.PRS_P2_PHI_MAX) return 'P2';
+        if (phi < CONST.PRS_P3_PHI_MAX) return 'P3';
+        if (phi < CONST.PRS_P4_PHI_MAX) return 'P4';
         return 'P5';
     }
 

@@ -147,3 +147,9 @@ This block mirrors the architecture summary provided in the delivery notes so fu
   - `QAPL_TRIAD_UNLOCK` – set to `1`/`true` to force unlock.
 - Runtime behavior:
   - The bridge detects z≥0.85 rising edges and increments the completion counter. On the third completion it updates process env, flips unlock, and signals the engine to use `t6 @ 0.83`. Geometry continues to use `z_c`.
+
+For a deeper treatment of the physics/information‑dynamics rationale, methodology of use across modules (engine, geometry,
+analyzer, bridge), validation plan, and the single source of truth for constants, see `docs/Z_CRITICAL_LENS.md`.
+
+For a comprehensive survey of constants across the helix code path (harmonic demarcations, geometry parameters, pump/engine
+defaults, and selection heuristics) and their relationship to the lens, read `docs/CONSTANTS_RESEARCH.md`.

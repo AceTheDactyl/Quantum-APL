@@ -178,6 +178,15 @@ The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-T
 
 For a complete end-to-end diagram of the integrated system (Python API → JavaScript engines → classical stacks → measurement flow), see `docs/SYSTEM_ARCHITECTURE.md`. It reproduces the final delivery schematic showing each layer, the Z-axis map, truth states, performance metrics, and file organization.
 
+## Constants
+
+- Lens specification: `docs/Z_CRITICAL_LENS.md` — authoritative definition of the critical lens `z_c = √3/2 ≈ 0.8660254`, methodology of use across engine/geometry/analyzer/bridge, and validation notes.
+- Constants research: `docs/CONSTANTS_RESEARCH.md` — survey of constants across the helix path (harmonic zoning, geometry projection, pump/engine parameters, selection heuristics) and maintenance policy.
+- Single sources of truth:
+  - Python: `src/quantum_apl_python/constants.py`
+  - JavaScript: `src/constants.js`
+  - Do not inline numeric thresholds; always import from these modules.
+
 ## Z Pump Profiles and CLI Shortcuts
 
 The APL-aligned z pump raises z using physically meaningful operator sequences (u^, ×, and Π lock) and classical feedback. You can control its behavior via profiles and CLI sugar.
@@ -198,6 +207,8 @@ All profiles preserve hex‑prism geometry using the lens `z_c = √3/2` and obe
   - `qapl-run --mode z_pump --z-pump-target 0.86 --z-pump-cycles 120 --z-pump-profile aggressive`
 
 Environment equivalents: `QAPL_PUMP_TARGET`, `QAPL_PUMP_CYCLES`, `QAPL_PUMP_PROFILE`.
+
+- Default target: if a pump target is omitted, the bridge resolves to the lens `z_c = √3/2 ≈ 0.8660254` (critical point). TRIAD thresholds remain `0.85/0.82/0.83` for rising-edge counting and unlock, and do not alter the geometric lens.
 
 ### Plot Markers (Notebook Helper)
 

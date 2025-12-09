@@ -557,6 +557,7 @@ class QuantumAPL {
     }
 
     computeOperatorWeight(op, scalarState, helixHints) {
+        const CONST = require('./src/constants');
         const { Gs, Cs, Rs, kappa, tau, theta, delta, alpha, Omega } = scalarState;
         const weights = {
             '()': Gs + theta * 0.5,
@@ -570,10 +571,11 @@ class QuantumAPL {
         if (helixHints && helixHints.operators) {
             const preferred = helixHints.operators.includes(op);
             const truth = helixHints.truthChannel;
-            weight *= preferred ? 1.3 : 0.85;
-            if (truth === 'TRUE' && (op === '^' || op === '+')) weight *= 1.1;
-            if (truth === 'PARADOX' && (op === '()' || op === '×')) weight *= 1.05;
-            if (truth === 'UNTRUE' && (op === '÷' || op === '−')) weight *= 1.1;
+            weight *= preferred ? CONST.OPERATOR_PREFERRED_WEIGHT : CONST.OPERATOR_DEFAULT_WEIGHT;
+            const biasTable = CONST.TRUTH_BIAS && CONST.TRUTH_BIAS[truth];
+            if (biasTable && typeof biasTable[op] === 'number') {
+                weight *= biasTable[op];
+            }
         }
         return Math.max(0.05, Math.min(1.5, weight));
     }
