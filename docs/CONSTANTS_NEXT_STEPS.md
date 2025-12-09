@@ -44,73 +44,54 @@ Estimated effort: Done
 Dependencies: None
 Priority: HIGH
 
-### 1.2 JSON Schema Validation (Planned)
-- Files to add:
-  - schemas/geometry-sidecar.schema.json
-  - schemas/apl-bundle.schema.json
-  - tests/test_schema_validation.js (Ajv)
-- Geometry Sidecar Schema (adapted to current 6‑vertex prism; versioned object with z, delta_S_neg, geometry {R,H,phi}, constants):
+### 1.2 JSON Schema Validation (DONE)
+- Files added:
+  - `schemas/geometry-sidecar.schema.json` — 63-vertex hex prism geometry
+  - `schemas/apl-bundle.schema.json` — APL token array validation
+  - `tests/test_schema_validation.js` — Ajv-based validation tests
 
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "version": { "type": "string", "pattern": "^\\\d+\\.\\\d+\\.\\\d+$" },
-    "z": { "type": "number", "minimum": 0, "maximum": 1 },
-    "delta_S_neg": { "type": "number", "minimum": 0 },
-    "vertices": {
-      "type": "array",
-      "minItems": 6,
-      "maxItems": 6,
-      "items": {
-        "type": "object",
-        "properties": {
-          "k": { "type": "integer", "minimum": 0, "maximum": 5 },
-          "x": { "type": "number" },
-          "y": { "type": "number" },
-          "z_top": { "type": "number" },
-          "z_bot": { "type": "number" }
-        },
-        "required": ["k", "x", "y", "z_top", "z_bot"]
-      }
-    },
-    "geometry": {
-      "type": "object",
-      "properties": {
-        "R": { "type": "number", "minimum": 0 },
-        "H": { "type": "number", "minimum": 0 },
-        "phi": { "type": "number" }
-      },
-      "required": ["R", "H", "phi"]
-    },
-    "constants": {
-      "type": "object",
-      "properties": {
-        "Z_CRITICAL": { "type": "number" },
-        "GEOM_SIGMA": { "type": "number" },
-        "GEOM_R_MAX": { "type": "number" },
-        "GEOM_BETA": { "type": "number" },
-        "GEOM_H_MIN": { "type": "number" },
-        "GEOM_GAMMA": { "type": "number" }
-      }
-    }
-  },
-  "required": ["version", "z", "delta_S_neg", "vertices", "geometry"]
-}
+#### Schema Validation
+
+**Paths:**
+- `schemas/geometry-sidecar.schema.json` — Validates geometry sidecar exports
+- `schemas/apl-bundle.schema.json` — Validates APL token bundles
+
+**How to run:**
+```bash
+npm install          # Install ajv dependency
+node tests/test_schema_validation.js
 ```
 
-Estimated effort: 3–4 hours
-Dependencies: ajv
-Priority: MEDIUM (data interchange)
+**What breaks:**
+- Vertex count ≠ 63
+- `delta_S_neg` outside [0, 1]
+- Missing required fields (`version`, `z`, `delta_S_neg`, `vertices`, `geometry`)
+- Malformed APL tokens (wrong channel, missing truth, missing tier)
 
-### 1.3 Reproducible Selection (QAPL_RANDOM_SEED) (Planned)
-- Add env‑driven seed constant and a tiny LCG for reproducible sampling in composite measurement and N0 selection.
-- Tests: two identical runs with the same seed yield identical selection traces.
+Status: DONE
+Dependencies: ajv (dev dependency in package.json)
 
-Estimated effort: 2–3 hours
+### 1.3 Reproducible Selection (QAPL_RANDOM_SEED) (DONE)
+- Added `QAPL_RANDOM_SEED` env-driven constant in `src/constants.js`
+- Created `src/utils/rng.js` — LCG-based seeded RNG
+- Integrated into `QuantumAPL.rand()` method (replaces `Math.random()` at selection sites)
+- Tests: `tests/test_seeded_selection.js` verifies deterministic behavior with same seed
+
+**Usage:**
+```bash
+# Reproducible run
+QAPL_RANDOM_SEED=12345 node tests/test_seeded_selection.js
+
+# Or with the CLI
+QAPL_RANDOM_SEED=42 qapl-run --steps 3 --mode measured --output out.json
+```
+
+**Scope:**
+- N0 operator selection (selectN0Operator)
+- Composite measurement branch selection (measure)
+
+Status: DONE
 Dependencies: None
-Priority: MEDIUM
 
 ## 🎯 Phase 2: Refactors (Priority: MEDIUM)
 - Replace inline operator weighting multipliers in the engine with constants from src/constants.js

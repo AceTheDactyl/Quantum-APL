@@ -9,3 +9,4 @@ __pycache__/
 /bridge_run.json
 .coverage
 htmlcov/
+node_modules/

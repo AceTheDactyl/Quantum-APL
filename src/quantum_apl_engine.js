@@ -3,6 +3,7 @@
 // Von Neumann measurement formalism with Lindblad dissipation
 // ================================================================
 const CONST = require('./constants');
+const { makeEngineRng } = require('./utils/rng');
 
 /**
  * Complex number class for quantum state representation
@@ -444,18 +445,29 @@ class QuantumAPL {
         this.z = 0.5;
         this.phi = 0;
         this.entropy = 0;
-        
+
         // Measurement history
         this.measurementHistory = [];
-        
+
         this.zBiasGain = typeof config.zBiasGain === 'number' ? config.zBiasGain : 0.05;
         this.zBiasSigma = typeof config.zBiasSigma === 'number' ? config.zBiasSigma : 0.18;
-        
+
         // Time
         this.time = 0;
 
+        // Reproducible RNG (null = use Math.random)
+        this.rng = makeEngineRng();
+
         this.helixAdvisor = new HelixOperatorAdvisor();
         this.lastHelixHints = this.helixAdvisor.describe(this.z);
+    }
+
+    /**
+     * Return a random number in [0, 1).
+     * Uses seeded RNG if QAPL_RANDOM_SEED is set, otherwise Math.random().
+     */
+    rand() {
+        return this.rng ? this.rng.next() : Math.random();
     }
 
     // ================================================================
@@ -609,7 +621,7 @@ class QuantumAPL {
         // Selective collapse: ρ' = P ρ P / P(outcome)
         let collapsed = false;
         
-        if (Math.random() < probability) {
+        if (this.rand() < probability) {
             // Measurement succeeded
             this.rho = projector.mul(this.rho).mul(projector);
             if (probability > 1e-10) {
@@ -831,7 +843,7 @@ class QuantumAPL {
         }
         
         // Sample from Born distribution
-        const r = Math.random();
+        const r = this.rand();
         let cumulative = 0;
         let selectedIdx = 0;
         
