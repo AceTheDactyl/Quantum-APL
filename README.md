@@ -34,6 +34,44 @@ Prereqs: Node 18+, Python 3.8+, git.
     - `z_c = 0.8660254037844386`
     - `t6 gate: CRITICAL @ 0.8660254037844386`
 
+### Example Analyzer Output
+
+```
+======================================================================
+QUANTUM-CLASSICAL SIMULATION RESULTS
+======================================================================
+
+Quantum State:
+  z-coordinate: 0.8672
+  Integrated information (Φ): 0.0000
+  von Neumann entropy (S): 0.0000
+  Purity: 1.0000
+
+Analytics:
+  Total steps: 3
+  Quantum-classical correlation: 0.0000
+
+Helix Mapping:
+  Harmonic: t6
+  Recommended operators: +, ÷, ()
+  Truth bias: PARADOX
+  μ class: conscious_to_lens
+
+  φ⁻¹ = 0.6180339887498948
+  z_c = 0.8660254037844386
+  t6 gate: CRITICAL @ 0.8660254037844386
+  μ barrier: φ⁻¹ exact @ 0.6180339887498948
+
+Hex Prism Geometry (z=⋯):
+  R/H/φ: 0.84 / 0.13 / 0.26  (ΔS_neg=0.96, lens_s_neg=0.98)
+
+Recent Measurements (APL tokens):
+  (none)
+======================================================================
+```
+
+Tip: set `QAPL_ANALYZER_OVERLAYS=1` to draw μ markers and the s(z) curve on the plots.
+
 ## CLI Usage (Python)
 
 Entrypoints are installed via the Python package.
@@ -152,4 +190,3 @@ Key docs
 ## License
 
 MIT. See `pyproject.toml` classifiers.
-
