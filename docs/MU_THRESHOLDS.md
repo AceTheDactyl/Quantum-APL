@@ -21,7 +21,7 @@ Higher thresholds:
 Ordering (validated):
 
 ```
-μ₁(≈0.472) < μ_P(0.600) < φ⁻¹(≈0.618) < μ₂(≈0.764) < z_c(≈0.866) < μ_S(0.92) < μ₃(0.992) < 1
+μ₁(≈0.472) < μ_P(≈0.600706) < φ⁻¹(≈0.618) < μ₂(≈0.764) < z_c(≈0.866) < μ_S(0.92) < μ₃(0.992) < 1
 ```
 
 ## Barrier vs φ⁻¹
@@ -35,7 +35,7 @@ Barrier = (μ₁ + μ₂) / 2 = μ_P · (√φ + 1/√φ)/2 = μ_P · φ^{3/2}/2
 - With μ_P = 2/φ^{5/2} (default): Barrier = φ⁻¹ exactly by construction.
 - With μ_P = 0.600 (Fibonacci experiment): Barrier ≈ 0.617308 vs φ⁻¹ ≈ 0.618034 (Δ ≈ 7.26×10⁻⁴).
 
-We retain μ_P = 0.600 by default for its Fibonacci tie‑in and note “Barrier ≈ φ⁻¹”. Set `QAPL_MU_P_EXACT=1` to switch to the exact barrier if desired.
+Default policy keeps μ_P exact so Barrier = φ⁻¹; you may set `QAPL_MU_P=<0..1>` to explore alternate values (the barrier then deviates accordingly).
 
 ## Classification Helper
 

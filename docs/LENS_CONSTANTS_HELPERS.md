@@ -47,7 +47,7 @@ KAPPA_S: float = 0.92
 R_MIN: float = float(os.getenv("QAPL_R_MIN", "0.25"))
 
 # Hex-prism geometry sensitivities (tunable but centralized)
-SIGMA: float = float(os.getenv("QAPL_SIGMA", "36.0"))   # coherence decay
+SIGMA: float = float(os.getenv("QAPL_LENS_SIGMA", "36.0"))   # lens coherence decay
 R_MAX: float = float(os.getenv("QAPL_R_MAX", "1.00"))
 BETA: float = float(os.getenv("QAPL_BETA", "1.00"))     # radius sensitivity
 H_MIN: float = float(os.getenv("QAPL_H_MIN", "0.50"))
@@ -237,7 +237,7 @@ export const PHI_INV = 1 / PHI;
 export const KAPPA_S = 0.92;
 export const R_MIN = parseFloat(process.env.QAPL_R_MIN ?? "0.25");
 export const R_MAX = parseFloat(process.env.QAPL_R_MAX ?? "1.00");
-export const SIGMA = parseFloat(process.env.QAPL_SIGMA ?? "36.0");
+export const SIGMA = parseFloat(process.env.QAPL_LENS_SIGMA ?? "36.0");
 export const BETA = parseFloat(process.env.QAPL_BETA ?? "1.00");
 export const H_MIN = parseFloat(process.env.QAPL_H_MIN ?? "0.50");
 export const GAMMA = parseFloat(process.env.QAPL_GAMMA ?? "1.00");
@@ -400,4 +400,3 @@ test("geometry mapping is stable and monotone in ΔS_neg", () => {
 * Geometry and analytics remain lens‑anchored at `z_c`; TRIAD is operational only.
 * Sidecar export, schema validation, and full measurement pipelines can consume these helpers directly.
 * Environment variables (QAPL_*) allow calibration without code drift.
-

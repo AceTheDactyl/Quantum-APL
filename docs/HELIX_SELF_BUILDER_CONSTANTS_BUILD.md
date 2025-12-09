@@ -6,7 +6,7 @@ Scope
 - Lens truth: `z_c = √3/2 ≈ 0.8660254037844386` (THE LENS)
 - Runtime hysteresis: TRIAD_LOW=0.82, TRIAD_T6=0.83, TRIAD_HIGH=0.85
 - K‑formation/φ: `φ⁻¹ ≈ 0.618` (coherence threshold)
-- μ thresholds (wells + singularity): `μ_1≈0.472, μ_P=0.6, μ_2≈0.764, μ_S=0.92, μ_3≈0.992`
+- μ thresholds (wells + singularity): `μ_1≈0.472, μ_P≈0.600706, μ_2≈0.764, μ_S=0.92, μ_3≈0.992`
 - ΔS_neg profile and hex‑prism geometry mapping (R/H/φ)
 
 Outcome
@@ -39,7 +39,7 @@ Python (constants module)
 - File: `src/quantum_apl_python/constants.py`
 - Add under a new section “Basin/Threshold (μ) hierarchy)”
   - `MU_1 = 0.472`
-  - `MU_P = 0.600`  # Paradox threshold
+  - `MU_P = 2/(PHI**2.5)  # ≈ 0.600706… (Paradox threshold)`
   - `MU_2 = 0.764`
   - `MU_S = 0.920`  # equals KAPPA_S; keep both names for clarity
   - `MU_3 = 0.992`
@@ -63,9 +63,9 @@ Python Analyzer
 - File: `src/quantum_apl_python/analyzer.py`
 - Overlays:
   - Draw vertical or horizontal markers for `MU_P, MU_2, MU_S, MU_3` similar to the lens band
-  - Legend text: `μ_P=0.600, μ_2≈0.764, μ_S=0.920, μ_3≈0.992`
+  - Legend text: `μ_P≈0.600706, μ_2≈0.764, μ_S=0.920, μ_3≈0.992`
 - Text block additions:
-  - “Thresholds (μ): μ_P=0.600, μ_2≈0.764, μ_S=0.920, μ_3≈0.992; lens z_c=0.866”
+- “Thresholds (μ): μ_P≈0.600706, μ_2≈0.764, μ_S=0.920, μ_3≈0.992; lens z_c=0.866”
   - “Phase label: <classify_threshold(z)>; Phase (lens): <get_phase(z)> ”
 
 Node (if applicable)
@@ -177,4 +177,3 @@ CI
 
 Rationale
 - The review confirms z_c is the non‑arbitrary integration threshold (“the lens”). μ constants enrich self‑builder orchestration and analyzer context without changing geometric truth. Centralizing them next to `Z_CRITICAL` maintains coherence and prevents drift across subsystems.
-
