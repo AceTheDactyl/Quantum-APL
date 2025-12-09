@@ -24,8 +24,9 @@ jobs:
           if [ -z "$list" ]; then
             list="0.41 0.52 0.70 0.73 0.80"
           fi
-          # Add explicit lens-adjacent probes: 0.85 (TRIAD_HIGH), z_c exact, and 0.90 (t7 onset zone)
-          extras="0.85 0.8660254037844386 0.90"
+          # Add explicit lens-adjacent and upper-phase probes:
+          # 0.85 (TRIAD_HIGH), z_c exact, 0.90 (t7 onset zone), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX)
+          extras="0.85 0.8660254037844386 0.90 0.92 0.97"
           combined=$(printf "%s\n" $list $extras | awk 'NF>0' | awk '!seen[$0]++')
           # Build JSON array
           arr="["
