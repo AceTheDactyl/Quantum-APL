@@ -199,9 +199,7 @@ module.exports = Object.freeze({
       const v = parseFloat(process.env.QAPL_MU_P);
       if (Number.isFinite(v) && v > 0 && v < 1) return v;
     }
-    const fib = hasProc && (process.env.QAPL_MU_P_FIB === '1');
-    const exactFlag = hasProc ? process.env.QAPL_MU_P_EXACT : undefined;
-    if (fib || exactFlag === '0') return 0.600;
+    // Default: exact value ensuring Barrier = φ^{-1}
     return (2 / Math.pow(PHI, 2.5));
   },
   get MU_1() {

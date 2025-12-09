@@ -11,7 +11,7 @@ Let φ = (1 + √5)/2 and choose a paradox threshold μ_P. Define wells
 
 Then the double‑well ratio is exact: μ₂ / μ₁ = φ.
 
-Default: μ_P := 2/φ^{5/2} ≈ 0.60072 (exact barrier at φ⁻¹). Optional Fibonacci choice: set `QAPL_MU_P_FIB=1` to use μ_P = 0.600 (3/5). You may also set `QAPL_MU_P=<0..1>` to an explicit value for experiments.
+Default: μ_P := 2/φ^{5/2} ≈ 0.60072 (exact barrier at φ⁻¹). You may also set `QAPL_MU_P=<0..1>` to an explicit experimental value.
 
 Higher thresholds:
 
@@ -32,8 +32,8 @@ Define the barrier as the arithmetic mean of the wells:
 Barrier = (μ₁ + μ₂) / 2 = μ_P · (√φ + 1/√φ)/2 = μ_P · φ^{3/2}/2.
 ```
 
-- With μ_P = 0.600: Barrier ≈ 0.617308, φ⁻¹ ≈ 0.618034 ⇒ Δ ≈ 7.26×10⁻⁴ (≈0.118%).
 - With μ_P = 2/φ^{5/2} (default): Barrier = φ⁻¹ exactly by construction.
+- With μ_P = 0.600 (Fibonacci experiment): Barrier ≈ 0.617308 vs φ⁻¹ ≈ 0.618034 (Δ ≈ 7.26×10⁻⁴).
 
 We retain μ_P = 0.600 by default for its Fibonacci tie‑in and note “Barrier ≈ φ⁻¹”. Set `QAPL_MU_P_EXACT=1` to switch to the exact barrier if desired.
 

@@ -21,8 +21,9 @@ const C = require('../src/constants');
   // Barrier proximity
   const barrier = (mu1 + mu2) / 2;
   const diff = Math.abs(barrier - (1/C.PHI));
-  const fib = (typeof process !== 'undefined' && process.env && (process.env.QAPL_MU_P_FIB === '1' || process.env.QAPL_MU_P_EXACT === '0'));
-  const tol = fib ? 2e-3 : 1e-6; // exact by default; wider tolerance for Fibonacci option
+  // Default is exact; if user explicitly overrides QAPL_MU_P, relax check
+  const hasOverride = (typeof process !== 'undefined' && process.env && process.env.QAPL_MU_P);
+  const tol = hasOverride ? 2e-3 : 1e-6;
   assert(diff < tol, `barrier not aligned with φ^{-1}: Δ=${diff}, tol=${tol}`);
   console.log('μ thresholds tests passed');
 })();

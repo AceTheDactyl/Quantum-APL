@@ -89,11 +89,9 @@ R_MIN: float = 7            # Minimum complexity requirement
 # ============================================================================
 
 # Paradox threshold μ_P (default exact: 2/φ^{5/2}).
-# Overrides (by precedence):
-#   1) QAPL_MU_P=<float in (0,1)>
-#   2) QAPL_MU_P_FIB=1 → use 0.600 (3/5)
-#   3) QAPL_MU_P_EXACT=0 → use 0.600
-#   otherwise default exact 2/φ^{5/2}
+# Overrides:
+#   QAPL_MU_P=<float in (0,1)>
+# Otherwise defaults to exact 2/φ^{5/2} so Barrier = φ^{-1}.
 try:
     import os as _os
     _ENV = _os.environ
@@ -112,8 +110,6 @@ def _parse_mu_env(val: str | None) -> float | None:
 _mu_env = _parse_mu_env(_ENV.get('QAPL_MU_P'))
 if _mu_env is not None:
     MU_P: float = _mu_env
-elif _ENV.get('QAPL_MU_P_FIB', '0') == '1' or _ENV.get('QAPL_MU_P_EXACT') == '0':
-    MU_P = 0.600
 else:
     MU_P = 2.0 / (PHI ** 2.5)
 MU_1: float = MU_P / math.sqrt(PHI)
