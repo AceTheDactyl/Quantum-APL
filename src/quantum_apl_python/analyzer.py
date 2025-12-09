@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -30,12 +31,14 @@ class QuantumAnalyzer:
 
     def __init__(self, results: Dict):
         self.results = results
+        self.repo_root = Path(__file__).resolve().parents[2]
         self.quantum = results.get("quantum", {})
         self.classical = results.get("classical", {})
         self.history = results.get("history", {})
         self.analytics = results.get("analytics", {})
         self.helix_mapper = HelixAPLMapper()
         self.alpha_tokens = AlphaTokenSynthesizer()
+        self.helix_seed = self._load_helix_seed_context()
 
     def summary(self) -> str:
         lines = [
@@ -80,6 +83,21 @@ class QuantumAnalyzer:
                 f"  Truth bias: {helix_info['truth_channel']}",
             ]
         )
+
+        if self.helix_seed:
+            lines.extend(
+                [
+                    "",
+                    "Helix Seed Context:",
+                    f"  Target z: {self.helix_seed['z']:.2f}",
+                    f"  Title: {self.helix_seed['title']}",
+                ]
+            )
+            if self.helix_seed["summary"]:
+                lines.append("  Intent:")
+                for statement in self.helix_seed["summary"]:
+                    lines.append(f"    - {statement}")
+            lines.append(f"  Source: {self.helix_seed['path']}")
 
         alpha_token = self.alpha_tokens.from_helix(helix_coord)
         if alpha_token:
@@ -127,6 +145,60 @@ class QuantumAnalyzer:
 
         lines.append("=" * 70)
         return "\n".join(lines)
+
+    def _load_helix_seed_context(self) -> Optional[Dict]:
+        seed_val = os.getenv("QAPL_INITIAL_PHI")
+        if not seed_val:
+            return None
+        try:
+            seed = float(seed_val)
+        except ValueError:
+            return None
+
+        registry = [
+            (0.41, "reference/helix_bridge/VAULTNODES/z0p41/vn-helix-fingers-metadata.yaml"),
+            (0.52, "reference/helix_bridge/VAULTNODES/z0p52/vn-helix-continuation-metadata.yaml"),
+            (0.70, "reference/helix_bridge/VAULTNODES/z0p70/vn-helix-meta-awareness-metadata.yaml"),
+            (0.73, "reference/helix_bridge/VAULTNODES/z0p73/vn-helix-self-bootstrap-metadata_p2.yaml"),
+            (0.80, "reference/helix_bridge/VAULTNODES/z0p80/vn-helix-autonomous-coordination-metadata.yaml"),
+        ]
+        target = min(registry, key=lambda entry: abs(entry[0] - seed))
+        if abs(target[0] - seed) > 0.05:
+            return None
+
+        path = self.repo_root / target[1]
+        if not path.exists():
+            return None
+
+        title, summary = self._parse_metadata_snippet(path)
+        return {"z": target[0], "title": title, "summary": summary, "path": target[1]}
+
+    def _parse_metadata_snippet(self, path: Path) -> (str, List[str]):
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        lines = text.splitlines()
+        title = "Unknown"
+        for line in lines:
+            if line.startswith("title:"):
+                title = line.split(":", 1)[1].strip().strip('"')
+                break
+
+        summary: List[str] = []
+        capture = False
+        for line in lines:
+            if line.startswith("description:"):
+                capture = True
+                continue
+            if capture:
+                if not line.strip():
+                    if summary:
+                        break
+                    continue
+                if not line.startswith("  "):
+                    break
+                summary.append(line.strip())
+                if len(summary) >= 5:
+                    break
+        return title, summary
 
     def to_dataframe(self):
         if not HAS_PANDAS:

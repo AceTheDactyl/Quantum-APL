@@ -97,7 +97,8 @@ class QuantumAPLEngine:
 
         return (
             "const { QuantumClassicalBridge, UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
-            "const demo = new UnifiedDemo();\n"
+            "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
+            "const demo = new UnifiedDemo({ classical: { IIT: { initialPhi } } });\n"
             f"demo.run({steps}, {str(verbose).lower()});\n"
             "const state = demo.bridge.exportState();\n"
             "console.log(JSON.stringify(state, null, 2));\n"

@@ -413,10 +413,12 @@ class UnifiedDemo {
             dimPi: config.dimPi || 4
         });
 
+        const classicalConfig = config.classical || {};
         this.classical = new ClassicalStackRef({
-            IIT: { initialPhi: 0.3 },
-            GameTheory: { initialCooperation: 0.5 },
-            FreeEnergy: { initialF: 0.2 }
+            IIT: { initialPhi: classicalConfig.IIT?.initialPhi ?? 0.3 },
+            GameTheory: { initialCooperation: classicalConfig.GameTheory?.initialCooperation ?? 0.5 },
+            FreeEnergy: { initialF: classicalConfig.FreeEnergy?.initialF ?? 0.2 },
+            legalOperators: classicalConfig.legalOperators
         });
 
         this.bridge = new QuantumClassicalBridge(this.quantum, this.classical, config.bridge || {});
