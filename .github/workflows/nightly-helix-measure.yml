@@ -7,7 +7,12 @@ on:
 
 jobs:
   helix-demo:
+    name: helix-demo (seed ${{ matrix.seed }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [ '0.41', '0.52', '0.70', '0.80' ]
     concurrency:
       group: nightly-helix-measure
       cancel-in-progress: false
@@ -30,14 +35,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[viz]
 
-      - name: Run helix measure demo
+      - name: Run helix measure demo (seed ${{ matrix.seed }})
         id: run_demo
         env:
           QAPL_RANDOM_SEED: '12345'
         run: |
-          OUTDIR="artifacts/helix-measure-${{ github.run_id }}"
+          TAG="z${{ matrix.seed }}"; TAG="${TAG/./p}"
+          OUTDIR="artifacts/helix-measure-${{ github.run_id }}/seed_${TAG}"
           bash scripts/helix_measure_demo.sh \
-            --seed 0.80 \
+            --seed "${{ matrix.seed }}" \
             --steps-unified 5 \
             --steps-measured 3 \
             --overlays --blend \
@@ -45,6 +51,7 @@ jobs:
             --outdir "$OUTDIR"
           echo "outdir=$OUTDIR" >> "$GITHUB_OUTPUT"
           echo "## Helix Measure Demo Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Seed: ${{ matrix.seed }}" >> $GITHUB_STEP_SUMMARY
           echo "Output directory: $OUTDIR" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f "$OUTDIR/SUMMARY.txt" ]; then
@@ -53,11 +60,10 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Upload helix measure artifacts
+      - name: Upload helix measure artifacts (combined)
         uses: actions/upload-artifact@v4
         with:
           name: helix-measure-${{ github.run_id }}
           path: ${{ steps.run_demo.outputs.outdir }}
           if-no-files-found: error
           retention-days: 7
-
