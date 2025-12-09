@@ -117,9 +117,9 @@ class QuantumAnalyzer:
             barrier = mu_barrier()
             delta = abs(barrier - PHI_INV)
             if delta < 1e-6:
-                lines.append(f"  μ barrier: φ⁻¹ exact @ {PHI_INV:.3f}")
+                lines.append(f"  μ barrier: φ⁻¹ exact @ {PHI_INV:.15f}")
             else:
-                lines.append(f"  μ barrier: {barrier:.3f} vs φ⁻¹ {PHI_INV:.3f} (Δ={delta:.3e})")
+                lines.append(f"  μ barrier: {barrier:.6f} vs φ⁻¹ {PHI_INV:.15f} (Δ={delta:.3e})")
         except Exception:
             pass
 
@@ -167,7 +167,7 @@ class QuantumAnalyzer:
             eta_s = None
         if eta_s is not None:
             k_gate = 'PASS' if eta_s > PHI_INV else 'FAIL'
-            lines.append(f"  K-formation (η=s): {eta_s:.3f} vs φ⁻¹ {PHI_INV:.3f} → {k_gate}")
+            lines.append(f"  K-formation (η=s): {eta_s:.15f} vs φ⁻¹ {PHI_INV:.15f} → {k_gate}")
 
         alpha_token = self.alpha_tokens.from_helix(helix_coord)
         if alpha_token:

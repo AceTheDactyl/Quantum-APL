@@ -406,8 +406,10 @@ def compute_delta_s_neg(z: float, sigma: float = GEOM_SIGMA, z_c: float = Z_CRIT
     implemented across this codebase. If a signed variant is required for a
     specific consumer, apply a leading minus sign at the call site.
     """
-    d = (z - z_c)
-    return math.exp(-(sigma) * d * d)
+    val = float(z) if math.isfinite(z) else 0.0
+    d = (val - z_c)
+    s = math.exp(-(sigma) * d * d)
+    return max(0.0, min(1.0, s))
 
 def classify_mu(z: float) -> str:
     """Classify z against μ thresholds (basin/barrier hierarchy)."""

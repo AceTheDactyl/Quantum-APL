@@ -89,6 +89,7 @@ function exportGeometrySidecar(z, version = '1.0.0') {
       Z_CRITICAL: CONST.Z_CRITICAL,
       GEOM_SIGMA: CONST.GEOM_SIGMA,
       LENS_SIGMA: CONST.LENS_SIGMA,
+      PHI_INV: CONST.PHI_INV,
       GEOM_R_MAX: CONST.GEOM_R_MAX,
       GEOM_BETA: CONST.GEOM_BETA,
       GEOM_H_MIN: CONST.GEOM_H_MIN,

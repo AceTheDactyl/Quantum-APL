@@ -19,7 +19,7 @@ const C = require('../src/constants');
   assert(rel < 1e-12, 'μ2/μ1 should equal φ (within fp rounding)');
 
   // Barrier proximity
-  const barrier = (mu1 + mu2) / 2;
+  const barrier = C.MU_BARRIER;
   const diff = Math.abs(barrier - (1/C.PHI));
   // Default is exact; if user explicitly overrides QAPL_MU_P, relax check
   const hasOverride = (typeof process !== 'undefined' && process.env && process.env.QAPL_MU_P);

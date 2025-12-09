@@ -408,7 +408,7 @@ class HelixOperatorAdvisor {
         const harmonic = this.harmonicFromZ(clamped);
         const CONST = require('./constants');
         const s = CONST.computeDeltaSNeg(clamped, CONST.LENS_SIGMA);
-        const w_pi = clamped >= CONST.Z_CRITICAL ? s : 0.0;
+        const w_pi = clamped >= CONST.Z_CRITICAL ? Math.max(0, Math.min(1, s)) : 0.0;
         const w_loc = 1.0 - w_pi;
         const muClass = (typeof CONST.classifyThreshold === 'function') ? CONST.classifyThreshold(clamped) : undefined;
         return {

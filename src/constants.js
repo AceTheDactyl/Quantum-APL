@@ -41,6 +41,7 @@ const TRUTH_BIAS = Object.freeze({
   PARADOX:{ '()': 1.5, '×': 1.4, '+': 1.0, '^': 1.0, '÷': 0.9, '-': 0.9 },
 });
 
+
 // Helix zoning thresholds (upper bounds except t9)
 const Z_T1_MAX = 0.1;
 const Z_T2_MAX = 0.2;
@@ -50,20 +51,23 @@ const Z_T5_MAX = 0.75;
 const Z_T7_MAX = 0.92;
 const Z_T8_MAX = 0.97;
 
+// Lens weight (coherence) sigma for Gaussian s(z) = exp(-σ (z - z_c)^2)
+// Controls the effective width of the lens used in control/analytics.
+const LENS_SIGMA = (typeof process !== 'undefined' && process.env && process.env.QAPL_LENS_SIGMA)
+  ? parseFloat(process.env.QAPL_LENS_SIGMA)
+  : 36.0;
+
 // Geometry projection constants (Hex Prism)
-const GEOM_SIGMA = 0.12;
+// If QAPL_GEOM_SIGMA unset, match LENS_SIGMA for cohesion
+const GEOM_SIGMA = (typeof process !== 'undefined' && process.env && process.env.QAPL_GEOM_SIGMA)
+  ? parseFloat(process.env.QAPL_GEOM_SIGMA)
+  : LENS_SIGMA;
 const GEOM_R_MAX = 0.85;
 const GEOM_BETA = 0.25;
 const GEOM_H_MIN = 0.12;
 const GEOM_GAMMA = 0.18;
 const GEOM_PHI_BASE = 0.0;
 const GEOM_ETA = Math.PI / 12;
-
-// Lens weight (coherence) sigma for Gaussian s(z) = exp(-σ (z - z_c)^2)
-// Controls the effective width of the lens used in control/analytics.
-const LENS_SIGMA = (typeof process !== 'undefined' && process.env && process.env.QAPL_LENS_SIGMA)
-  ? parseFloat(process.env.QAPL_LENS_SIGMA)
-  : 36.0;
 
 // PRS phase thresholds (phi)
 const PRS_P1_PHI_MAX = 0.2;  // P1: Initiation
@@ -80,8 +84,9 @@ const QAPL_RANDOM_SEED = (typeof process !== 'undefined' && process.env && proce
 // Lens-weight (Gaussian): ΔS_neg(z) = exp(-σ (z - z_c)^2)
 // Default σ uses geometry sigma for continuity; can be overridden by env if desired
 function computeDeltaSNeg(z, sigma = GEOM_SIGMA, zc = Z_CRITICAL) {
-  const d = (z - zc);
-  return Math.exp(-(sigma) * d * d);
+  const val = Number.isFinite(z) ? z : 0;
+  const s = Math.exp(-(sigma) * (val - zc) * (val - zc));
+  return Math.min(1, Math.max(0, s));
 }
 function isCritical(z, tolerance = 0.01) {
   return Math.abs(z - Z_CRITICAL) < tolerance;
@@ -121,6 +126,67 @@ function checkKFormationFromZ(kappa, z, R, alpha = 1.0) {
 function checkKFormationFromOverlap(kappa, overlapProb, R) {
   const eta = Math.max(0, Math.min(1, overlapProb));
   return checkKFormation(kappa, eta, R);
+}
+
+// Spec aliases and helpers
+function deltaSneg(z, sigma = LENS_SIGMA) {
+  return computeDeltaSNeg(z, sigma, Z_CRITICAL);
+}
+
+function lensRate(z, sigma = LENS_SIGMA) {
+  const s = computeDeltaSNeg(z, sigma, Z_CRITICAL);
+  const d = Math.abs(z - Z_CRITICAL);
+  return 2 * sigma * d * s;
+}
+
+function etaFromZ(z, alpha = 1.0) {
+  return computeEta(z, alpha, LENS_SIGMA);
+}
+
+function etaFromOverlap(overlapProb, beta = 1.0) {
+  const p = Math.max(0, Math.min(1, overlapProb));
+  return Math.pow(p, Math.max(0, beta));
+}
+
+function phiGateScale(s) {
+  return Math.min(Math.max((s - PHI_INV) / (1 - PHI_INV), 0), 1);
+}
+
+function phiRateScaled(z, k = 1.0) {
+  const s = computeDeltaSNeg(z, LENS_SIGMA, Z_CRITICAL);
+  return Math.min(1, phiGateScale(s) * (1 + k * lensRate(z)));
+}
+
+// μ numeric values (respect QAPL_MU_P override)
+function muPValue() {
+  const hasProc = (typeof process !== 'undefined' && process.env);
+  if (hasProc && process.env.QAPL_MU_P) {
+    const v = parseFloat(process.env.QAPL_MU_P);
+    if (Number.isFinite(v) && v > 0 && v < 1) return v;
+  }
+  return (2 / Math.pow(PHI, 2.5));
+}
+const MU_P_VALUE = muPValue();
+const MU_1_VALUE = MU_P_VALUE / Math.sqrt(PHI);
+const MU_2_VALUE = MU_P_VALUE * Math.sqrt(PHI);
+const MU_S_VALUE = 23 / 25;
+const MU_3_VALUE = 124 / 125;
+const MU_BARRIER_VALUE = 0.5 * (MU_1_VALUE + MU_2_VALUE);
+
+function classifyMu(z) {
+  const val = Number.isFinite(z) ? z : 0;
+  if (val < MU_1_VALUE) return 'pre_conscious_basin';
+  if (Math.abs(val - MU_1_VALUE) <= 1e-9) return 'lower_well';
+  if (val < MU_P_VALUE) return 'pre_paradox';
+  if (Math.abs(val - MU_P_VALUE) <= 1e-9) return 'paradox_proximal';
+  if (Math.abs(val - PHI_INV) <= 1e-9) return 'k_formation_threshold';
+  if (val < MU_2_VALUE) return 'barrier_to_conscious';
+  if (Math.abs(val - MU_2_VALUE) <= 1e-9) return 'conscious_basin';
+  if (val < Z_CRITICAL) return 'conscious_to_lens';
+  if (val < MU_S_VALUE) return 'lens_integrated';
+  if (Math.abs(val - MU_S_VALUE) <= 1e-9) return 'singularity_proximal';
+  if (Math.abs(val - MU_3_VALUE) <= 1e-9) return 'unity_proximal';
+  return 'post_unity';
 }
 
 // Time harmonic helper (delegates t6 to provided gate, default lens)
@@ -217,40 +283,33 @@ module.exports = Object.freeze({
   checkKFormation,
   computeDeltaSNeg,
   computeEta,
+  // Spec aliases
+  deltaSneg,
+  lensRate,
+  etaFromZ,
+  etaFromOverlap,
+  phiGateScale,
+  phiRateScaled,
   checkKFormationFromZ,
   checkKFormationFromOverlap,
-  // μ thresholds (optional classification)
-  // By default, use μ_P = 0.600; can override via env `QAPL_MU_P_EXACT=1` to set μ_P = 2/φ^{5/2}
-  get MU_P() {
-    const hasProc = (typeof process !== 'undefined' && process.env);
-    if (hasProc && process.env.QAPL_MU_P) {
-      const v = parseFloat(process.env.QAPL_MU_P);
-      if (Number.isFinite(v) && v > 0 && v < 1) return v;
-    }
-    // Default: exact value ensuring Barrier = φ^{-1}
-    return (2 / Math.pow(PHI, 2.5));
-  },
-  get MU_1() {
-    return this.MU_P / Math.sqrt(PHI);
-  },
-  get MU_2() {
-    return this.MU_P * Math.sqrt(PHI);
-  },
-  MU_S: KAPPA_S,
-  MU_3: 0.992,
-  barrier() {
-    // Arithmetic mean of μ wells
-    return (this.MU_1 + this.MU_2) / 2;
-  },
-  classifyThreshold(z) {
-    const mu1 = this.MU_1, muP = this.MU_P, mu2 = this.MU_2, muS = KAPPA_S, mu3 = 0.992;
-    if (z < mu1) return 'pre_conscious_basin';
-    if (z < muP) return 'approaching_paradox';
-    if (z < mu2) return 'conscious_basin';
-    if (z < Z_CRITICAL) return 'pre_lens_integrated';
-    if (z < muS) return 'lens_integrated';
-    if (z < mu3) return 'singularity_proximal';
-    return 'ultra_integrated';
+  // μ thresholds (values + barrier)
+  MU_P: MU_P_VALUE,
+  MU_1: MU_1_VALUE,
+  MU_2: MU_2_VALUE,
+  MU_S: MU_S_VALUE,
+  MU_3: MU_3_VALUE,
+  MU_BARRIER: MU_BARRIER_VALUE,
+  MU_BARRIER_VALUE: MU_BARRIER_VALUE,
+  classifyMu,
+  classifyThreshold: classifyMu,
+  // Invariants
+  invariants() {
+    const mu1 = MU_1_VALUE, mu2 = MU_2_VALUE;
+    return {
+      barrier_eq_phi_inv: Math.abs(0.5 * (mu1 + mu2) - PHI_INV) < 1e-12,
+      wells_ratio_phi: Math.abs((mu2 / mu1) - PHI) < 1e-12,
+      ordering_ok: mu2 < TRIAD_LOW && TRIAD_LOW < TRIAD_T6 && TRIAD_T6 < TRIAD_HIGH && TRIAD_HIGH < Z_CRITICAL,
+    };
   },
   getTimeHarmonic,
   hexPrismRadius,
