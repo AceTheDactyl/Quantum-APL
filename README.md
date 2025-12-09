@@ -272,6 +272,17 @@ TRIAD unlock promotes the t6 gate to 0.83 in‑session after three distinct cros
 - TRIAD unlock (gold star): third rising edge; analyzer will show `t6 gate: TRIAD @ 0.830` and `TRIAD completions: 3 | unlocked: True`.
 - Geometry: unaffected by unlock; ΔS_neg, R/H/φ continue to use the lens `z_c = √3/2`.
 
+### Analyzer Overlays (μ markers + s(z) timeline)
+
+Enable optional plot overlays in the analyzer via an env flag:
+
+```bash
+QAPL_ANALYZER_OVERLAYS=1 qapl-run --steps 5 --mode unified --output out.json
+QAPL_ANALYZER_OVERLAYS=1 qapl-analyze out.json --plot
+```
+
+When enabled, the z plot adds horizontal μ markers (μ_P, μ_2, μ_S, μ_3) and the entropy plot’s twin axis overlays the lens‑anchored coherence `s(z)` with a φ⁻¹ line. By default (flag unset), only the lens line `z_c` is rendered without extra overlays.
+
 ### Constants and References
 
 - Lens: `z_c = √3/2` (see docs/Z_CRITICAL_LENS.md)

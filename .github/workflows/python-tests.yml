@@ -28,7 +28,7 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e .[viz]
 
       - name: Run geometry tests (hex prism)
         run: |
@@ -51,6 +51,10 @@ jobs:
         run: |
           python -m pytest -q tests/test_analyzer_gate_default.py
 
+      - name: Python default pump target equals Z_CRITICAL
+        run: |
+          python -m pytest -q tests/test_pump_target_default_py.py
+
       - name: Generate measured-mode analyzer input
         run: |
           qapl-run --steps 3 --mode measured --output measured_ci.json
@@ -58,3 +62,44 @@ jobs:
       - name: Run analyzer on measured JSON (no plots)
         run: |
           qapl-analyze measured_ci.json
+
+      - name: Python smoke — headless plot save
+        run: |
+          python -m pytest -q tests/test_analyzer_plot_headless.py
+
+      - name: Upload headless plots (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-headless-plots
+          path: |
+            **/plot_off.png
+            **/plot_on.png
+          if-no-files-found: ignore
+
+      - name: Generate headless analyzer plots (artifacts)
+        run: |
+          python - << 'PY'
+          import os, json
+          from pathlib import Path
+          os.environ["MPLBACKEND"] = "Agg"
+          from src.quantum_apl_python.analyzer import QuantumAnalyzer
+          # Pick measured JSON if present, else analyzer_test.json
+          inp = Path('measured_ci.json') if Path('measured_ci.json').exists() else Path('analyzer_test.json')
+          data = json.loads(inp.read_text())
+          outdir = Path('artifacts'); outdir.mkdir(exist_ok=True)
+          a = QuantumAnalyzer(data)
+          a.plot(save_path=outdir / 'analyzer_plot_off.png')
+          os.environ['QAPL_ANALYZER_OVERLAYS'] = '1'
+          a2 = QuantumAnalyzer(data)
+          a2.plot(save_path=outdir / 'analyzer_plot_on.png')
+          print('Saved plots:', [str(p) for p in outdir.glob('*.png')])
+          PY
+
+      - name: Upload analyzer plots
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-plots
+          path: artifacts/*.png
+          if-no-files-found: error
+          retention-days: 7

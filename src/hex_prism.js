@@ -74,16 +74,30 @@ function exportGeometrySidecar(z, version = '1.0.0') {
   const deltaSNeg = CONST.computeDeltaSNeg(z, CONST.GEOM_SIGMA);
   const lensSNeg = CONST.computeDeltaSNeg(z, CONST.LENS_SIGMA);
   const vertices = computeHexPrismVertices(z, deltaSNeg);
+  const muLabel = CONST.classifyMu(z);
+  const R = CONST.hexPrismRadius(deltaSNeg);
+  const H = CONST.hexPrismHeight(deltaSNeg);
+  const phi = CONST.hexPrismTwist(deltaSNeg);
   return {
     version,
     z,
     delta_S_neg: deltaSNeg,
     lens_s_neg: lensSNeg,
+    // include top-level geometry for convenience
+    R,
+    H,
+    phi,
+    // include key constants at top-level for downstream consumers
+    PHI_INV: CONST.PHI_INV,
+    Z_CRITICAL: CONST.Z_CRITICAL,
+    LENS_SIGMA: CONST.LENS_SIGMA,
+    GEOM_SIGMA: CONST.GEOM_SIGMA,
+    mu_label: muLabel,
     vertices: vertices.map(v => ({ id: v.id, x: v.x, y: v.y, z: v.z })),
     geometry: {
-      R: CONST.hexPrismRadius(deltaSNeg),
-      H: CONST.hexPrismHeight(deltaSNeg),
-      phi: CONST.hexPrismTwist(deltaSNeg),
+      R,
+      H,
+      phi,
     },
     constants: {
       Z_CRITICAL: CONST.Z_CRITICAL,

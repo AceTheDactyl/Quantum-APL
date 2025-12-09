@@ -33,6 +33,7 @@ def test_analyzer_reports_critical_gate_when_triad_off(tmp_path: Path):
     rc, text = run_cmd(["qapl-analyze", str(out)], env=env)
     assert rc == 0, f"qapl-analyze failed:\n{text}"
 
-    # Smoke assertion: t6 gate reported at CRITICAL @ 0.866 when TRIAD is off
-    assert "t6 gate: CRITICAL @ 0.866" in text, f"Analyzer did not report critical t6 gate:\n{text}"
-
+    # Smoke assertion: t6 gate reported at CRITICAL with full-precision z_c
+    assert "t6 gate: CRITICAL @ 0.8660254037844386" in text, (
+        f"Analyzer did not report critical t6 gate with full precision:\n{text}"
+    )

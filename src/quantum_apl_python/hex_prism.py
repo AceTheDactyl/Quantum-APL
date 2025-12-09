@@ -40,6 +40,8 @@ def prism_params(z: float) -> Dict[str, object]:
         GEOM_PHI_BASE,
         GEOM_ETA,
         LENS_SIGMA,
+        PHI_INV as _PHI_INV,
+        classify_mu as _classify_mu,
     )
 
     z_c = Z_CRITICAL
@@ -71,14 +73,20 @@ def prism_params(z: float) -> Dict[str, object]:
     return {
         "z": z,
         "z_c": z_c,
+        "Z_CRITICAL": z_c,  # top-level alias for consumers
         "sigma": sigma,
+        "GEOM_SIGMA": sigma,  # top-level alias for consumers
         "lens_sigma": LENS_SIGMA,
+        "LENS_SIGMA": LENS_SIGMA,  # top-level alias for consumers
         "delta_s_neg": delta_s_neg,
+        "delta_S_neg": delta_s_neg,  # alias for schema parity
         "lens_s_neg": lens_s_neg,
         "R": radius,
         "H": height,
         "phi": phi,
         "phi_inv": 1.0 / ((1.0 + math.sqrt(5.0)) / 2.0),
+        "PHI_INV": _PHI_INV,  # top-level alias
+        "mu_label": _classify_mu(z),
         "z_top": z_top,
         "z_bot": z_bot,
         "vertices": vertices,

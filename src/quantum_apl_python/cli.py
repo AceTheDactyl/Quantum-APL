@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from .analyzer import QuantumAnalyzer
+from .constants import Z_CRITICAL
 from .engine import QuantumAPLEngine
 
 
@@ -25,9 +26,18 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", type=Path, help="Save results JSON to path")
     parser.add_argument("--js-dir", type=Path, help="Directory containing JS files (defaults to repo root)")
     # Pump controls (z_pump mode)
-    parser.add_argument("--z-pump", nargs="?", const=0.86, type=float,
-                        help="Shortcut: enable z_pump mode with target z (default 0.86); cycles taken from --steps")
-    parser.add_argument("--z-pump-target", type=float, help="Target z for APL pump mode (default: 0.86)")
+    parser.add_argument(
+        "--z-pump",
+        nargs="?",
+        const=Z_CRITICAL,
+        type=float,
+        help=f"Shortcut: enable z_pump mode with target z (default Z_CRITICAL≈{Z_CRITICAL:.16f}); cycles taken from --steps",
+    )
+    parser.add_argument(
+        "--z-pump-target",
+        type=float,
+        help=f"Target z for APL pump mode (default: Z_CRITICAL≈{Z_CRITICAL:.16f})",
+    )
     parser.add_argument("--z-pump-cycles", type=int, help="Cycle count for APL pump mode (default: 120)")
     parser.add_argument("--z-pump-profile", choices=["gentle", "balanced", "aggressive"],
                         help="Pump profile controlling gain/sigma and cadence")

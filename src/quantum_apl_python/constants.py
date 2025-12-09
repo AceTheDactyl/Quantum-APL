@@ -152,7 +152,7 @@ Z_T8_MAX: float = 0.97
 # ============================================================================
 
 GEOM_SIGMA: float = 0.12
-GEOM_R_MAX: float = 0.85
+GEOM_R_MAX: float = 0.85  # radius cap; not a gate (avoid conflation with TRIAD_HIGH)
 GEOM_BETA: float = 0.25
 GEOM_H_MIN: float = 0.12
 GEOM_GAMMA: float = 0.18

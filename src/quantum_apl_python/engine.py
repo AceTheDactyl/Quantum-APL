@@ -97,9 +97,10 @@ class QuantumAPLEngine:
         if mode == "z_pump":
             return (
                 "const { UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
+                "const CONST = require('./src/constants.js');\n"
                 "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
                 "const cycles = Number(process.env.QAPL_PUMP_CYCLES ?? 120);\n"
-                "const targetZ = Number(process.env.QAPL_PUMP_TARGET ?? 0.86);\n"
+                "const targetZ = Number(process.env.QAPL_PUMP_TARGET ?? CONST.Z_CRITICAL);\n"
                 "const profile = String(process.env.QAPL_PUMP_PROFILE || 'balanced');\n"
                 "const gain = (process.env.QAPL_PUMP_GAIN!==undefined)? Number(process.env.QAPL_PUMP_GAIN) : undefined;\n"
                 "const sigma = (process.env.QAPL_PUMP_SIGMA!==undefined)? Number(process.env.QAPL_PUMP_SIGMA) : undefined;\n"
@@ -138,3 +139,8 @@ class QuantumAPLEngine:
             "const state = demo.bridge.exportState();\n"
             "console.log(JSON.stringify(state, null, 2));\n"
         )
+
+def default_pump_target() -> float:
+    """Return default pump target used by the runner (Z_CRITICAL)."""
+    from .constants import Z_CRITICAL as _ZC
+    return float(_ZC)

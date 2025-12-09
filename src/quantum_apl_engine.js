@@ -1118,5 +1118,8 @@ class QuantumAPL {
 // ================================================================
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { QuantumAPL, ComplexMatrix, Complex, QuantumUtils };
+    // Default pump target uses lens Z_CRITICAL
+    function defaultPumpTarget() { return CONST.Z_CRITICAL; }
+
+    module.exports = { QuantumAPL, ComplexMatrix, Complex, QuantumUtils, defaultPumpTarget };
 }

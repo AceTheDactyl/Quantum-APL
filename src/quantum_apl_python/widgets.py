@@ -71,7 +71,7 @@ def run_hex_prism_widget(results_json: Optional[str] = None) -> None:
 __all__ = ["run_hex_prism_widget"]
 
 
-def pump_and_visualize(pump_cycles: int = 120, target_z: float = 0.86, profile: str = "balanced") -> None:
+def pump_and_visualize(pump_cycles: int = 120, target_z: float = None, profile: str = "balanced") -> None:
     """Run the z_pump mode and visualize z history + current prism.
 
     - Executes the Node runner in z_pump mode via QuantumAPLEngine.
@@ -86,7 +86,10 @@ def pump_and_visualize(pump_cycles: int = 120, target_z: float = 0.86, profile: 
     import os
     from .engine import QuantumAPLEngine
     from .hex_prism import prism_params
-    from .constants import TRIAD_HIGH, TRIAD_LOW
+    from .constants import TRIAD_HIGH, TRIAD_LOW, Z_CRITICAL
+
+    if target_z is None:
+        target_z = float(Z_CRITICAL)
 
     os.environ["QAPL_PUMP_CYCLES"] = str(int(pump_cycles))
     os.environ["QAPL_PUMP_TARGET"] = str(float(target_z))

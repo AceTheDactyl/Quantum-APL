@@ -62,7 +62,7 @@ const LENS_SIGMA = (typeof process !== 'undefined' && process.env && process.env
 const GEOM_SIGMA = (typeof process !== 'undefined' && process.env && process.env.QAPL_GEOM_SIGMA)
   ? parseFloat(process.env.QAPL_GEOM_SIGMA)
   : LENS_SIGMA;
-const GEOM_R_MAX = 0.85;
+const GEOM_R_MAX = 0.85; // radius cap; not a gate (do not conflate with TRIAD_HIGH)
 const GEOM_BETA = 0.25;
 const GEOM_H_MIN = 0.12;
 const GEOM_GAMMA = 0.18;

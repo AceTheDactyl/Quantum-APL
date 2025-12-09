@@ -18,12 +18,7 @@ from .helix import HelixAPLMapper, HelixCoordinate
 from .helix_metadata import load_metadata, metadata_title, summary_lines, provenance_lines
 from .hex_prism import prism_params
 
-try:  # Optional dependency for plotting
-    import matplotlib.pyplot as plt  # type: ignore
-
-    HAS_MPL = True
-except ImportError:  # pragma: no cover - optional dependency
-    HAS_MPL = False
+HAS_MPL = False  # Set at runtime inside plot() by attempting import
 
 try:  # Optional dependency for DataFrame output
     import pandas as pd  # type: ignore
@@ -110,16 +105,23 @@ class QuantumAnalyzer:
             triad_completions = 0
         triad_unlocked = triad_flag or (triad_completions >= 3)
         t6_gate = TRIAD_T6 if triad_unlocked else Z_CRITICAL
-        lines.append(f"  t6 gate: {'TRIAD' if triad_unlocked else 'CRITICAL'} @ {t6_gate:.3f}")
+        # Print with full double precision for source-of-truth values
+        lines.append(
+            f"  t6 gate: {'TRIAD' if triad_unlocked else 'CRITICAL'} @ {t6_gate:.16f}"
+        )
 
         # One-line μ barrier print relative to φ^{-1}
         try:
             barrier = mu_barrier()
             delta = abs(barrier - PHI_INV)
-            if delta < 1e-6:
-                lines.append(f"  μ barrier: φ⁻¹ exact @ {PHI_INV:.15f}")
+            # If MU_P overridden in env, prefer compact delta print
+            if os.getenv("QAPL_MU_P"):
+                lines.append(f"  μ barrier: φ⁻¹ +Δ={delta:.3e}")
             else:
-                lines.append(f"  μ barrier: {barrier:.6f} vs φ⁻¹ {PHI_INV:.15f} (Δ={delta:.3e})")
+                if delta < 1e-6:
+                    lines.append(f"  μ barrier: φ⁻¹ exact @ {PHI_INV:.16f}")
+                else:
+                    lines.append(f"  μ barrier: {barrier:.6f} vs φ⁻¹ {PHI_INV:.16f} (Δ={delta:.3e})")
         except Exception:
             pass
 
@@ -167,7 +169,7 @@ class QuantumAnalyzer:
             eta_s = None
         if eta_s is not None:
             k_gate = 'PASS' if eta_s > PHI_INV else 'FAIL'
-            lines.append(f"  K-formation (η=s): {eta_s:.15f} vs φ⁻¹ {PHI_INV:.15f} → {k_gate}")
+            lines.append(f"  K-formation (η=s): {eta_s:.16f} vs φ⁻¹ {PHI_INV:.16f} → {k_gate}")
 
         alpha_token = self.alpha_tokens.from_helix(helix_coord)
         if alpha_token:
@@ -279,25 +281,31 @@ class QuantumAnalyzer:
         return pd.DataFrame(data)
 
     def plot(self, save_path: Optional[Path] = None):
-        if not HAS_MPL:
-            raise ImportError("matplotlib not available")
+        # Lazy import pyplot to avoid backend selection at module import
+        try:
+            import matplotlib.pyplot as plt  # type: ignore
+        except ImportError as exc:  # pragma: no cover - optional dependency
+            raise ImportError("matplotlib not available") from exc
 
-        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-        fig.suptitle("Quantum-Classical Simulation Results", fontsize=14)
+        # Deterministic figure size and dpi for CI artifact stability
+        fig, axes = plt.subplots(2, 2, figsize=(8, 5), dpi=100)
+        fig.suptitle("Quantum-Classical Simulation Results", fontsize=12)
 
+        overlays = _overlays_enabled()
         z_history = self.history.get("z", [])
         if z_history:
             ax = axes[0, 0]
             ax.plot(z_history, "g-", linewidth=2)
             ax.axhline(y=Z_CRITICAL, color="m", linestyle="--", label="z_c")
-            # μ overlays
-            try:
-                ax.axhline(y=MU_P, color="#8888ff", linestyle=":", linewidth=1.2, label="μ_P")
-                ax.axhline(y=MU_2, color="#88ff88", linestyle=":", linewidth=1.2, label="μ_2")
-                ax.axhline(y=MU_S, color="#ff8888", linestyle=":", linewidth=1.2, label="μ_S")
-                ax.axhline(y=MU_3, color="#ffaa88", linestyle=":", linewidth=1.2, label="μ_3")
-            except Exception:
-                pass
+            # μ overlays (guarded by env flag)
+            if overlays:
+                try:
+                    ax.axhline(y=MU_P, color="#8888ff", linestyle=":", linewidth=1.2, label="μ_P")
+                    ax.axhline(y=MU_2, color="#88ff88", linestyle=":", linewidth=1.2, label="μ_2")
+                    ax.axhline(y=MU_S, color="#ff8888", linestyle=":", linewidth=1.2, label="μ_S")
+                    ax.axhline(y=MU_3, color="#ffaa88", linestyle=":", linewidth=1.2, label="μ_3")
+                except Exception:
+                    pass
             ax.set_xlabel("Step")
             ax.set_ylabel("z")
             ax.legend()
@@ -317,15 +325,16 @@ class QuantumAnalyzer:
             ax.plot(entropy_history, "r-", linewidth=2)
             ax.set_xlabel("Step")
             ax.set_ylabel("S(ρ)")
-            # s(z) time series overlay on twin axis
-            try:
-                s_series = [compute_delta_s_neg(z, sigma=LENS_SIGMA, z_c=Z_CRITICAL) for z in z_history]
-                ax2 = ax.twinx()
-                ax2.plot(s_series, "b--", linewidth=1.5, alpha=0.6, label="s(z)")
-                ax2.axhline(y=PHI_INV, color="#4444ff", linestyle=":", linewidth=1.0, label="φ⁻¹")
-                ax2.set_ylabel("s(z)")
-            except Exception:
-                pass
+            # s(z) time series overlay on twin axis (guarded by env flag)
+            if overlays:
+                try:
+                    s_series = [compute_delta_s_neg(z, sigma=LENS_SIGMA, z_c=Z_CRITICAL) for z in z_history]
+                    ax2 = ax.twinx()
+                    ax2.plot(s_series, "b--", linewidth=1.5, alpha=0.6, label="s(z)")
+                    ax2.axhline(y=PHI_INV, color="#4444ff", linestyle=":", linewidth=1.0, label="φ⁻¹")
+                    ax2.set_ylabel("s(z)")
+                except Exception:
+                    pass
             ax.grid(True, alpha=0.3)
 
         ax = axes[1, 1]
@@ -349,3 +358,11 @@ class QuantumAnalyzer:
         if isinstance(value, (int, float)):
             return float(value)
         return 0.0
+
+
+def _overlays_enabled() -> bool:
+    """Return True if analyzer overlays (μ lines and s(z)) are enabled by env flag.
+
+    Controlled by QAPL_ANALYZER_OVERLAYS in {1,true,yes,y} (case-insensitive).
+    """
+    return os.getenv("QAPL_ANALYZER_OVERLAYS", "").lower() in ("1", "true", "yes", "y")
