@@ -14,7 +14,7 @@ References:
 
 Those documents treat the `(θ, z, r)` triple as a literal geometric index for state tracking. To bridge that into Quantum-APL:
 
-1. `src/quantum_apl/helix.py` exposes `HelixCoordinate.from_parameter(t)` so tests/demos can construct normalized `z ∈ [0,1]` values directly from the helix equation.
+1. `src/quantum_apl_python/helix.py` exposes `HelixCoordinate.from_parameter(t)` so tests/demos can construct normalized `z ∈ [0,1]` values directly from the helix equation.
 2. `HelixAPLMapper` maps the normalized `z` into the time-harmonic windows already defined for Quantum-APL (t1–t9) and surfaces the operator bundle each window expects.
 3. `QuantumAnalyzer.summary()` now prints the helix harmonic, preferred operators, and implied truth channel for any simulation result.
 

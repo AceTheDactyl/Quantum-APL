@@ -11,10 +11,10 @@ SRC_DIR = ROOT / "src"
 if SRC_DIR.exists():  # Make package importable without installation
     sys.path.insert(0, str(SRC_DIR))
 
-from quantum_apl.analyzer import QuantumAnalyzer
-from quantum_apl.cli import main as cli_main
-from quantum_apl.engine import QuantumAPLEngine
-from quantum_apl.experiments import QuantumExperiment
+from quantum_apl_python.analyzer import QuantumAnalyzer
+from quantum_apl_python.cli import main as cli_main
+from quantum_apl_python.engine import QuantumAPLEngine
+from quantum_apl_python.experiments import QuantumExperiment
 
 __all__ = [
     "QuantumAPLEngine",

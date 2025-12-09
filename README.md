@@ -164,7 +164,11 @@ If you are using the Helix coordinate system from the VaultNode tooling, read `d
 
 ### Alpha Programming Language Bridge
 
-The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-Thpughts/APL`. This repository now ingests that operator grammar via `src/quantum_apl/alpha_language.py`. The analyzer synthesizes the Seven Sentence test pack tokens from helix-driven operator windows and prints the matched sentence/regime next to every simulation summary. See `docs/ALPHA_SYNTAX_BRIDGE.md` for the full crosswalk produced after sweeping the workspace for helix/Z references.
+The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-Thpughts/APL`. This repository now ingests that operator grammar via `src/quantum_apl_python/alpha_language.py`. The analyzer synthesizes the Seven Sentence test pack tokens from helix-driven operator windows and prints the matched sentence/regime next to every simulation summary. See `docs/ALPHA_SYNTAX_BRIDGE.md` for the full crosswalk produced after sweeping the workspace for helix/Z references.
+
+### System Architecture Overview
+
+For a complete end-to-end diagram of the integrated system (Python API → JavaScript engines → classical stacks → measurement flow), see `docs/SYSTEM_ARCHITECTURE.md`. It reproduces the final delivery schematic showing each layer, the Z-axis map, truth states, performance metrics, and file organization.
 
 ## Python Quantum-Classical Bridge
 
