@@ -117,6 +117,12 @@ function checkKFormationFromZ(kappa, z, R, alpha = 1.0) {
   return checkKFormation(kappa, eta, R);
 }
 
+// Subspace overlap (Π projector): η := ⟨ψ|Π|ψ⟩ = overlap probability
+function checkKFormationFromOverlap(kappa, overlapProb, R) {
+  const eta = Math.max(0, Math.min(1, overlapProb));
+  return checkKFormation(kappa, eta, R);
+}
+
 // Time harmonic helper (delegates t6 to provided gate, default lens)
 function getTimeHarmonic(z, t6Gate = Z_CRITICAL) {
   if (z < Z_T1_MAX) return 't1';
@@ -212,6 +218,7 @@ module.exports = Object.freeze({
   computeDeltaSNeg,
   computeEta,
   checkKFormationFromZ,
+  checkKFormationFromOverlap,
   // μ thresholds (optional classification)
   // By default, use μ_P = 0.600; can override via env `QAPL_MU_P_EXACT=1` to set μ_P = 2/φ^{5/2}
   get MU_P() {

@@ -94,6 +94,7 @@ class QuantumAnalyzer:
                 f"  Harmonic: {helix_info['harmonic']}",
                 f"  Recommended operators: {', '.join(helix_info['operators'])}",
                 f"  Truth bias: {helix_info['truth_channel']}",
+                f"  μ class: {helix_info.get('mu_class', '?') if isinstance(helix_info, dict) else '?'}",
             ]
         )
         # Show t6 gate policy (TRIAD vs CRITICAL)

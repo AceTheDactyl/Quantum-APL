@@ -95,6 +95,15 @@ class HelixAPLMapper:
         harmonic = self.harmonic_from_z(coord.z)
         operators = self.operator_windows.get(harmonic, ["()"])
         truth = self.truth_channel_from_z(coord.z)
+        # Optional μ classification and coherence via constants
+        try:
+            from .constants import compute_delta_s_neg, LENS_SIGMA, Z_CRITICAL
+            from .constants import classify_mu  # type: ignore
+            s = compute_delta_s_neg(coord.z, sigma=LENS_SIGMA, z_c=Z_CRITICAL)
+            mu_class = classify_mu(coord.z)
+        except Exception:
+            s = None
+            mu_class = None
         return {
             "harmonic": harmonic,
             "operators": operators,
@@ -102,4 +111,6 @@ class HelixAPLMapper:
             "theta": coord.theta,
             "z": coord.z,
             "r": coord.r,
+            "coherence_s": s,
+            "mu_class": mu_class,
         }

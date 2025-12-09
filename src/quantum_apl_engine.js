@@ -406,11 +406,19 @@ class HelixOperatorAdvisor {
         const value = Number.isFinite(z) ? z : 0;
         const clamped = Math.max(0, Math.min(1, value));
         const harmonic = this.harmonicFromZ(clamped);
+        const CONST = require('./constants');
+        const s = CONST.computeDeltaSNeg(clamped, CONST.LENS_SIGMA);
+        const w_pi = clamped >= CONST.Z_CRITICAL ? s : 0.0;
+        const w_loc = 1.0 - w_pi;
+        const muClass = (typeof CONST.classifyThreshold === 'function') ? CONST.classifyThreshold(clamped) : undefined;
         return {
             harmonic,
             operators: this.operatorWindows[harmonic] || ['()'],
             truthChannel: this.truthChannelFromZ(clamped),
-            z: clamped
+            z: clamped,
+            coherenceS: s,
+            weights: { pi: w_pi, loc: w_loc },
+            muClass
         };
     }
 }
@@ -771,7 +779,10 @@ class QuantumAPL {
             const S_target = S_max * (1 - this.entropyCtrlCoeff * deltaSNeg);
             // Control error: positive when S_current > S_target (reduce entropy)
             const e_norm = (S_current - S_target) / S_max;
-            effectiveGain = Math.max(0.0, Math.min(0.5, gain + this.entropyCtrlGain * e_norm));
+            // Gate control intensity by φ^{-1} threshold on s
+            const phiInv = 1 / CONST.PHI;
+            const ctrlScale = Math.max(0, deltaSNeg - phiInv) / Math.max(1e-9, (1 - phiInv));
+            effectiveGain = Math.max(0.0, Math.min(0.5, gain + this.entropyCtrlGain * e_norm * ctrlScale));
         }
 
         // Gate smoothing around t6 using lens softness factor

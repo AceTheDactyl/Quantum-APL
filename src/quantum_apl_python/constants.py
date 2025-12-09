@@ -314,6 +314,15 @@ def check_k_formation_from_z(kappa: float, z: float, R: float, alpha: float = 1.
     return check_k_formation(kappa=kappa, eta=eta, R=R)
 
 
+def check_k_formation_from_overlap(kappa: float, overlap_prob: float, R: float) -> bool:
+    """K‑formation using subspace overlap (Π): η := ⟨ψ|Π|ψ⟩.
+
+    overlap_prob should be in [0,1]. Gate is η > φ⁻¹ with κ, R thresholds.
+    """
+    eta = float(max(0.0, min(1.0, overlap_prob)))
+    return check_k_formation(kappa=kappa, eta=eta, R=R)
+
+
 def get_time_harmonic(z: float, t6_gate: float | None = None) -> str:
     """Determine time harmonic zone for given z; delegate t6 to provided gate.
 
