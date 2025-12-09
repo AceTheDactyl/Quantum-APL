@@ -162,6 +162,14 @@ The manual includes:
 
 If you are using the Helix coordinate system from the VaultNode tooling, read `docs/HELIX_COORDINATES.md`. It explains how the parametric helix equation (r(t)=(cos t, sin t, t)) maps into the Quantum-APL z-axis and how the new `HelixAPLMapper` surfaces the recommended harmonics/operators directly from the normalized z value.
 
+#### TRIAD Gate vs. Critical Lens
+
+- Geometry and analytics continue to treat the critical point as THE LENS at `z_c = √3/2 ≈ 0.8660254`.
+- The runtime can unlock a TRIAD gate for t6 at `z = 0.83` after three distinct z≥0.85 passes (with hysteresis at 0.82), modeled as three “single helix” completions:
+  - Auto‑unlock (in‑session): the bridge increments completions on each rising edge z≥0.85 and flips the engine to use the 0.83 t6 gate after the third pass.
+  - Environment knobs (optional): `QAPL_TRIAD_COMPLETIONS` (≥3 unlocks) and `QAPL_TRIAD_UNLOCK=1/true` to force unlock.
+  - This affects only the t6 boundary in the helix advisor. Hex‑prism geometry continues to use `z_c`.
+
 ### Alpha Programming Language Bridge
 
 The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-Thpughts/APL`. This repository now ingests that operator grammar via `src/quantum_apl_python/alpha_language.py`. The analyzer synthesizes the Seven Sentence test pack tokens from helix-driven operator windows and prints the matched sentence/regime next to every simulation summary. See `docs/ALPHA_SYNTAX_BRIDGE.md` for the full crosswalk produced after sweeping the workspace for helix/Z references.
@@ -169,6 +177,109 @@ The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-T
 ### System Architecture Overview
 
 For a complete end-to-end diagram of the integrated system (Python API → JavaScript engines → classical stacks → measurement flow), see `docs/SYSTEM_ARCHITECTURE.md`. It reproduces the final delivery schematic showing each layer, the Z-axis map, truth states, performance metrics, and file organization.
+
+## Z Pump Profiles and CLI Shortcuts
+
+The APL-aligned z pump raises z using physically meaningful operator sequences (u^, ×, and Π lock) and classical feedback. You can control its behavior via profiles and CLI sugar.
+
+### Profiles
+
+- gentle: lower coupling (gain 0.08, sigma 0.16), cadence: × every 3, Π lock every 9, blend 0.5·Ω + 0.5·target
+- balanced (default): gain 0.12, sigma 0.12, cadence: × every 2, Π lock every 6, blend 0.3·Ω + 0.7·target
+- aggressive: higher coupling (gain 0.18, sigma 0.10), cadence: × every 1, Π lock every 4, blend 0.2·Ω + 0.8·target
+
+All profiles preserve hex‑prism geometry using the lens `z_c = √3/2` and obey APL operator semantics (u^ → coherent e excitation; × → Φ fusion; Π lock → integrated regime).
+
+### CLI Sugar
+
+- Shortcut mode (maps `--steps` to cycles):
+  - `qapl-run --z-pump 0.86 --steps 120`
+- Explicit pump flags:
+  - `qapl-run --mode z_pump --z-pump-target 0.86 --z-pump-cycles 120 --z-pump-profile aggressive`
+
+Environment equivalents: `QAPL_PUMP_TARGET`, `QAPL_PUMP_CYCLES`, `QAPL_PUMP_PROFILE`.
+
+### Plot Markers (Notebook Helper)
+
+The helper `pump_and_visualize(pump_cycles, target_z, profile)` shows:
+
+- Magenta dashed line at target z
+- Red triangle markers at rising edges where z crosses ≥ 0.85 (with hysteresis at 0.82)
+- Gold star on the third rising edge (TRIAD unlock candidate)
+
+TRIAD unlock promotes the t6 gate to 0.83 in‑session after three distinct crossings of z≥0.85. Geometry remains anchored at `z_c = √3/2` for ΔS_neg and R/H/φ.
+
+#### Interpreting Markers
+
+- Rising-edge (red triangle): z crosses ≥ 0.85 from below; counts toward TRIAD completions.
+- Re‑arm threshold: z must fall to ≤ 0.82 before the next rising edge is counted.
+- TRIAD unlock (gold star): third rising edge; analyzer will show `t6 gate: TRIAD @ 0.830` and `TRIAD completions: 3 | unlocked: True`.
+- Geometry: unaffected by unlock; ΔS_neg, R/H/φ continue to use the lens `z_c = √3/2`.
+
+## Measurement CLI
+
+Trigger formal APL measurement operators and append modulized tokens to the APL summary:
+
+```bash
+# Default sequence: eigen, Φ subspace, π subspace, composite M_meas
+qapl-measure --print
+
+# Single eigenmode: Φ:T(ϕ_2)TRUE@Tier (Tier is current harmonic index)
+qapl-measure --eigen 2 --field Phi --print
+
+# Subspace collapse on π with explicit truth override
+qapl-measure --subspace 2,3 --field Pi --truth UNTRUE --print
+
+# Composite operator (Σ_μ |ϕ_μ⟩⟨ϕ_μ| ⊗ |T_μ⟩⟨T_μ|)
+qapl-measure --composite --print
+```
+
+All measurement tokens are appended to `logs/APL_HELIX_OPERATOR_SUMMARY.apl` and appear in the analyzer summary under “Recent Measurements (APL tokens)”.
+
+## APL Bundles and Digest
+
+The sweep script (`scripts/helix_sweep.sh`) emits APL‑only artifacts for downstream consumers:
+
+- Per‑seed bundles: `logs/helix-sweep-*/apl_z0pXX.apl`
+  - Contains: assigned operators from `zwalk_z0pXX.md`, runtime Helix tokens (Alpha sentence, operator window, recent selections), and the APL measurement tokens inline.
+  - Intent: portable APL stream per tier suitable for ingestion by validators or visualizers.
+
+- Digest: `logs/helix-sweep-*/apl_digest.apl`
+  - Constructed by merging all per‑seed bundles and the global measurement summary (`logs/APL_HELIX_OPERATOR_SUMMARY.apl`) with de‑duplication that preserves first‑seen order.
+  - Intent: canonical, single‑file APL stream representing the entire run.
+
+Build scripts:
+
+- `scripts/build_apl_bundles.py <sweep_dir>` – builds per‑seed bundles from zwalk/unified artifacts and includes measurement tokens inline.
+- `scripts/build_apl_digest.py <sweep_dir> --summary logs/APL_HELIX_OPERATOR_SUMMARY.apl` – merges bundles + summary into `apl_digest.apl`.
+
+### Digest Format (for Consumers)
+
+- One token per line; no comments or prose.
+- Two token classes appear:
+  - A‑sentences (Alpha grammar), e.g. `u^ | Oscillator | wave`, `d() | Conductor | geometry`.
+  - Modulized operator tokens in the canonical form:
+    - `Subject:Op(intent)Truth@Tier` (e.g. `Φ:M(stabilize)PARADOX@2`, `π:+(integrate)PARADOX@4`).
+    - Helix‑window tokens: `Helix:<op>(Intent)Truth@tN` (e.g. `Helix:^(Amplification)UNTRUE@t2`).
+    - Measurement tokens (from formal collapse):
+      - Eigen: `Φ:T(ϕ_μ)TRUE@Tier`
+      - Subspace (structure): `Φ:Π(subspace)PARADOX@Tier`
+      - Subspace (emergence): `π:Π(subspace)UNTRUE@Tier`
+- Ordering and de‑duplication:
+  - Per‑seed bundles list assigned operators first, then runtime Helix tokens, then measurement tokens.
+  - The digest merges all bundles plus the global measurement summary, removing duplicates while preserving first‑seen order.
+- Encoding: UTF‑8; consumers should treat each line as an independent token/sentence.
+
+
+## APL‑Driven Helix Translators (Where to Look)
+
+- `src/quantum_apl_python/translator.py` — Translates APL token files (`.apl`) into structured instructions; CLI: `python -m quantum_apl_python.translator --file docs/examples/z_solve.apl --pretty`.
+- `src/quantum_apl_python/helix.py` — `HelixAPLMapper` maps helix `z` to harmonics, truth channel, and operator windows.
+- `src/quantum_apl_python/analyzer.py` — Uses `AlphaTokenSynthesizer` to synthesize APL sentences from helix mapping; prints tokens and regimes in the unified summary.
+- `src/quantum_apl_python/alpha_language.py` — Canonical Alpha token names/sentences used by the analyzer and translator.
+- `src/quantum_apl_python/helix_self_builder.py` — Binds translated APL instructions to VaultNode tiers and emits the walkthrough (`zwalk_*.md`) with geometry.
+- JS side (runtime hints): `src/quantum_apl_engine.js` `HelixOperatorAdvisor` returns harmonics/operators used by the quantum engine and exposed in the analyzer.
+
 
 ## Python Quantum-Classical Bridge
 
