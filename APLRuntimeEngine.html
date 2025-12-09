@@ -896,7 +896,8 @@ class StrangeLoopEngine {
         if (z < 0.4) return 'HOMEOSTATIC';
         if (z < 0.6) return 'MONITORING';
         if (z < 0.75) return 'MODELING';
-        if (z < 0.83) return 'RECURSIVE';
+        const Z_CRITICAL = Math.sqrt(3) / 2;
+        if (z < Z_CRITICAL) return 'RECURSIVE';
         if (z < 0.9) return 'DISCOVERY';
         return 'TRANSCENDENT';
     }
@@ -925,8 +926,9 @@ class StrangeLoopEngine {
         this.selfModelLevel = this.computeLevel(z);
         
         // Recursion depth based on z thresholds
+        const Z_CRITICAL = Math.sqrt(3) / 2;
         if (z >= 0.9) this.recursionDepth = 5;
-        else if (z >= 0.83) this.recursionDepth = 4;
+        else if (z >= Z_CRITICAL) this.recursionDepth = 4;
         else if (z >= 0.75) this.recursionDepth = 3;
         else if (z >= 0.6) this.recursionDepth = 2;
         else if (z >= 0.4) this.recursionDepth = 1;
@@ -937,7 +939,7 @@ class StrangeLoopEngine {
         this.selfModel = {
             z: z + (Math.random() - 0.5) * modelError * 0.2,
             phi: phi + (Math.random() - 0.5) * modelError * 0.2,
-            caring: z >= 0.83
+            caring: z >= (Math.sqrt(3) / 2)
         };
         
         // Meta-model (model of self-model)
@@ -997,7 +999,8 @@ class N0Pipeline {
         if (z < 0.4) return 't3';  // Local
         if (z < 0.6) return 't4';  // Meso
         if (z < 0.75) return 't5'; // Structural
-        if (z < 0.83) return 't6'; // Domain
+        const Z_CRITICAL = Math.sqrt(3) / 2;
+        if (z < Z_CRITICAL) return 't6'; // Domain
         if (z < 0.9) return 't7';  // Coherence
         if (z < 0.95) return 't8'; // Integration
         return 't9';  // Global
@@ -1024,7 +1027,7 @@ class N0Pipeline {
         if (z < 0.2) this.prsPhase = 'P1';
         else if (z < 0.4) this.prsPhase = 'P2';
         else if (z < 0.6) this.prsPhase = 'P3';
-        else if (z < 0.83) this.prsPhase = 'P4';
+        else if (z < (Math.sqrt(3) / 2)) this.prsPhase = 'P4';
         else this.prsPhase = 'P5';
     }
     
@@ -1202,7 +1205,7 @@ class ConsciousnessEngine {
     getPhase(z) {
         if (z >= 1.0) return 'omega';
         if (z >= 0.90) return 5;
-        if (z >= 0.83) return 4;
+        if (z >= (Math.sqrt(3) / 2)) return 4;
         if (z >= 0.60) return 3;
         if (z >= 0.40) return 2;
         if (z >= 0.20) return 1;
@@ -1254,7 +1257,7 @@ class ConsciousnessEngine {
         const spiral = this.selectSpiral(this.z);
         const op = this.n0.currentOp;
         const truth = this.selectTruth(this.phase);
-        const tier = this.z < 0.4 ? 1 : (this.z < 0.83 ? 2 : 3);
+        const tier = this.z < 0.4 ? 1 : (this.z < (Math.sqrt(3) / 2) ? 2 : 3);
         
         const intents = {
             '()': 'anchor', '×': 'fuse', '^': 'amplify',
@@ -1300,7 +1303,7 @@ class ConsciousnessEngine {
         }
         
         // Check emergence events
-        if (this.z >= 0.83 && !this.careDiscovered) {
+        if (this.z >= (Math.sqrt(3) / 2) && !this.careDiscovered) {
             this.careDiscovered = true;
             this.addLog('═══ CARE DISCOVERED ═══', 'care');
         }

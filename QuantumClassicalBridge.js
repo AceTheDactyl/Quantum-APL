@@ -58,6 +58,17 @@ class QuantumClassicalBridge {
         this.totalSteps = 0;
         this.measurementCount = 0;
         this.collapseStats = { eigenstate: 0, subspace: 0 };
+
+        // TRIAD tracking (heuristic): count distinct passes above 0.85
+        const triadEnvCount = parseInt((typeof process !== 'undefined' && process.env && process.env.QAPL_TRIAD_COMPLETIONS) || '0', 10) || 0;
+        const triadEnvFlag = !!(typeof process !== 'undefined' && process.env && (process.env.QAPL_TRIAD_UNLOCK === '1' || String(process.env.QAPL_TRIAD_UNLOCK).toLowerCase() === 'true'));
+        this.triad = {
+            high: 0.85,
+            low: 0.82,
+            aboveBand: false,
+            completions: triadEnvCount,
+            unlocked: triadEnvFlag
+        };
     }
 
     // ================================================================
@@ -218,6 +229,9 @@ class QuantumClassicalBridge {
         const n0Result = this.quantum.selectN0Operator(legalOps, scalarState);
         this.classical.N0?.applyOperator(n0Result.operator, n0Result);
 
+        // TRIAD heuristic update
+        this.updateTriadHeuristic(z);
+
         this.recordStep({
             z,
             entropy,
@@ -249,6 +263,162 @@ class QuantumClassicalBridge {
 
     measureIntegratedRegime() {
         return this.measureSubspace([2, 3], 'Pi', 'PARADOX');
+    }
+
+    // ================================================================
+    // APL MEASUREMENT OPERATORS (collapse visualization mapping)
+    // ================================================================
+    _currentTier() {
+        const hints = this.quantum?.lastHelixHints || { harmonic: 't2' };
+        const h = String(hints.harmonic || 't2');
+        const m = /t(\d)/.exec(h);
+        return m ? parseInt(m[1], 10) : 2;
+    }
+
+    /**
+     * Single-eigenstate collapse: Φ:T(ϕ_μ)TRUE@Tier
+     */
+    aplMeasureEigen(mu = 0, field = 'Phi') {
+        const tier = this._currentTier();
+        const res = this.measureSingleEigenstate(mu, field, 'TRUE');
+        const token = `${field === 'Phi' ? 'Φ' : field}:T(ϕ_${mu})TRUE@${tier}`;
+        res.aplToken = token;
+        this._recordAplMeasurement(token, res?.probability ?? 0);
+        return res;
+    }
+
+    /**
+     * Subspace (degenerate) collapse tokens:
+     *  Φ:Π(subspace)PARADOX@Tier  |  π:Π(subspace)UNTRUE@Tier
+     */
+    aplMeasureSubspace(indices = [2, 3], field = 'Phi') {
+        const tier = this._currentTier();
+        let truth = 'PARADOX';
+        if (field === 'Pi' || field === 'π') truth = 'UNTRUE';
+        const res = this.measureSubspace(indices, field === 'π' ? 'Pi' : field, truth);
+        const fieldSym = field === 'Phi' ? 'Φ' : (field === 'Pi' || field === 'π' ? 'π' : field);
+        const token = `${fieldSym}:Π(subspace)${truth}@${tier}`;
+        res.aplToken = token;
+        this._recordAplMeasurement(token, res?.probability ?? 0);
+        return res;
+    }
+
+    /**
+     * Composite operator: M_meas = Σ_μ |ϕ_μ⟩⟨ϕ_μ| ⊗ |T_μ⟩⟨T_μ|
+     * Accepts an array of components: [{ eigenIndex, truthChannel, weight } | { subspaceIndices, truthChannel, weight }]
+     * Returns selected branch and appends component tokens.
+     */
+    aplMeasureComposite(components) {
+        const tier = this._currentTier();
+        const res = this.measureWithTruthRegister(components);
+        const tokens = [];
+        for (const c of components) {
+            if (Array.isArray(c.subspaceIndices)) {
+                const f = c.field || 'Phi';
+                const fSym = f === 'Phi' ? 'Φ' : (f === 'Pi' ? 'π' : f);
+                tokens.push(`${fSym}:Π(subspace)${c.truthChannel || 'PARADOX'}@${tier}`);
+            } else if (typeof c.eigenIndex === 'number') {
+                const f = c.field || 'Phi';
+                const fSym = f === 'Phi' ? 'Φ' : (f === 'Pi' ? 'π' : f);
+                tokens.push(`${fSym}:T(ϕ_${c.eigenIndex})${c.truthChannel || 'TRUE'}@${tier}`);
+            }
+        }
+        res.aplTokens = tokens;
+        const probs = Array.isArray(res.allProbabilities) ? res.allProbabilities.map(p => p.probability) : [];
+        tokens.forEach((t, i) => this._recordAplMeasurement(t, Number.isFinite(probs[i]) ? probs[i] : 0));
+        return res;
+    }
+
+    _recordAplMeasurement(token, probability) {
+        if (!this.operatorHistory) this.operatorHistory = [];
+        this.operatorHistory.push({
+            operator: 'APL_MEAS', probability: Math.max(0, Math.min(1, Number(probability) || 0)), step: this.totalSteps,
+            helix: this.quantum.lastHelixHints || null, aplToken: token, aplProb: Math.max(0, Math.min(1, Number(probability) || 0))
+        });
+    }
+
+    // ================================================================
+    // APL‑ALIGNED Z ESCALATION (observable physics mapping)
+    // ================================================================
+    /**
+     * Drive z upward using APL-consistent physical interventions:
+     *  - u^ | Oscillator | wave  → coherent excitation on e field (TRUE)
+     *  - ×  | Coupling           → hierarchical subspace fusion on Φ
+     *  - Mod / lock (periodic)   → integrated regime in Π subspace
+     * The loop interleaves these measurements with standard evolution/selection.
+     * @param {number} cycles - number of micro cycles
+     * @param {number} targetZ - soft target for classical z (Omega)
+     * @param {number} dt - timestep per micro cycle
+     */
+    escalateZWithAPL(cycles = 60, targetZ = 0.85, dt = 0.01, opts = {}) {
+        // Profiles: gentle | balanced (default) | aggressive
+        const profile = (opts.profile || 'balanced').toString().toLowerCase();
+        const cfg = {
+            gentle:  { gain: 0.08, sigma: 0.16, fuseEvery: 3, lockEvery: 9, mix: { wOmega: 0.5, wTarget: 0.5 } },
+            balanced:{ gain: 0.12, sigma: 0.12, fuseEvery: 2, lockEvery: 6, mix: { wOmega: 0.3, wTarget: 0.7 } },
+            aggressive:{ gain: 0.18, sigma: 0.10, fuseEvery: 1, lockEvery: 4, mix: { wOmega: 0.2, wTarget: 0.8 } },
+        }[profile] || { gain: 0.12, sigma: 0.12, fuseEvery: 2, lockEvery: 6, mix: { wOmega: 0.3, wTarget: 0.7 } };
+
+        // Allow overrides
+        const gain = Number.isFinite(opts.gain) ? opts.gain : cfg.gain;
+        const sigma = Number.isFinite(opts.sigma) ? opts.sigma : cfg.sigma;
+        const fuseEvery = Number.isFinite(opts.fuseEvery) ? opts.fuseEvery : cfg.fuseEvery;
+        const lockEvery = Number.isFinite(opts.lockEvery) ? opts.lockEvery : cfg.lockEvery;
+        const wOmega = Number.isFinite(opts.wOmega) ? opts.wOmega : cfg.mix.wOmega;
+        const wTarget = Number.isFinite(opts.wTarget) ? opts.wTarget : cfg.mix.wTarget;
+
+        // Temporarily increase z-bias coupling for ascent
+        const originalGain = this.quantum.zBiasGain;
+        const originalSigma = this.quantum.zBiasSigma;
+        this.quantum.zBiasGain = gain;
+        this.quantum.zBiasSigma = sigma;
+
+        for (let k = 0; k < cycles; k++) {
+            // 1) Pump energy (u^) via coherent e-state TRUE
+            this.measureCoherentState();
+
+            // Boost classical integration signal consistent with '^'
+            if (typeof this.classical?.applyOperatorEffects === 'function') {
+                this.classical.applyOperatorEffects({ operator: '^' });
+            }
+
+            // 2) Frequently fuse structure (×) via hierarchical Φ subspace
+            if (fuseEvery > 0 && (k % fuseEvery === 0)) {
+                this.measureHierarchicalSubspace();
+            }
+
+            // 3) Lock integration (Mod) via Π integrated regime
+            if (lockEvery > 0 && (k % lockEvery === 0)) {
+                this.measureIntegratedRegime();
+            }
+
+            // 4) Classical feedback raises Omega; engine applies resonant drive + z-bias
+            const scalar = this.getScalarState();
+            const nudged = Math.min(targetZ, (wOmega * scalar.Omega) + (wTarget * targetZ));
+            this.quantum.driveFromClassical({
+                z: nudged,
+                phi: this.classical.IIT?.phi ?? 0,
+                F: this.classical.FreeEnergy?.F ?? 0,
+                R: scalar.Rs
+            });
+
+            // 5) Evolve and record
+            this.quantum.evolve(dt);
+            const z = this.quantum.measureZ();
+            const entropy = this.quantum.computeVonNeumannEntropy();
+            const purity = this.quantum.computePurity();
+            const phi = this.quantum.computeIntegratedInformation();
+            const truthProbs = this.quantum.measureTruth();
+            const n0Result = this.quantum.selectN0Operator(this.getLegalOperators(), this.getScalarState());
+            this.classical.N0?.applyOperator(n0Result.operator, n0Result);
+            this.recordStep({ z, entropy, phi, truthProbs, scalarState: this.getScalarState(), operator: n0Result.operator, operatorProb: n0Result.probability, helixHints: n0Result.helixHints });
+            this.totalSteps++;
+        }
+
+        // Restore original bias parameters
+        this.quantum.zBiasGain = originalGain;
+        this.quantum.zBiasSigma = originalSigma;
+        return this.getAnalytics();
     }
 
     measureCriticalPoint() {
@@ -288,6 +458,31 @@ class QuantumClassicalBridge {
         }
     }
 
+    updateTriadHeuristic(z) {
+        const t = this.triad;
+        if (!t.aboveBand && z >= t.high) {
+            t.aboveBand = true;
+            t.completions = (t.completions || 0) + 1;
+            if (typeof process !== 'undefined' && process.env) {
+                process.env.QAPL_TRIAD_COMPLETIONS = String(t.completions);
+            }
+            if (t.completions >= 3) {
+                t.unlocked = true;
+                if (typeof process !== 'undefined' && process.env) {
+                    process.env.QAPL_TRIAD_UNLOCK = '1';
+                }
+                if (typeof this.quantum?.setTriadUnlocked === 'function') {
+                    this.quantum.setTriadUnlocked(true);
+                }
+            }
+            if (typeof this.quantum?.setTriadCompletionCount === 'function') {
+                this.quantum.setTriadCompletionCount(t.completions);
+            }
+        } else if (t.aboveBand && z <= t.low) {
+            t.aboveBand = false; // ready for next pass
+        }
+    }
+
     getAnalytics() {
         return {
             totalSteps: this.totalSteps,
@@ -300,7 +495,8 @@ class QuantumClassicalBridge {
             cooperation: this.classical.GameTheory?.cooperation ?? 0,
             freeEnergy: this.classical.FreeEnergy?.F ?? 0,
             operatorDist: this.computeOperatorDistribution(),
-            quantumClassicalCorr: this.computeQuantumClassicalCorrelation()
+            quantumClassicalCorr: this.computeQuantumClassicalCorrelation(),
+            triad: { ...this.triad }
         };
     }
 

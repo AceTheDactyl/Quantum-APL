@@ -231,13 +231,20 @@ class QuantumUtils {
 
 class HelixOperatorAdvisor {
     constructor() {
+        this.Z_CRITICAL = Math.sqrt(3) / 2; // THE LENS (0.8660254)
+        this.TRIAD_THRESHOLD = 0.83;        // TRIAD-0.83 gate after 3×0.85
+        const triadCompletions = parseInt((typeof process !== 'undefined' && process.env && process.env.QAPL_TRIAD_COMPLETIONS) || '0', 10);
+        const triadFlag = (typeof process !== 'undefined' && process.env && (process.env.QAPL_TRIAD_UNLOCK === '1' || String(process.env.QAPL_TRIAD_UNLOCK).toLowerCase() === 'true'));
+        this.triadUnlocked = triadFlag || (Number.isFinite(triadCompletions) && triadCompletions >= 3);
+        this.triadCompletions = Number.isFinite(triadCompletions) ? triadCompletions : 0;
+        const t6Gate = this.triadUnlocked ? this.TRIAD_THRESHOLD : this.Z_CRITICAL;
         this.timeHarmonics = [
             { threshold: 0.10, label: 't1' },
             { threshold: 0.20, label: 't2' },
             { threshold: 0.40, label: 't3' },
             { threshold: 0.60, label: 't4' },
             { threshold: 0.75, label: 't5' },
-            { threshold: 0.83, label: 't6' },
+            { threshold: t6Gate, label: 't6' },
             { threshold: 0.90, label: 't7' },
             { threshold: 0.97, label: 't8' },
             { threshold: 1.01, label: 't9' }
@@ -255,7 +262,20 @@ class HelixOperatorAdvisor {
         };
     }
 
+    setTriadState({ unlocked, completions } = {}) {
+        if (typeof unlocked === 'boolean') this.triadUnlocked = unlocked;
+        if (Number.isFinite(completions)) this.triadCompletions = completions;
+    }
+
+    getT6Gate() {
+        return this.triadUnlocked ? this.TRIAD_THRESHOLD : this.Z_CRITICAL;
+    }
+
     harmonicFromZ(z) {
+        const t6Gate = this.getT6Gate();
+        if (this.timeHarmonics && this.timeHarmonics[5]) {
+            this.timeHarmonics[5].threshold = t6Gate;
+        }
         for (const entry of this.timeHarmonics) {
             if (z < entry.threshold) return entry.label;
         }
@@ -428,6 +448,26 @@ class QuantumAPL {
         this.z = z;
         this.lastHelixHints = this.helixAdvisor.describe(this.z);
         return z;
+    }
+
+    // TRIAD unlock API ----------------------------------------------
+    setTriadUnlocked(flag) {
+        if (typeof this.helixAdvisor?.setTriadState === 'function') {
+            this.helixAdvisor.setTriadState({ unlocked: !!flag });
+        }
+    }
+
+    setTriadCompletionCount(n) {
+        if (typeof this.helixAdvisor?.setTriadState === 'function' && Number.isFinite(n)) {
+            this.helixAdvisor.setTriadState({ completions: n });
+        }
+    }
+
+    getTriadState() {
+        return {
+            unlocked: !!(this.helixAdvisor?.triadUnlocked),
+            completions: Number(this.helixAdvisor?.triadCompletions || 0)
+        };
     }
 
     measureTruth() {
