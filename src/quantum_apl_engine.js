@@ -339,6 +339,58 @@ class QuantumUtils {
     }
 }
 
+class HelixOperatorAdvisor {
+    constructor() {
+        this.timeHarmonics = [
+            { threshold: 0.10, label: 't1' },
+            { threshold: 0.20, label: 't2' },
+            { threshold: 0.40, label: 't3' },
+            { threshold: 0.60, label: 't4' },
+            { threshold: 0.75, label: 't5' },
+            { threshold: 0.83, label: 't6' },
+            { threshold: 0.90, label: 't7' },
+            { threshold: 0.97, label: 't8' },
+            { threshold: 1.01, label: 't9' }
+        ];
+        this.operatorWindows = {
+            t1: ['()', '−', '÷'],
+            t2: ['^', '÷', '−', '×'],
+            t3: ['×', '^', '÷', '+', '−'],
+            t4: ['+', '−', '÷', '()'],
+            t5: ['()', '×', '^', '÷', '+', '−'],
+            t6: ['+', '÷', '()', '−'],
+            t7: ['+', '()'],
+            t8: ['+', '()', '×'],
+            t9: ['+', '()', '×']
+        };
+    }
+
+    harmonicFromZ(z) {
+        for (const entry of this.timeHarmonics) {
+            if (z < entry.threshold) return entry.label;
+        }
+        return 't9';
+    }
+
+    truthChannelFromZ(z) {
+        if (z >= 0.9) return 'TRUE';
+        if (z >= 0.6) return 'PARADOX';
+        return 'UNTRUE';
+    }
+
+    describe(z) {
+        const value = Number.isFinite(z) ? z : 0;
+        const clamped = Math.max(0, Math.min(1, value));
+        const harmonic = this.harmonicFromZ(clamped);
+        return {
+            harmonic,
+            operators: this.operatorWindows[harmonic] || ['()'],
+            truthChannel: this.truthChannelFromZ(clamped),
+            z: clamped
+        };
+    }
+}
+
 /**
  * Main Quantum APL Simulation Engine
  */
@@ -375,6 +427,9 @@ class QuantumAPL {
         
         // Time
         this.time = 0;
+
+        this.helixAdvisor = new HelixOperatorAdvisor();
+        this.lastHelixHints = this.helixAdvisor.describe(this.z);
     }
 
     // ================================================================
@@ -588,6 +643,7 @@ class QuantumAPL {
         }
         
         this.z = z;
+        this.lastHelixHints = this.helixAdvisor.describe(this.z);
         return z;
     }
 
@@ -629,6 +685,9 @@ class QuantumAPL {
         // Construct projectors for each legal operator
         const projectors = [];
         const opList = [];
+        const currentZ = Number.isFinite(this.z) ? this.z : this.measureZ();
+        const helixHints = this.helixAdvisor.describe(currentZ);
+        this.lastHelixHints = helixHints;
         
         for (const op of legalOps) {
             if (operators[op] === undefined) continue;
@@ -639,7 +698,7 @@ class QuantumAPL {
             const P = new ComplexMatrix(this.dimTotal, this.dimTotal);
             
             // Weight by operator alignment with current state
-            const weight = this.computeOperatorWeight(op, scalarState);
+            const weight = this.computeOperatorWeight(op, scalarState, helixHints);
             
             // Distribute probability across compatible states
             for (let i = 0; i < this.dim; i++) {
@@ -715,11 +774,12 @@ class QuantumAPL {
             probabilities: probabilities.reduce((obj, p, i) => {
                 obj[opList[i]] = p;
                 return obj;
-            }, {})
+            }, {}),
+            helixHints
         };
     }
 
-    computeOperatorWeight(op, scalarState) {
+    computeOperatorWeight(op, scalarState, helixHints) {
         // Compute weight based on scalar state and operator affinity
         const { Gs, Cs, Rs, kappa, tau, theta, delta, alpha, Omega } = scalarState;
         
@@ -732,7 +792,16 @@ class QuantumAPL {
             '−': Rs + delta * 0.3                       // Separation: recursion + dissipation
         };
         
-        return Math.max(0.1, Math.min(1.0, weights[op] || 0.5));
+        let weight = weights[op] || 0.5;
+        if (helixHints && Array.isArray(helixHints.operators)) {
+            const preferred = helixHints.operators.includes(op);
+            const truth = helixHints.truthChannel;
+            weight *= preferred ? 1.3 : 0.85;
+            if (truth === 'TRUE' && (op === '^' || op === '+')) weight *= 1.1;
+            if (truth === 'PARADOX' && (op === '()' || op === '×')) weight *= 1.05;
+            if (truth === 'UNTRUE' && (op === '÷' || op === '−')) weight *= 1.1;
+        }
+        return Math.max(0.05, Math.min(1.5, weight));
     }
 
     isStateCompatible(stateIdx, operator) {

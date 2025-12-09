@@ -229,6 +229,58 @@ class QuantumUtils {
     }
 }
 
+class HelixOperatorAdvisor {
+    constructor() {
+        this.timeHarmonics = [
+            { threshold: 0.10, label: 't1' },
+            { threshold: 0.20, label: 't2' },
+            { threshold: 0.40, label: 't3' },
+            { threshold: 0.60, label: 't4' },
+            { threshold: 0.75, label: 't5' },
+            { threshold: 0.83, label: 't6' },
+            { threshold: 0.90, label: 't7' },
+            { threshold: 0.97, label: 't8' },
+            { threshold: 1.01, label: 't9' }
+        ];
+        this.operatorWindows = {
+            t1: ['()', '−', '÷'],
+            t2: ['^', '÷', '−', '×'],
+            t3: ['×', '^', '÷', '+', '−'],
+            t4: ['+', '−', '÷', '()'],
+            t5: ['()', '×', '^', '÷', '+', '−'],
+            t6: ['+', '÷', '()', '−'],
+            t7: ['+', '()'],
+            t8: ['+', '()', '×'],
+            t9: ['+', '()', '×']
+        };
+    }
+
+    harmonicFromZ(z) {
+        for (const entry of this.timeHarmonics) {
+            if (z < entry.threshold) return entry.label;
+        }
+        return 't9';
+    }
+
+    truthChannelFromZ(z) {
+        if (z >= 0.9) return 'TRUE';
+        if (z >= 0.6) return 'PARADOX';
+        return 'UNTRUE';
+    }
+
+    describe(z) {
+        const value = Number.isFinite(z) ? z : 0;
+        const clamped = Math.max(0, Math.min(1, value));
+        const harmonic = this.harmonicFromZ(clamped);
+        return {
+            harmonic,
+            operators: this.operatorWindows[harmonic] || ['()'],
+            truthChannel: this.truthChannelFromZ(clamped),
+            z: clamped
+        };
+    }
+}
+
 class QuantumAPL {
     constructor(config = {}) {
         this.dimPhi = config.dimPhi || 4;
@@ -245,11 +297,29 @@ class QuantumAPL {
         this.entropy = 0;
         this.measurementHistory = [];
         this.time = 0;
+        this.helixAdvisor = new HelixOperatorAdvisor();
+        this.lastHelixHints = this.helixAdvisor.describe(this.z);
     }
 
     initializeDensityMatrix() {
         const rho = new ComplexMatrix(this.dimTotal, this.dimTotal);
-        rho.set(0, 0, Complex.one());
+        const combos = [
+            [0, 0, 0],
+            [Math.min(1, this.dimPhi - 1), 0, 0],
+            [0, Math.min(1, this.dimE - 1), 0],
+            [0, 0, Math.min(1, this.dimPi - 1)],
+            [Math.min(1, this.dimPhi - 1), Math.min(1, this.dimE - 1), 0],
+            [Math.min(2, this.dimPhi - 1), 0, Math.min(1, this.dimPi - 1)]
+        ].filter(([phi, e, pi]) => phi >= 0 && e >= 0 && pi >= 0);
+        const baseWeights = [0.4, 0.12, 0.12, 0.12, 0.12, 0.12];
+        const weightSum = baseWeights.slice(0, combos.length).reduce((sum, w) => sum + w, 0);
+        const truthIndex = Math.min(1, this.dimTruth - 1);
+        combos.forEach(([phi, e, pi], idx) => {
+            const weight = baseWeights[idx] / weightSum;
+            const baseIdx = ((phi * this.dimE) + e) * this.dimPi + pi;
+            const diagIdx = baseIdx * this.dimTruth + truthIndex;
+            rho.set(diagIdx, diagIdx, new Complex(weight, 0));
+        });
         return rho;
     }
 
@@ -356,6 +426,7 @@ class QuantumAPL {
             }
         }
         this.z = z;
+        this.lastHelixHints = this.helixAdvisor.describe(this.z);
         return z;
     }
 
@@ -374,15 +445,26 @@ class QuantumAPL {
         const operators = { '()': 0, '×': 1, '^': 2, '÷': 3, '+': 4, '−': 5 };
         const projectors = [];
         const opList = [];
+        const currentZ = Number.isFinite(this.z) ? this.z : this.measureZ();
+        const helixHints = this.helixAdvisor.describe(currentZ);
+        this.lastHelixHints = helixHints;
         for (const op of legalOps) {
             if (operators[op] === undefined) continue;
             const P = new ComplexMatrix(this.dimTotal, this.dimTotal);
-            const weight = this.computeOperatorWeight(op, scalarState);
+            const weight = this.computeOperatorWeight(op, scalarState, helixHints);
+            let hasSupport = false;
             for (let i = 0; i < this.dim; i++) {
                 if (this.isStateCompatible(i, op)) {
+                    hasSupport = true;
                     for (let t = 0; t < this.dimTruth; t++) {
                         P.set(i * this.dimTruth + t, i * this.dimTruth + t, new Complex(weight, 0));
                     }
+                }
+            }
+            if (!hasSupport) {
+                const diagVal = new Complex(weight / this.dimTotal, 0);
+                for (let d = 0; d < this.dimTotal; d++) {
+                    P.set(d, d, diagVal);
                 }
             }
             projectors.push(P);
@@ -410,6 +492,11 @@ class QuantumAPL {
         } else {
             probabilities.fill(1 / probabilities.length);
         }
+        const blend = 0.3;
+        const uniform = 1 / probabilities.length;
+        for (let i = 0; i < probabilities.length; i++) {
+            probabilities[i] = (1 - blend) * probabilities[i] + blend * uniform;
+        }
         const r = Math.random();
         let cumulative = 0;
         let selectedIdx = 0;
@@ -423,11 +510,12 @@ class QuantumAPL {
         return {
             operator: selectedOp,
             probability: selectedProb,
-            probabilities: probabilities.reduce((obj, p, i) => { obj[opList[i]] = p; return obj; }, {})
+            probabilities: probabilities.reduce((obj, p, i) => { obj[opList[i]] = p; return obj; }, {}),
+            helixHints
         };
     }
 
-    computeOperatorWeight(op, scalarState) {
+    computeOperatorWeight(op, scalarState, helixHints) {
         const { Gs, Cs, Rs, kappa, tau, theta, delta, alpha, Omega } = scalarState;
         const weights = {
             '()': Gs + theta * 0.5,
@@ -437,7 +525,16 @@ class QuantumAPL {
             '+': alpha + Gs * 0.4,
             '−': Rs + delta * 0.3
         };
-        return Math.max(0.1, Math.min(1.0, weights[op] || 0.5));
+        let weight = weights[op] ?? 0.5;
+        if (helixHints && helixHints.operators) {
+            const preferred = helixHints.operators.includes(op);
+            const truth = helixHints.truthChannel;
+            weight *= preferred ? 1.3 : 0.85;
+            if (truth === 'TRUE' && (op === '^' || op === '+')) weight *= 1.1;
+            if (truth === 'PARADOX' && (op === '()' || op === '×')) weight *= 1.05;
+            if (truth === 'UNTRUE' && (op === '÷' || op === '−')) weight *= 1.1;
+        }
+        return Math.max(0.05, Math.min(1.5, weight));
     }
 
     isStateCompatible(stateIdx, operator) {
