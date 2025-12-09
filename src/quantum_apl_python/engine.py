@@ -94,6 +94,41 @@ class QuantumAPLEngine:
                 "const analytics = demo.integration.getDiagnostics();\n"
                 "console.log(JSON.stringify(analytics, null, 2));\n"
             )
+        if mode == "z_pump":
+            return (
+                "const { UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
+                "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
+                "const cycles = Number(process.env.QAPL_PUMP_CYCLES ?? 120);\n"
+                "const targetZ = Number(process.env.QAPL_PUMP_TARGET ?? 0.86);\n"
+                "const profile = String(process.env.QAPL_PUMP_PROFILE || 'balanced');\n"
+                "const gain = (process.env.QAPL_PUMP_GAIN!==undefined)? Number(process.env.QAPL_PUMP_GAIN) : undefined;\n"
+                "const sigma = (process.env.QAPL_PUMP_SIGMA!==undefined)? Number(process.env.QAPL_PUMP_SIGMA) : undefined;\n"
+                "const demo = new UnifiedDemo({ classical: { IIT: { initialPhi } } });\n"
+                "demo.bridge.escalateZWithAPL(cycles, targetZ, 0.01, { profile, gain, sigma });\n"
+                "const state = demo.bridge.exportState();\n"
+                "console.log(JSON.stringify(state, null, 2));\n"
+            )
+
+        if mode == "measured":
+            return (
+                "const { UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
+                "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
+                f"const steps = {steps};\n"
+                "const demo = new UnifiedDemo({ classical: { IIT: { initialPhi } } });\n"
+                "for (let i=0;i<steps;i++){ demo.bridge.step(0.01); }\n"
+                "const b = demo.bridge;\n"
+                "const eigenStr = process.env.QAPL_MEASURE_EIGEN;\n"
+                "const fieldStr = process.env.QAPL_MEASURE_FIELD || 'Phi';\n"
+                "const subStr = process.env.QAPL_MEASURE_SUBSPACE;\n"
+                "const compStr = process.env.QAPL_MEASURE_COMPOSITE;\n"
+                "let any = false;\n"
+                "if (eigenStr!==undefined) { b.aplMeasureEigen(Number(eigenStr), fieldStr); any = true; }\n"
+                "if (subStr) { const idx=subStr.split(',').map(s=>Number(s.trim())).filter(n=>Number.isFinite(n)); if (idx.length) { b.aplMeasureSubspace(idx, fieldStr); any = true; } }\n"
+                "if (compStr !== '0') { b.aplMeasureComposite([{ eigenIndex: 0, field: 'Phi', truthChannel: 'TRUE', weight: 0.3 }, { eigenIndex: 1, field: 'Pi', truthChannel: 'UNTRUE', weight: 0.3 }, { subspaceIndices: [2,3], field: 'Phi', truthChannel: 'PARADOX', weight: 0.4 }]); any = true; }\n"
+                "if (!any) { b.aplMeasureEigen(0,'Phi'); b.aplMeasureSubspace([2,3],'Phi'); b.aplMeasureSubspace([2,3],'Pi'); b.aplMeasureComposite([{ eigenIndex: 0, field: 'Phi', truthChannel: 'TRUE', weight: 0.3 }, { eigenIndex: 1, field: 'Pi', truthChannel: 'UNTRUE', weight: 0.3 }, { subspaceIndices: [2,3], field: 'Phi', truthChannel: 'PARADOX', weight: 0.4 }]); }\n"
+                "const state = demo.bridge.exportState();\n"
+                "console.log(JSON.stringify(state, null, 2));\n"
+            )
 
         return (
             "const { QuantumClassicalBridge, UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
