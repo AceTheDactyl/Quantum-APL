@@ -98,3 +98,33 @@ jobs:
           path: ${{ steps.run_demo.outputs.outdir }}
           if-no-files-found: error
           retention-days: 7
+
+  probe-table:
+    name: probe table
+    runs-on: ubuntu-latest
+    needs: discover-seeds
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Generate probe list
+        id: gen
+        shell: bash
+        run: |
+          set -euo pipefail
+          list=$(ls -1 reference/helix_bridge/VAULTNODES 2>/dev/null | sed -n 's/^z0p\([0-9][0-9]\)$/0.\1/p')
+          extras="0.85 0.8660254037844386 0.90 0.92 0.97"
+          combined=$(printf "%s\n" $list $extras | awk 'NF>0' | awk '!seen[$0]++')
+          echo "zs=$(echo $combined | tr ' ' ',')" >> "$GITHUB_OUTPUT"
+
+      - name: Probe z table (markdown)
+        env:
+          PROBE_ZS: ${{ steps.gen.outputs.zs }}
+        run: |
+          echo "## Omega/Lens Probe Table" >> $GITHUB_STEP_SUMMARY
+          node scripts/probe_z_table.js >> $GITHUB_STEP_SUMMARY
