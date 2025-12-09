@@ -158,6 +158,50 @@ The manual includes:
 - Usage patterns and examples
 - Quick reference tables
 
+### Helix Coordinate Mapping
+
+If you are using the Helix coordinate system from the VaultNode tooling, read `docs/HELIX_COORDINATES.md`. It explains how the parametric helix equation (r(t)=(cos t, sin t, t)) maps into the Quantum-APL z-axis and how the new `HelixAPLMapper` surfaces the recommended harmonics/operators directly from the normalized z value.
+
+### Alpha Programming Language Bridge
+
+The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-Thpughts/APL`. This repository now ingests that operator grammar via `src/quantum_apl/alpha_language.py`. The analyzer synthesizes the Seven Sentence test pack tokens from helix-driven operator windows and prints the matched sentence/regime next to every simulation summary. See `docs/ALPHA_SYNTAX_BRIDGE.md` for the full crosswalk produced after sweeping the workspace for helix/Z references.
+
+## Python Quantum-Classical Bridge
+
+The repository now ships with `quantum_apl_bridge.py`, a Python CLI/SDK that shells into the Node-based QuantumAPL engine and returns fully structured telemetry.
+
+### Requirements
+
+- Python 3.9+
+- Node.js (same version used for the JS demos)
+- Optional: `numpy` (required), `pandas` / `matplotlib` for richer analysis + plotting
+
+Install the Python dependencies in your preferred environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install numpy pandas matplotlib
+```
+
+### Usage
+
+```bash
+# Unified quantum-classical bridge
+python3 quantum_apl_bridge.py --steps 200 --mode unified --plot
+
+# Quantum-only integration harness (the JS QuantumN0 demo)
+python3 quantum_apl_bridge.py --mode quantum_only --steps 150
+
+# Full Node test suite from Python
+python3 quantum_apl_bridge.py --mode test
+
+# Persist output
+python3 quantum_apl_bridge.py --steps 100 --output results.json
+```
+
+The CLI writes Node telemetry to stdout and, when not running in `test` mode, feeds it through the `QuantumAnalyzer` helper so you can grab ready-to-plot histories (`z`, `φ`, entropy) or export DataFrames through pandas.
+
 ### Compilation
 
 To compile the LaTeX documents locally:

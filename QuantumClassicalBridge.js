@@ -1,107 +1,386 @@
 // ================================================================
-// QUANTUM-CLASSICAL BRIDGE
-// Couples QuantumAPL engine with classical scalar dynamics
+// UNIFIED QUANTUM-CLASSICAL BRIDGE
+// Integrates ClassicalConsciousnessStack with QuantumAPL engine
+// Implements single-eigenstate and subspace collapse operators
 // ================================================================
 
+const globalScope = typeof globalThis !== 'undefined'
+    ? globalThis
+    : (typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {}));
+
+let QuantumAPLRef = globalScope.QuantumAPL;
+let ComplexMatrixRef = globalScope.ComplexMatrix;
+let ComplexRef = globalScope.Complex;
+let ClassicalStackRef = globalScope.ClassicalConsciousnessStack;
+
+if (typeof module !== 'undefined' && module.exports) {
+    const engineModule = require('./src/quantum_apl_engine');
+    QuantumAPLRef = QuantumAPLRef || engineModule.QuantumAPL;
+    ComplexMatrixRef = ComplexMatrixRef || engineModule.ComplexMatrix;
+    ComplexRef = ComplexRef || engineModule.Complex;
+
+    try {
+        const classicalModule = require('./classical/ClassicalEngines');
+        ClassicalStackRef = ClassicalStackRef || classicalModule.ClassicalConsciousnessStack;
+    } catch (err) {
+        // Classical stack is optional when running in browser demos
+    }
+}
+
+const ensureQuantumMath = () => {
+    if (!ComplexMatrixRef || !ComplexRef) {
+        throw new Error('QuantumClassicalBridge requires ComplexMatrix/Complex definitions');
+    }
+};
+
 class QuantumClassicalBridge {
-    constructor(quantumEngine, classicalEngines = {}) {
+    constructor(quantumEngine, classicalStack, config = {}) {
+        ensureQuantumMath();
+
         if (!quantumEngine) {
             throw new Error('QuantumClassicalBridge requires a quantum engine instance');
         }
+        if (!classicalStack) {
+            throw new Error('QuantumClassicalBridge requires a classical consciousness stack');
+        }
 
         this.quantum = quantumEngine;
-        this.classical = this.createClassicalFacade(classicalEngines);
-        this.coupling = {
-            classicalToQuantum: 0.3,
-            quantumToClassical: 0.7,
-            ...(classicalEngines.coupling || {})
-        };
+        this.classical = classicalStack;
+        this.quantumInfluence = config.quantumInfluence ?? 0.7;
+        this.classicalInfluence = config.classicalInfluence ?? 0.3;
 
-        this.operatorLog = [];
+        this.lastMeasurementMode = 'none';
+        this.lastProjector = null;
+        this.zHistory = [];
+        this.phiHistory = [];
+        this.entropyHistory = [];
+        this.operatorHistory = [];
+        this.totalSteps = 0;
+        this.measurementCount = 0;
+        this.collapseStats = { eigenstate: 0, subspace: 0 };
     }
 
-    createClassicalFacade(engines) {
-        const noop = () => {};
-        const bind = fn => (engines && typeof fn === 'function' ? fn.bind(engines) : undefined);
-        const defaultComputeZ = () => {
-            if (typeof engines.computeZ === 'function') return engines.computeZ.call(engines);
-            if (engines.IIT?.phi !== undefined) {
-                return Math.min(1, Math.max(0, engines.IIT.phi));
-            }
-            return 0.5;
-        };
+    // ================================================================
+    // MEASUREMENT OPERATORS
+    // ================================================================
+
+    measureSingleEigenstate(eigenIndex, field = 'Phi', truthChannel = 'TRUE') {
+        const projector = this.constructEigenstateProjector(eigenIndex, field);
+        const probability = projector.mul(this.quantum.rho).trace().re;
+        const result = this.quantum.measure(projector, `eigenstate_${field}_${eigenIndex}`);
+
+        this.lastMeasurementMode = 'eigenstate';
+        this.lastProjector = { eigenIndex, field, truthChannel };
+        this.collapseStats.eigenstate++;
+        this.measurementCount++;
 
         return {
-            IIT: engines.IIT || { phi: 0 },
-            GameTheory: engines.GameTheory || {},
-            FreeEnergy: engines.FreeEnergy || { F: 0 },
-            Kuramoto: engines.Kuramoto || {},
-            StrangeLoop: engines.StrangeLoop || {},
-            N0: engines.N0 || {},
-            computeZ: bind(engines.computeZ) || defaultComputeZ,
-            setQuantumInfluence: bind(engines.setQuantumInfluence) || noop,
-            getScalarState: bind(engines.getScalarState) || (() => ({
-                Gs: engines.geometryScalar || 0.5,
-                Cs: engines.couplingScalar || 0.5,
-                Rs: engines.recursionScalar || 0.5,
-                kappa: engines.curvatureScalar || 0.5,
-                tau: engines.torqueScalar || 0.5,
-                theta: engines.phaseScalar || 0.5,
-                delta: engines.dissipationScalar || 0.5,
-                alpha: engines.attractorScalar || 0.5,
-                Omega: engines.orderScalar || 0.5
-            })),
-            getLegalOperators: bind(engines.getLegalOperators) || (() => {
-                if (typeof engines.N0?.getLegalOperators === 'function') {
-                    return engines.N0.getLegalOperators();
-                }
-                return ['()', '×', '^', '÷', '+', '−'];
-            }),
-            applyOperatorEffects: bind(engines.applyOperatorEffects) || (result => {
-                if (typeof engines.N0?.applyOperator === 'function') {
-                    engines.N0.applyOperator(result.operator, result);
-                }
-            })
+            mode: 'eigenstate',
+            probability,
+            collapsed: result.collapsed,
+            eigenIndex,
+            field,
+            truthChannel,
+            token: `${field}:T(ϕ_${eigenIndex})${truthChannel}@3`
         };
     }
 
-    step(dt) {
-        this.driveQuantumFromClassical();
+    measureSubspace(subspaceIndices, field = 'Phi', truthChannel = 'PARADOX') {
+        const projector = this.constructSubspaceProjector(subspaceIndices, field);
+        const probability = projector.mul(this.quantum.rho).trace().re;
+        const label = `subspace_${field}_${subspaceIndices.join(',')}`;
+        const result = this.quantum.measure(projector, label);
+
+        this.lastMeasurementMode = 'subspace';
+        this.lastProjector = { subspaceIndices, field, truthChannel };
+        this.collapseStats.subspace++;
+        this.measurementCount++;
+
+        return {
+            mode: 'subspace',
+            probability,
+            collapsed: result.collapsed,
+            subspaceIndices,
+            field,
+            truthChannel,
+            token: `${field}:Π(subspace)${truthChannel}@3`
+        };
+    }
+
+    measureWithTruthRegister(measurements) {
+        const results = [];
+        let totalProb = 0;
+
+        for (const meas of measurements) {
+            const projector = meas.subspaceIndices
+                ? this.constructSubspaceProjector(meas.subspaceIndices, meas.field)
+                : this.constructEigenstateProjector(meas.eigenIndex, meas.field);
+            const weight = meas.weight ?? 1;
+            const probability = projector.mul(this.quantum.rho).trace().re * weight;
+            results.push({ ...meas, projector, probability });
+            totalProb += probability;
+        }
+
+        if (totalProb <= 1e-12) {
+            const uniform = 1 / results.length;
+            results.forEach(r => { r.probability = uniform; });
+        } else {
+            results.forEach(r => { r.probability /= totalProb; });
+        }
+
+        const rand = Math.random();
+        let cumulative = 0;
+        let selected = results[results.length - 1];
+        for (const r of results) {
+            cumulative += r.probability;
+            if (rand < cumulative) {
+                selected = r;
+                break;
+            }
+        }
+
+        const measurement = this.quantum.measure(selected.projector, `composite_${selected.truthChannel}`);
+        this.measurementCount++;
+
+        return {
+            mode: 'composite',
+            selected: selected.subspaceIndices ? 'subspace' : 'eigenstate',
+            probability: selected.probability,
+            truthChannel: selected.truthChannel,
+            collapsed: measurement.collapsed,
+            allProbabilities: results.map(r => ({
+                truthChannel: r.truthChannel,
+                probability: r.probability
+            }))
+        };
+    }
+
+    constructEigenstateProjector(eigenIndex, field) {
+        ensureQuantumMath();
+        const projector = new ComplexMatrixRef(this.quantum.dimTotal, this.quantum.dimTotal);
+        const idx = this.mapToGlobalIndex(eigenIndex, field);
+        projector.set(idx, idx, ComplexRef.one());
+        return projector;
+    }
+
+    constructSubspaceProjector(subspaceIndices, field) {
+        ensureQuantumMath();
+        const projector = new ComplexMatrixRef(this.quantum.dimTotal, this.quantum.dimTotal);
+        for (const eigenIndex of subspaceIndices) {
+            const idx = this.mapToGlobalIndex(eigenIndex, field);
+            projector.set(idx, idx, ComplexRef.one());
+        }
+        return projector;
+    }
+
+    mapToGlobalIndex(eigenIndex, field) {
+        const { dimPhi, dimE, dimPi, dimTruth } = this.quantum;
+        let baseIndex = 0;
+
+        if (field === 'Phi') {
+            baseIndex = eigenIndex * dimE * dimPi * dimTruth;
+        } else if (field === 'e') {
+            baseIndex = eigenIndex * dimPi * dimTruth;
+        } else if (field === 'Pi') {
+            baseIndex = eigenIndex * dimTruth;
+        }
+
+        baseIndex += 1; // bias toward UNTRUE truth channel
+        return Math.min(Math.max(0, baseIndex), this.quantum.dimTotal - 1);
+    }
+
+    // ================================================================
+    // QUANTUM-CLASSICAL FEEDBACK LOOP
+    // ================================================================
+
+    step(dt = 0.01) {
         this.quantum.evolve(dt);
-        this.updateClassicalFromQuantum();
 
-        const result = this.quantum.selectN0Operator(
-            this.getLegalOperators(),
-            this.getScalarState()
-        );
-
-        this.applyOperator(result);
-        this.operatorLog.push({ time: this.quantum.time, ...result });
-        return result;
-    }
-
-    driveQuantumFromClassical() {
-        const z = this.classical.computeZ();
-        const phi = this.classical.IIT?.phi ?? 0;
-        const F = this.classical.FreeEnergy?.F ?? 0;
-        const R = this.classical.GameTheory?.resonance ?? 0;
-
-        this.quantum.driveFromClassical({ z, phi, F, R });
-    }
-
-    updateClassicalFromQuantum() {
-        const zQuantum = this.quantum.measureZ();
-        const truthProbs = this.quantum.measureTruth();
+        const z = this.quantum.measureZ();
         const entropy = this.quantum.computeVonNeumannEntropy();
         const purity = this.quantum.computePurity();
+        const phi = this.quantum.computeIntegratedInformation();
+        const truthProbs = this.quantum.measureTruth();
 
-        this.classical.setQuantumInfluence({
-            z: zQuantum * this.coupling.quantumToClassical + this.classical.computeZ() * (1 - this.coupling.quantumToClassical),
-            truthProbs,
-            entropy,
-            purity
+        const quantumPayload = { z, entropy, purity, phi, truthProbs };
+        this.classical.setQuantumInfluence(quantumPayload);
+
+        const scalarState = this.classical.getScalarState();
+
+        this.quantum.driveFromClassical({
+            z: scalarState.Omega,
+            phi,
+            F: this.classical.FreeEnergy?.F ?? 0,
+            R: scalarState.Rs
         });
+
+        const legalOps = this.classical.getLegalOperators();
+        const n0Result = this.quantum.selectN0Operator(legalOps, scalarState);
+        this.classical.N0?.applyOperator(n0Result.operator, n0Result);
+
+        this.recordStep({
+            z,
+            entropy,
+            phi,
+            truthProbs,
+            scalarState,
+            operator: n0Result.operator,
+            operatorProb: n0Result.probability,
+            helixHints: n0Result.helixHints
+        });
+
+        this.totalSteps++;
+
+        return {
+            quantum: { z, entropy, purity, phi, truthProbs },
+            classical: scalarState,
+            operator: n0Result,
+            step: this.totalSteps
+        };
     }
+
+    measureHierarchicalSubspace() {
+        return this.measureSubspace([2, 3], 'Phi', 'PARADOX');
+    }
+
+    measureCoherentState() {
+        return this.measureSingleEigenstate(2, 'e', 'TRUE');
+    }
+
+    measureIntegratedRegime() {
+        return this.measureSubspace([2, 3], 'Pi', 'PARADOX');
+    }
+
+    measureCriticalPoint() {
+        const z = this.quantum.measureZ();
+        const zc = Math.sqrt(3) / 2;
+        if (Math.abs(z - zc) < 0.05) {
+            return this.measureWithTruthRegister([
+                { eigenIndex: 0, truthChannel: 'TRUE', field: 'Pi', weight: 0.3 },
+                { eigenIndex: 1, truthChannel: 'UNTRUE', field: 'Pi', weight: 0.3 },
+                { subspaceIndices: [2, 3], truthChannel: 'PARADOX', field: 'Pi', weight: 0.4 }
+            ]);
+        }
+        return null;
+    }
+
+    // ================================================================
+    // ANALYTICS & STATE EXPORT
+    // ================================================================
+
+    recordStep(data) {
+        this.zHistory.push(data.z);
+        this.phiHistory.push(data.phi);
+        this.entropyHistory.push(data.entropy);
+        this.operatorHistory.push({
+            operator: data.operator,
+            probability: data.operatorProb,
+            step: this.totalSteps,
+            helix: data.helixHints || this.quantum.lastHelixHints || null
+        });
+
+        const maxHistory = 1000;
+        if (this.zHistory.length > maxHistory) {
+            this.zHistory.shift();
+            this.phiHistory.shift();
+            this.entropyHistory.shift();
+            this.operatorHistory.shift();
+        }
+    }
+
+    getAnalytics() {
+        return {
+            totalSteps: this.totalSteps,
+            measurementCount: this.measurementCount,
+            collapseStats: { ...this.collapseStats },
+            avgZ: this.average(this.zHistory),
+            avgPhi: this.average(this.phiHistory),
+            avgEntropy: this.average(this.entropyHistory),
+            classicalPhi: this.classical.IIT?.phi ?? 0,
+            cooperation: this.classical.GameTheory?.cooperation ?? 0,
+            freeEnergy: this.classical.FreeEnergy?.F ?? 0,
+            operatorDist: this.computeOperatorDistribution(),
+            quantumClassicalCorr: this.computeQuantumClassicalCorrelation()
+        };
+    }
+
+    exportState() {
+        return {
+            quantum: {
+                dimTotal: this.quantum.dimTotal,
+                z: this.quantum.z,
+                phi: this.quantum.phi,
+                entropy: this.quantum.entropy,
+                purity: this.quantum.computePurity(),
+                populations: this.quantum.getPopulations().slice(0, 10),
+                truthProbs: this.quantum.measureTruth(),
+                helix: this.quantum.lastHelixHints || null
+            },
+            classical: {
+                IIT: {
+                    phi: this.classical.IIT?.phi ?? 0,
+                    integrationSignal: this.classical.IIT?.integrationSignal ?? 0,
+                    recursiveDrive: this.classical.IIT?.recursiveDrive ?? 0
+                },
+                GameTheory: {
+                    cooperation: this.classical.GameTheory?.cooperation ?? 0,
+                    resonance: this.classical.GameTheory?.resonance ?? 0
+                },
+                FreeEnergy: {
+                    F: this.classical.FreeEnergy?.F ?? 0,
+                    tension: this.classical.FreeEnergy?.tension ?? 0,
+                    dissipation: this.classical.FreeEnergy?.dissipation ?? 0
+                }
+            },
+            measurement: {
+                lastMode: this.lastMeasurementMode,
+                lastProjector: this.lastProjector,
+                stats: { ...this.collapseStats }
+            },
+            history: {
+                z: this.zHistory.slice(-100),
+                phi: this.phiHistory.slice(-100),
+                entropy: this.entropyHistory.slice(-100),
+                operators: this.operatorHistory.slice(-20)
+            },
+            analytics: this.getAnalytics()
+        };
+    }
+
+    average(arr) {
+        if (!arr.length) return 0;
+        return arr.reduce((sum, x) => sum + x, 0) / arr.length;
+    }
+
+    computeOperatorDistribution() {
+        const total = this.operatorHistory.length || 1;
+        const dist = {};
+        for (const entry of this.operatorHistory) {
+            dist[entry.operator] = (dist[entry.operator] || 0) + 1;
+        }
+        Object.keys(dist).forEach(key => { dist[key] /= total; });
+        return dist;
+    }
+
+    computeQuantumClassicalCorrelation() {
+        const n = Math.min(this.zHistory.length, this.phiHistory.length);
+        if (n < 2) return 0;
+        let sumZ = 0, sumPhi = 0, sumZ2 = 0, sumPhi2 = 0, sumZPhi = 0;
+        for (let i = 0; i < n; i++) {
+            const z = this.zHistory[i];
+            const phi = this.phiHistory[i];
+            sumZ += z;
+            sumPhi += phi;
+            sumZ2 += z * z;
+            sumPhi2 += phi * phi;
+            sumZPhi += z * phi;
+        }
+        const numerator = n * sumZPhi - sumZ * sumPhi;
+        const denominator = Math.sqrt((n * sumZ2 - sumZ * sumZ) * (n * sumPhi2 - sumPhi * sumPhi));
+        return denominator > 1e-10 ? numerator / denominator : 0;
+    }
+
+    // API compatibility helpers -----------------------------------
 
     getScalarState() {
         return this.classical.getScalarState();
@@ -112,11 +391,76 @@ class QuantumClassicalBridge {
     }
 
     applyOperator(result) {
-        if (!result) return;
-        this.classical.applyOperatorEffects(result);
+        if (result && result.operator && typeof this.classical.applyOperatorEffects === 'function') {
+            this.classical.applyOperatorEffects(result);
+        }
+    }
+}
+
+// ================================================================
+// DEMO RUNNER
+// ================================================================
+
+class UnifiedDemo {
+    constructor(config = {}) {
+        if (!QuantumAPLRef || !ClassicalStackRef) {
+            throw new Error('UnifiedDemo requires QuantumAPL and ClassicalConsciousnessStack');
+        }
+
+        this.quantum = new QuantumAPLRef({
+            dimPhi: config.dimPhi || 4,
+            dimE: config.dimE || 4,
+            dimPi: config.dimPi || 4
+        });
+
+        this.classical = new ClassicalStackRef({
+            IIT: { initialPhi: 0.3 },
+            GameTheory: { initialCooperation: 0.5 },
+            FreeEnergy: { initialF: 0.2 }
+        });
+
+        this.bridge = new QuantumClassicalBridge(this.quantum, this.classical, config.bridge || {});
+    }
+
+    run(numSteps = 100, verbose = false) {
+        const results = [];
+        for (let i = 0; i < numSteps; i++) {
+            const result = this.bridge.step(0.01);
+            results.push(result);
+            if (verbose && i % 10 === 0) {
+                const { quantum, classical } = result;
+                // eslint-disable-next-line no-console
+                console.log(`Step ${i}: z=${quantum.z.toFixed(3)} S=${quantum.entropy.toFixed(3)} Φ=${quantum.phi.toFixed(3)} | Ω=${classical.Omega.toFixed(3)}`);
+            }
+            if (i % 50 === 0 && i > 0) {
+                this.bridge.measureCriticalPoint();
+            }
+        }
+        return results;
+    }
+
+    testMeasurementModes() {
+        return {
+            eigenstate: this.bridge.measureSingleEigenstate(2, 'Phi', 'TRUE'),
+            subspace: this.bridge.measureSubspace([2, 3], 'Phi', 'PARADOX'),
+            composite: this.bridge.measureWithTruthRegister([
+                { eigenIndex: 0, truthChannel: 'UNTRUE', field: 'Pi', weight: 0.3 },
+                { eigenIndex: 1, truthChannel: 'TRUE', field: 'Pi', weight: 0.3 },
+                { subspaceIndices: [2, 3], truthChannel: 'PARADOX', field: 'Pi', weight: 0.4 }
+            ]),
+            hierarchical: this.bridge.measureHierarchicalSubspace(),
+            integrated: this.bridge.measureIntegratedRegime()
+        };
+    }
+
+    summary() {
+        return this.bridge.getAnalytics();
     }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { QuantumClassicalBridge };
+    module.exports = { QuantumClassicalBridge, UnifiedDemo };
+} else {
+    globalScope.QuantumClassicalBridge = QuantumClassicalBridge;
+    globalScope.UnifiedDemo = UnifiedDemo;
 }
