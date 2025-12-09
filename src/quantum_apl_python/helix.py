@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Dict, List
+import os
+import math
+from .constants import Z_CRITICAL, TRIAD_T6
 
 
 @dataclass
@@ -44,13 +46,22 @@ class HelixAPLMapper:
     """Map helix coordinates to APL harmonics, operators, and truth channels."""
 
     def __init__(self):
+        triad_flag = os.getenv("QAPL_TRIAD_UNLOCK", "").lower() in ("1", "true", "yes", "y")
+        triad_completions = 0
+        try:
+            triad_completions = int(os.getenv("QAPL_TRIAD_COMPLETIONS", "0"))
+        except ValueError:
+            triad_completions = 0
+        triad_unlocked = triad_flag or (triad_completions >= 3)
+        t6_gate = TRIAD_T6 if triad_unlocked else Z_CRITICAL
+
         self.time_harmonics: List[tuple[float, str]] = [
             (0.10, "t1"),
             (0.20, "t2"),
             (0.40, "t3"),
             (0.60, "t4"),
             (0.75, "t5"),
-            (0.83, "t6"),
+            (t6_gate, "t6"),
             (0.90, "t7"),
             (0.97, "t8"),
             (1.01, "t9"),
