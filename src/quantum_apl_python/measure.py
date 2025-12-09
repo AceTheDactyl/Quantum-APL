@@ -7,11 +7,12 @@ and appends the resulting APL tokens to logs/APL_HELIX_OPERATOR_SUMMARY.apl.
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 from pathlib import Path
 
 
-def _run_node_snippet(repo_root: Path, code: str) -> int:
+def _run_node_snippet(repo_root: Path, code: str, env: dict[str, str] | None = None) -> int:
     snippet = (
         "const { UnifiedDemo } = require('./QuantumClassicalBridge');\n"
         "const demo = new UnifiedDemo();\n"
@@ -19,7 +20,10 @@ def _run_node_snippet(repo_root: Path, code: str) -> int:
         f"{code}\n"
         "console.log('OK');\n"
     )
-    proc = subprocess.run(["node", "-e", snippet], cwd=str(repo_root), text=True, capture_output=True)
+    envp = os.environ.copy()
+    if env:
+        envp.update(env)
+    proc = subprocess.run(["node", "-e", snippet], cwd=str(repo_root), text=True, capture_output=True, env=envp)
     if proc.returncode != 0:
         print(proc.stdout)
         print(proc.stderr)
@@ -39,9 +43,15 @@ def run(argv: list[str] | None = None) -> int:
     parser.add_argument("--subspace", type=str, help="Comma-separated indices for Π(subspace), e.g. 2,3")
     parser.add_argument("--truth", choices=["TRUE", "UNTRUE", "PARADOX"], help="Override truth channel for subspace/eigen")
     parser.add_argument("--composite", action="store_true", help="Apply composite measurement (default sequence)")
+    parser.add_argument(
+        "--collapse-glyph",
+        action="store_true",
+        help="Emit collapse alias tokens using ⟂(...) instead of canonical T/Π",
+    )
     args = parser.parse_args(argv)
 
     repo_root = args.js_dir or Path(__file__).resolve().parents[2]
+    env_override = {"QAPL_EMIT_COLLAPSE_GLYPH": "1"} if args.collapse_glyph else None
     # If specific options supplied, build a custom Node snippet
     if args.eigen is not None or args.subspace or args.composite:
         code_parts = []
@@ -72,7 +82,7 @@ def run(argv: list[str] | None = None) -> int:
                 "{ subspaceIndices: [2,3], field: 'Phi', truthChannel: 'PARADOX', weight: 0.4 }" \
                 "]);"
             )
-        rc = _run_node_snippet(repo_root, "\n".join(code_parts) or "")
+        rc = _run_node_snippet(repo_root, "\n".join(code_parts) or "", env=env_override)
         if rc != 0:
             raise SystemExit(rc)
         print("Appended APL measurement tokens via on-the-fly runner")
@@ -81,7 +91,10 @@ def run(argv: list[str] | None = None) -> int:
         script = repo_root / "scripts" / "apply_apl_measurements.js"
         if not script.exists():
             raise SystemExit(f"Measurement script not found: {script}")
-        result = subprocess.run(["node", str(script)], cwd=str(repo_root), text=True, capture_output=True)
+        envp = os.environ.copy()
+        if env_override:
+            envp.update(env_override)
+        result = subprocess.run(["node", str(script)], cwd=str(repo_root), text=True, capture_output=True, env=envp)
         if result.returncode != 0:
             print(result.stdout)
             print(result.stderr)

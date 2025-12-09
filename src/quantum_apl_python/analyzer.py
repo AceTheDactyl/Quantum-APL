@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import numpy as np
-from .constants import Z_CRITICAL
+from .constants import Z_CRITICAL, TRIAD_T6
 
 from .alpha_language import AlphaTokenSynthesizer
 from .helix import HelixAPLMapper, HelixCoordinate
@@ -104,7 +104,7 @@ class QuantumAnalyzer:
         except ValueError:
             triad_completions = 0
         triad_unlocked = triad_flag or (triad_completions >= 3)
-        t6_gate = 0.83 if triad_unlocked else Z_CRITICAL
+        t6_gate = TRIAD_T6 if triad_unlocked else Z_CRITICAL
         lines.append(f"  t6 gate: {'TRIAD' if triad_unlocked else 'CRITICAL'} @ {t6_gate:.3f}")
 
         # Append hex-prism geometry for current engine z
@@ -194,7 +194,11 @@ class QuantumAnalyzer:
         if apl_entries:
             lines.append("")
             lines.append("Recent Measurements (APL tokens):")
+            # Normalize collapse alias unless experimental ops enabled
+            exp_ops = os.getenv("QAPL_EXPERIMENTAL_OPS", "").lower() in ("1", "true", "yes", "y")
             for tok, p in apl_entries[-5:]:
+                if tok and not exp_ops:
+                    tok = tok.replace("⟂(subspace)", "Π(subspace)").replace("⟂(ϕ_", "T(ϕ_")
                 if tok:
                     if isinstance(p, (int, float)):
                         lines.append(f"  {tok}  (p={p:.3f})")

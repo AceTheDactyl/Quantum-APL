@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 from collections import OrderedDict
+import os
 
 
 def read_lines(p: Path) -> list[str]:
@@ -24,15 +25,19 @@ def main() -> int:
     tokens: "OrderedDict[str, None]" = OrderedDict()
 
     # 1) Per-seed bundles first (preserve seed ordering by filename)
+    exp_ops = os.getenv('QAPL_EXPERIMENTAL_OPS', '').lower() in ('1', 'true', 'yes', 'y')
+
     for bundle in sorted(sweep.glob("apl_*.apl")):
         for ln in read_lines(bundle):
-            tokens.setdefault(ln, None)
+            norm = ln if exp_ops else ln.replace('⟂(subspace)', 'Π(subspace)').replace('⟂(ϕ_', 'T(ϕ_')
+            tokens.setdefault(norm, None)
 
     # 2) Global measurement summary last
     summary = Path(args.summary).resolve()
     if summary.exists():
         for ln in read_lines(summary):
-            tokens.setdefault(ln, None)
+            norm = ln if exp_ops else ln.replace('⟂(subspace)', 'Π(subspace)').replace('⟂(ϕ_', 'T(ϕ_')
+            tokens.setdefault(norm, None)
 
     out_path = Path(args.output).resolve() if args.output else (sweep / "apl_digest.apl")
     out_path.write_text("\n".join(tokens.keys()) + "\n", encoding="utf-8")
@@ -42,4 +47,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -36,6 +36,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--measure-field", choices=["Phi", "Pi", "π"], help="Field for eigen/subspace in measured mode")
     parser.add_argument("--measure-subspace", type=str, help="Comma-separated indices for Π(subspace) in measured mode")
     parser.add_argument("--no-measure-composite", action="store_true", help="Disable composite measurement in measured mode")
+    parser.add_argument(
+        "--collapse-glyph",
+        action="store_true",
+        help="Emit collapse alias tokens (⟂) in measured mode",
+    )
     return parser
 
 
@@ -66,6 +71,8 @@ def _execute(args: argparse.Namespace) -> int:
         if getattr(args, "measure_subspace", None):
             os.environ["QAPL_MEASURE_SUBSPACE"] = str(args.measure_subspace)
         os.environ["QAPL_MEASURE_COMPOSITE"] = "0" if args.no_measure_composite else "1"
+        if getattr(args, "collapse_glyph", False):
+            os.environ["QAPL_EMIT_COLLAPSE_GLYPH"] = "1"
 
     engine = QuantumAPLEngine(js_dir=args.js_dir)
     print(f"Running {args.mode} simulation with {args.steps} steps...")
