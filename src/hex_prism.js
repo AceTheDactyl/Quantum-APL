@@ -71,12 +71,14 @@ function computeHexPrismVertices(z, deltaSNeg = null) {
  * Export geometry as a JSON-compatible sidecar
  */
 function exportGeometrySidecar(z, version = '1.0.0') {
-  const deltaSNeg = CONST.computeDeltaSNeg(z);
+  const deltaSNeg = CONST.computeDeltaSNeg(z, CONST.GEOM_SIGMA);
+  const lensSNeg = CONST.computeDeltaSNeg(z, CONST.LENS_SIGMA);
   const vertices = computeHexPrismVertices(z, deltaSNeg);
   return {
     version,
     z,
     delta_S_neg: deltaSNeg,
+    lens_s_neg: lensSNeg,
     vertices: vertices.map(v => ({ id: v.id, x: v.x, y: v.y, z: v.z })),
     geometry: {
       R: CONST.hexPrismRadius(deltaSNeg),
@@ -86,6 +88,7 @@ function exportGeometrySidecar(z, version = '1.0.0') {
     constants: {
       Z_CRITICAL: CONST.Z_CRITICAL,
       GEOM_SIGMA: CONST.GEOM_SIGMA,
+      LENS_SIGMA: CONST.LENS_SIGMA,
       GEOM_R_MAX: CONST.GEOM_R_MAX,
       GEOM_BETA: CONST.GEOM_BETA,
       GEOM_H_MIN: CONST.GEOM_H_MIN,
@@ -97,4 +100,3 @@ function exportGeometrySidecar(z, version = '1.0.0') {
 }
 
 module.exports = { computeHexPrismVertices, exportGeometrySidecar };
-

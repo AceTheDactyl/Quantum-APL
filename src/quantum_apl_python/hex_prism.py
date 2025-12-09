@@ -39,6 +39,7 @@ def prism_params(z: float) -> Dict[str, object]:
         GEOM_GAMMA,
         GEOM_PHI_BASE,
         GEOM_ETA,
+        LENS_SIGMA,
     )
 
     z_c = Z_CRITICAL
@@ -52,6 +53,7 @@ def prism_params(z: float) -> Dict[str, object]:
 
     from .constants import compute_delta_s_neg
     delta_s_neg = compute_delta_s_neg(z, sigma=sigma, z_c=z_c)
+    lens_s_neg = compute_delta_s_neg(z, sigma=LENS_SIGMA, z_c=z_c)
     radius = r_max - beta * delta_s_neg
     height = h_min + gamma * delta_s_neg
     phi = phi_base + eta * delta_s_neg
@@ -71,6 +73,7 @@ def prism_params(z: float) -> Dict[str, object]:
         "z_c": z_c,
         "sigma": sigma,
         "delta_s_neg": delta_s_neg,
+        "lens_s_neg": lens_s_neg,
         "R": radius,
         "H": height,
         "phi": phi,

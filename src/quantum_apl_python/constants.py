@@ -161,6 +161,9 @@ GEOM_GAMMA: float = 0.18
 GEOM_PHI_BASE: float = 0.0
 GEOM_ETA: float = math.pi / 12.0
 
+# Lens weight sigma for Gaussian s(z) used in control/analytics
+LENS_SIGMA: float = float((__import__('os').environ.get('QAPL_LENS_SIGMA') or '36.0'))
+
 # ============================================================================
 # DOC-FRIENDLY ALIASES & EXTENSIONS
 # ============================================================================
@@ -347,7 +350,7 @@ __all__ = [
     # Helix zoning
     "Z_T1_MAX", "Z_T2_MAX", "Z_T3_MAX", "Z_T4_MAX", "Z_T5_MAX", "Z_T7_MAX", "Z_T8_MAX",
     # Geometry projection
-    "GEOM_SIGMA", "GEOM_R_MAX", "GEOM_BETA", "GEOM_H_MIN", "GEOM_GAMMA", "GEOM_PHI_BASE", "GEOM_ETA",
+    "GEOM_SIGMA", "GEOM_R_MAX", "GEOM_BETA", "GEOM_H_MIN", "GEOM_GAMMA", "GEOM_PHI_BASE", "GEOM_ETA", "LENS_SIGMA",
     # Geometry aliases
     "SIGMA", "R_MAX", "BETA", "H_MIN", "GAMMA", "PHI_BASE", "ETA",
     # Doc-friendly aliases

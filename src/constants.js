@@ -59,6 +59,12 @@ const GEOM_GAMMA = 0.18;
 const GEOM_PHI_BASE = 0.0;
 const GEOM_ETA = Math.PI / 12;
 
+// Lens weight (coherence) sigma for Gaussian s(z) = exp(-σ (z - z_c)^2)
+// Controls the effective width of the lens used in control/analytics.
+const LENS_SIGMA = (typeof process !== 'undefined' && process.env && process.env.QAPL_LENS_SIGMA)
+  ? parseFloat(process.env.QAPL_LENS_SIGMA)
+  : 36.0;
+
 // PRS phase thresholds (phi)
 const PRS_P1_PHI_MAX = 0.2;  // P1: Initiation
 const PRS_P2_PHI_MAX = 0.5;  // P2: Tension
@@ -172,6 +178,7 @@ module.exports = Object.freeze({
   GEOM_GAMMA,
   GEOM_PHI_BASE,
   GEOM_ETA,
+  LENS_SIGMA,
   PRS_P1_PHI_MAX,
   PRS_P2_PHI_MAX,
   PRS_P3_PHI_MAX,

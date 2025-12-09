@@ -767,14 +767,19 @@ class QuantumAPL {
             const dimMax = Math.max(2, this.dimTotal);
             const S_max = Math.log2(dimMax);
             // Target: S_target = S_max * (1 - C * ΔS_neg)
-            const deltaSNeg = CONST.computeDeltaSNeg(typeof targetZ === 'number' ? targetZ : this.z);
+            const deltaSNeg = CONST.computeDeltaSNeg(typeof targetZ === 'number' ? targetZ : this.z, CONST.LENS_SIGMA);
             const S_target = S_max * (1 - this.entropyCtrlCoeff * deltaSNeg);
             // Control error: positive when S_current > S_target (reduce entropy)
             const e_norm = (S_current - S_target) / S_max;
             effectiveGain = Math.max(0.0, Math.min(0.5, gain + this.entropyCtrlGain * e_norm));
         }
 
-        const mixed = this.rho.scale(1 - effectiveGain).add(normalizedBias.scale(effectiveGain));
+        // Gate smoothing around t6 using lens softness factor
+        const t6Gate = this.helixAdvisor?.getT6Gate ? this.helixAdvisor.getT6Gate() : CONST.Z_CRITICAL;
+        const softness = CONST.computeDeltaSNeg(t6Gate, CONST.LENS_SIGMA); // 0..1
+        const gainSmoothed = effectiveGain * (0.5 + 0.5 * softness);
+
+        const mixed = this.rho.scale(1 - gainSmoothed).add(normalizedBias.scale(gainSmoothed));
         this.rho = mixed;
         this.normalizeDensityMatrix();
         this.measureZ();

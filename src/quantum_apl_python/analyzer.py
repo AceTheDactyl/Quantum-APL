@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import numpy as np
-from .constants import Z_CRITICAL, TRIAD_T6
+from .constants import Z_CRITICAL, TRIAD_T6, PHI_INV, MU_P, MU_1, MU_2, mu_barrier
 
 from .alpha_language import AlphaTokenSynthesizer
 from .helix import HelixAPLMapper, HelixCoordinate
@@ -106,6 +106,17 @@ class QuantumAnalyzer:
         triad_unlocked = triad_flag or (triad_completions >= 3)
         t6_gate = TRIAD_T6 if triad_unlocked else Z_CRITICAL
         lines.append(f"  t6 gate: {'TRIAD' if triad_unlocked else 'CRITICAL'} @ {t6_gate:.3f}")
+
+        # One-line μ barrier print relative to φ^{-1}
+        try:
+            barrier = mu_barrier()
+            delta = abs(barrier - PHI_INV)
+            if delta < 1e-6:
+                lines.append(f"  μ barrier: φ⁻¹ exact @ {PHI_INV:.3f}")
+            else:
+                lines.append(f"  μ barrier: {barrier:.3f} vs φ⁻¹ {PHI_INV:.3f} (Δ={delta:.3e})")
+        except Exception:
+            pass
 
         # Append hex-prism geometry for current engine z
         geom = prism_params(z_value)
