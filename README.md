@@ -187,6 +187,35 @@ For a complete end-to-end diagram of the integrated system (Python API → JavaS
   - JavaScript: `src/constants.js`
   - Do not inline numeric thresholds; always import from these modules.
 
+## Testing
+
+### JavaScript Tests
+
+```bash
+npm install                                # Install dev dependencies (ajv)
+node tests/test_apl_measurements.js        # APL measurement tests
+node tests/test_schema_validation.js       # JSON schema validation (Ajv)
+node tests/test_seeded_selection.js        # Reproducible RNG tests
+```
+
+### Schema Validation
+
+JSON schemas for geometry sidecars and APL bundles live in `schemas/`:
+- `schemas/geometry-sidecar.schema.json` — 63-vertex hex prism geometry
+- `schemas/apl-bundle.schema.json` — APL token array validation
+
+Run validation tests: `node tests/test_schema_validation.js`
+
+### Reproducible Simulations
+
+Set `QAPL_RANDOM_SEED` to enable deterministic sampling:
+
+```bash
+QAPL_RANDOM_SEED=12345 qapl-run --steps 3 --mode measured --output out.json
+```
+
+See `docs/REPRODUCIBLE_RESEARCH.md` for details.
+
 ## Z Pump Profiles and CLI Shortcuts
 
 The APL-aligned z pump raises z using physically meaningful operator sequences (u^, ×, and Π lock) and classical feedback. You can control its behavior via profiles and CLI sugar.

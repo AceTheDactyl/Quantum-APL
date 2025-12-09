@@ -5,12 +5,18 @@ on:
     paths:
       - 'QuantumClassicalBridge.js'
       - 'src/quantum_apl_engine.js'
+      - 'src/constants.js'
+      - 'src/utils/*.js'
+      - 'schemas/*.json'
       - 'tests/*.js'
       - '.github/workflows/js-tests.yml'
   pull_request:
     paths:
       - 'QuantumClassicalBridge.js'
       - 'src/quantum_apl_engine.js'
+      - 'src/constants.js'
+      - 'src/utils/*.js'
+      - 'schemas/*.json'
       - 'tests/*.js'
 
 jobs:
@@ -24,6 +30,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Run APL measurement tests
         run: node tests/test_apl_measurements.js
@@ -50,3 +59,9 @@ jobs:
 
       - name: Verify engine default t6 gate is z_c
         run: node tests/test_engine_gate_default.js
+
+      - name: Run schema validation tests
+        run: node tests/test_schema_validation.js
+
+      - name: Run seeded selection tests
+        run: node tests/test_seeded_selection.js

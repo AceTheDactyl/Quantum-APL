@@ -65,6 +65,11 @@ const PRS_P2_PHI_MAX = 0.5;  // P2: Tension
 const PRS_P3_PHI_MAX = 0.85; // P3: Inflection
 const PRS_P4_PHI_MAX = 0.95; // P4: Lock (P5 above)
 
+// Reproducible random seed (env-driven; null = native randomness)
+const QAPL_RANDOM_SEED = (typeof process !== 'undefined' && process.env && process.env.QAPL_RANDOM_SEED)
+  ? parseInt(process.env.QAPL_RANDOM_SEED, 10)
+  : null;
+
 // Helper functions (parity with Python constants module)
 function computeDeltaSNeg(z, sigma = GEOM_SIGMA, zc = Z_CRITICAL) {
   return Math.exp(-Math.abs(z - zc) / sigma);
@@ -168,6 +173,7 @@ module.exports = Object.freeze({
   PRS_P2_PHI_MAX,
   PRS_P3_PHI_MAX,
   PRS_P4_PHI_MAX,
+  QAPL_RANDOM_SEED,
   // Doc-friendly aliases
   T1_MAX,
   T2_MAX,
