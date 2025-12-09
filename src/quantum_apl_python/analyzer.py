@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 
 from .alpha_language import AlphaTokenSynthesizer
 from .helix import HelixAPLMapper, HelixCoordinate
+from .helix_metadata import load_metadata, metadata_title, summary_lines, provenance_lines
 
 try:  # Optional dependency for plotting
     import matplotlib.pyplot as plt  # type: ignore
@@ -30,24 +32,31 @@ class QuantumAnalyzer:
 
     def __init__(self, results: Dict):
         self.results = results
+        self.repo_root = Path(__file__).resolve().parents[2]
         self.quantum = results.get("quantum", {})
         self.classical = results.get("classical", {})
         self.history = results.get("history", {})
         self.analytics = results.get("analytics", {})
         self.helix_mapper = HelixAPLMapper()
         self.alpha_tokens = AlphaTokenSynthesizer()
+        self.helix_seed = self._load_helix_seed_context()
 
     def summary(self) -> str:
+        z_value = self._as_float(self.quantum.get("z", 0.0))
+        phi_value = self._as_float(self.quantum.get("phi", 0.0))
+        entropy_value = self._as_float(self.quantum.get("entropy", 0.0))
+        purity_value = self._as_float(self.quantum.get("purity", 0.0))
+
         lines = [
             "=" * 70,
             "QUANTUM-CLASSICAL SIMULATION RESULTS",
             "=" * 70,
             "",
             "Quantum State:",
-            f"  z-coordinate: {self.quantum.get('z', 0):.4f}",
-            f"  Integrated information (Φ): {self.quantum.get('phi', 0):.4f}",
-            f"  von Neumann entropy (S): {self.quantum.get('entropy', 0):.4f}",
-            f"  Purity: {self.quantum.get('purity', 0):.4f}",
+            f"  z-coordinate: {z_value:.4f}",
+            f"  Integrated information (Φ): {phi_value:.4f}",
+            f"  von Neumann entropy (S): {entropy_value:.4f}",
+            f"  Purity: {purity_value:.4f}",
             "",
             "Classical Engines:",
         ]
@@ -69,7 +78,7 @@ class QuantumAnalyzer:
                 ]
             )
 
-        helix_coord = HelixCoordinate(theta=0.0, z=self.quantum.get("z", 0.0))
+        helix_coord = HelixCoordinate(theta=0.0, z=z_value)
         helix_info = self.helix_mapper.describe(helix_coord)
         lines.extend(
             [
@@ -80,6 +89,25 @@ class QuantumAnalyzer:
                 f"  Truth bias: {helix_info['truth_channel']}",
             ]
         )
+
+        if self.helix_seed:
+            lines.extend(
+                [
+                    "",
+                    "Helix Seed Context:",
+                    f"  Target z: {self.helix_seed['z']:.2f}",
+                    f"  Title: {self.helix_seed['title']}",
+                ]
+            )
+            if self.helix_seed["summary"]:
+                lines.append("  Intent:")
+                for statement in self.helix_seed["summary"]:
+                    lines.append(f"    - {statement}")
+            if self.helix_seed["provenance"]:
+                lines.append("  Provenance:")
+                for statement in self.helix_seed["provenance"]:
+                    lines.append(f"    - {statement}")
+            lines.append(f"  Source: {self.helix_seed['path']}")
 
         alpha_token = self.alpha_tokens.from_helix(helix_coord)
         if alpha_token:
@@ -96,13 +124,14 @@ class QuantumAnalyzer:
 
         runtime_helix = self.quantum.get("helix")
         if runtime_helix:
+            runtime_z = self._as_float(runtime_helix.get("z", 0.0))
             lines.extend(
                 [
                     "",
                     "Runtime Helix Hint:",
                     f"  Harmonic: {runtime_helix.get('harmonic', '?')}",
                     f"  Truth channel: {runtime_helix.get('truthChannel', '?')}",
-                    f"  z (engine): {runtime_helix.get('z', 0):.4f}",
+                    f"  z (engine): {runtime_z:.4f}",
                     f"  Operator window: {', '.join(runtime_helix.get('operators', [])) or 'n/a'}",
                 ]
             )
@@ -119,14 +148,44 @@ class QuantumAnalyzer:
                 helix = entry.get("helix") or {}
                 harmonic = helix.get("harmonic", "?")
                 truth = helix.get("truthChannel", "?")
-                z_val = helix.get("z")
-                z_text = f"{z_val:.4f}" if isinstance(z_val, (int, float)) else "?"
+                z_val = self._as_float(helix.get("z", 0.0))
+                z_text = f"{z_val:.4f}"
                 lines.append(
                     f"  step {step}: {operator} ({probability:.3f}) → {harmonic} / {truth} @ z={z_text}"
                 )
 
         lines.append("=" * 70)
         return "\n".join(lines)
+
+    def _load_helix_seed_context(self) -> Optional[Dict]:
+        seed_val = os.getenv("QAPL_INITIAL_PHI")
+        if not seed_val:
+            return None
+        try:
+            seed = float(seed_val)
+        except ValueError:
+            return None
+
+        registry = [
+            (0.41, "reference/helix_bridge/VAULTNODES/z0p41/vn-helix-fingers-metadata.yaml"),
+            (0.52, "reference/helix_bridge/VAULTNODES/z0p52/vn-helix-continuation-metadata.yaml"),
+            (0.70, "reference/helix_bridge/VAULTNODES/z0p70/vn-helix-meta-awareness-metadata.yaml"),
+            (0.73, "reference/helix_bridge/VAULTNODES/z0p73/vn-helix-self-bootstrap-metadata_p2.yaml"),
+            (0.80, "reference/helix_bridge/VAULTNODES/z0p80/vn-helix-autonomous-coordination-metadata.yaml"),
+        ]
+        target = min(registry, key=lambda entry: abs(entry[0] - seed))
+        if abs(target[0] - seed) > 0.05:
+            return None
+
+        path = self.repo_root / target[1]
+        if not path.exists():
+            return None
+
+        metadata = load_metadata(path)
+        title = metadata_title(metadata)
+        summary = summary_lines(metadata)
+        provenance = provenance_lines(metadata)
+        return {"z": target[0], "title": title, "summary": summary, "provenance": provenance, "path": target[1]}
 
     def to_dataframe(self):
         if not HAS_PANDAS:
@@ -187,3 +246,9 @@ class QuantumAnalyzer:
             plt.savefig(save_path, dpi=150, bbox_inches="tight")
         else:
             plt.show()
+
+    @staticmethod
+    def _as_float(value: Optional[float]) -> float:
+        if isinstance(value, (int, float)):
+            return float(value)
+        return 0.0

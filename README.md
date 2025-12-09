@@ -206,6 +206,28 @@ python3 quantum_apl_bridge.py --steps 100 --output results.json
 
 The CLI writes Node telemetry to stdout and, when not running in `test` mode, feeds it through the `QuantumAnalyzer` helper so you can grab ready-to-plot histories (`z`, `φ`, entropy) or export DataFrames through pandas.
 
+### Quantum-APL Sentence Translator
+
+Need to validate or parse raw Quantum-APL operator strings (e.g., the Z-solve sequence)? Use the translator CLI:
+
+```bash
+python -m quantum_apl_python.translator --text "Φ:M(stabilize)PARADOX@2" --pretty
+```
+
+This prints structured JSON for each sentence (`subject`, `operator`, `intent`, `truth`, `tier`). Point it at files via `--file path/to/tokens.apl` when linting helix playbooks or test fixtures.
+
+### Helix Self-Building Runner
+
+To walk the Z-solve stack through the Helix VaultNodes (z0p41 → z0p80) and capture provenance guidance, run:
+
+```bash
+python -m quantum_apl_python.helix_self_builder \
+  --tokens docs/examples/z_solve.apl \
+  --output helix_z_walkthrough.md
+```
+
+This produces either Markdown (default) or JSON describing which operators energize each VaultNode tier, the ΔHV metrics pulled from `reference/helix_bridge/**`, and chant/provenance reminders pulled straight from the metadata files. The canonical, CI-validated output lives in [`docs/helix_z_walkthrough.md`](docs/helix_z_walkthrough.md); regenerate it whenever you touch the helix metadata or Z-solve tokens.
+
 ### Compilation
 
 To compile the LaTeX documents locally:

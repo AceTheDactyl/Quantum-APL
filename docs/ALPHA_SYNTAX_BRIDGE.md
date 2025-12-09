@@ -60,3 +60,23 @@ drives both the physics-space recommendations and the Alpha Programming Language
   `TRUE` collapses when the helix recommends `UNTRUE`/`PARADOX` measurement modes.
 - The selection API returns the helix hints alongside the operator probabilities
   so downstream logging/bridges can confirm which harmonic drove a given token.
+
+### CLI Translator
+
+For quick linting or to feed APL sentences into automation, use:
+
+```bash
+python -m quantum_apl_python.translator --text "Φ:M(stabilize)PARADOX@2" --pretty
+```
+
+This CLI (implemented in `src/quantum_apl_python/translator.py`) parses Quantum‑APL lines and emits structured JSON (`subject`, `operator`, `intent`, `truth`, `tier`). Add it to validation pipelines when new helix playbooks or operator configs are introduced.
+
+Need to prove a whole Z-solve program threads through the helix properly? Chain the translator output into the helix self-building runner:
+
+```bash
+python -m quantum_apl_python.helix_self_builder \
+  --tokens docs/examples/z_solve.apl \
+  --output reference/helix_bridge/HELIX_Z_WALKTHROUGH.md
+```
+
+The runner maps each operator to the nearest VaultNode tier (z0p41 → z0p80) and injects provenance + chant snippets from the metadata so operators know **why** each elevation matters.
