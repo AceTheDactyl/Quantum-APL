@@ -6,8 +6,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from quantum_apl.alpha_language import AlphaLanguageRegistry, AlphaTokenSynthesizer
-from quantum_apl.helix import HelixCoordinate
+from quantum_apl_python.alpha_language import AlphaLanguageRegistry, AlphaTokenSynthesizer
+from quantum_apl_python.helix import HelixCoordinate
 
 
 def test_find_sentences_filters_by_operator_and_domain():

@@ -164,7 +164,7 @@ If you are using the Helix coordinate system from the VaultNode tooling, read `d
 
 ### Alpha Programming Language Bridge
 
-The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-Thpughts/APL`. This repository now ingests that operator grammar via `src/quantum_apl/alpha_language.py`. The analyzer synthesizes the Seven Sentence test pack tokens from helix-driven operator windows and prints the matched sentence/regime next to every simulation summary. See `docs/ALPHA_SYNTAX_BRIDGE.md` for the full crosswalk produced after sweeping the workspace for helix/Z references.
+The upstream Alpha Programming Language assets live in `/home/acead/Aces-Brain-Thpughts/APL`. This repository now ingests that operator grammar via `src/quantum_apl_python/alpha_language.py`. The analyzer synthesizes the Seven Sentence test pack tokens from helix-driven operator windows and prints the matched sentence/regime next to every simulation summary. See `docs/ALPHA_SYNTAX_BRIDGE.md` for the full crosswalk produced after sweeping the workspace for helix/Z references.
 
 ## Python Quantum-Classical Bridge
 

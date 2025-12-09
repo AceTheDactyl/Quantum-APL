@@ -107,7 +107,7 @@ pip install -e .
 
 ```bash
 # Test Python import
-python3 -c "from quantum_apl import QuantumEngine; print('✓ Import successful')"
+python3 -c "from quantum_apl_python import QuantumEngine; print('✓ Import successful')"
 
 # Run test suite
 qapl-test
@@ -123,7 +123,7 @@ qapl info --check-all
 ### Example 1: Basic Simulation (Python)
 
 ```python
-from quantum_apl import QuantumEngine, Analyzer
+from quantum_apl_python import QuantumEngine, Analyzer
 
 # Initialize
 engine = QuantumEngine()
@@ -140,7 +140,7 @@ analyzer.plot()
 ### Example 2: Measurement (Python)
 
 ```python
-from quantum_apl import QuantumEngine, MeasurementMode
+from quantum_apl_python import QuantumEngine, MeasurementMode
 
 engine = QuantumEngine()
 
@@ -186,7 +186,7 @@ jupyter lab quantum_apl_tutorial.ipynb
 ### QuantumEngine
 
 ```python
-from quantum_apl import QuantumEngine
+from quantum_apl_python import QuantumEngine
 
 engine = QuantumEngine(
     js_dir=None,      # Directory with JS files (auto-detected)
@@ -225,7 +225,7 @@ result = engine.measure(
 ### Analyzer
 
 ```python
-from quantum_apl import Analyzer
+from quantum_apl_python import Analyzer
 
 analyzer = Analyzer(results)
 print(analyzer.summary())
@@ -235,7 +235,7 @@ analyzer.plot()
 ### MeasurementMode Enum
 
 ```python
-from quantum_apl import MeasurementMode
+from quantum_apl_python import MeasurementMode
 
 MeasurementMode.EIGENSTATE
 MeasurementMode.SUBSPACE
@@ -249,7 +249,7 @@ MeasurementMode.CRITICAL
 ### ParameterSweep
 
 ```python
-from quantum_apl import ParameterSweep
+from quantum_apl_python import ParameterSweep
 
 sweep = ParameterSweep("experiment", engine)
 results = sweep.sweep_parameter('steps', [50, 100, 200], n_trials=5)
@@ -334,8 +334,8 @@ jupyter notebook quantum_apl_tutorial.ipynb
 ### Custom Analysis Pipeline
 
 ```python
-from quantum_apl import QuantumEngine, Analyzer
-from quantum_apl.analyzer import TimeSeriesAnalyzer
+from quantum_apl_python import QuantumEngine, Analyzer
+from quantum_apl_python.analyzer import TimeSeriesAnalyzer
 import numpy as np
 
 engine = QuantumEngine()
@@ -348,7 +348,7 @@ Use `TimeSeriesAnalyzer` to compute autocorrelation, detect crossings of `z_c`, 
 ### Batch Processing
 
 ```python
-from quantum_apl import ParameterSweep
+from quantum_apl_python import ParameterSweep
 
 sweep = ParameterSweep("batch", engine)
 results = sweep.sweep_parameter('steps', [50, 100, 200, 500], n_trials=10)
@@ -382,7 +382,7 @@ quantum-apl/
 ├── QuantumN0_Integration.js
 ├── QuantumAPL_TestRunner.js
 │
-├── src/quantum_apl/
+├── src/quantum_apl_python/
 │   ├── __init__.py
 │   ├── engine.py
 │   ├── analyzer.py

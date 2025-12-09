@@ -13,9 +13,9 @@ encode state as `(θ, z, r)` via the parametric helix `r(t) = (cos t, sin t, t)`
 The `Quantum-APL` folder already shipped PDF/TeX copies of the operator manual, so the
 new integration focuses on structured data:
 
-1. `src/quantum_apl/alpha_language.py` mirrors the operator table, field definitions,
+1. `src/quantum_apl_python/alpha_language.py` mirrors the operator table, field definitions,
    and the seven validation sentences from the Alpha test pack.
-2. `src/quantum_apl/analyzer.py` now asks the helix mapper for a normalized `z`
+2. `src/quantum_apl_python/analyzer.py` now asks the helix mapper for a normalized `z`
    coordinate and synthesizes a legal Alpha sentence (token) that matches the
    recommended operator bundle.  Each simulation summary prints the sentence ID,
    operator semantics, and predicted regime beside the helix harmonic + truth channel.
@@ -27,7 +27,7 @@ strings or forcing `TRUE`-biased measurements.
 ## How the Helix Equation Steers Tokens
 
 1. A helix coordinate is built from `r(t) = (cos t, sin t, t)` and mapped into
-   `z ∈ [0,1]` using the smooth tanh normalization described in `src/quantum_apl/helix.py`.
+   `z ∈ [0,1]` using the smooth tanh normalization described in `src/quantum_apl_python/helix.py`.
 2. `HelixAPLMapper` locates the harmonic window (`t1`…`t9`) and the associated operator
    set for that window.  These windows were derived from the references flagged during
    the `rg -i "helix equation"` sweep (Triad logs, witness checklists, etc.).
