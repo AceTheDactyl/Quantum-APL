@@ -82,6 +82,25 @@ Entrypoints are installed via the Python package.
   Headless plots auto‑select Agg in tests; set `QAPL_ANALYZER_OVERLAYS=1` to show μ lines and s(z).
 - `qapl-test` (runs Node test suite via bridge)
 
+### Convenience Script
+
+Run an end‑to‑end lens‑anchored demo (helix self‑builder + unified + measured) and save reports, geometry, and plots:
+
+```
+scripts/helix_measure_demo.sh \
+  --seed 0.80 \
+  --steps-unified 5 \
+  --steps-measured 3 \
+  --overlays --blend \
+  --lens-sigma 36 --geom-sigma 36
+```
+
+Outputs a timestamped folder under `logs/` containing:
+- `zwalk_<tag>.md`, `zwalk_<tag>.geom.json` (self‑builder + geometry)
+- `unified_<tag>.json|.txt`, `measured_<tag>.json|.txt` (analyzer summaries)
+- `*_plot_off.png|*_plot_on.png` (headless analyzers, unless `--no-plots`)
+- `SUMMARY.txt` (concise run summary)
+
 ## Environment Flags (single place to steer runs)
 
 Set once; modules read these at import time.
