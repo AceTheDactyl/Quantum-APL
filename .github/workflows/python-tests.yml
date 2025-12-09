@@ -46,3 +46,11 @@ jobs:
       - name: Run analyzer on saved JSON (no plots)
         run: |
           qapl-analyze analyzer_test.json
+
+      - name: Generate measured-mode analyzer input
+        run: |
+          qapl-run --steps 3 --mode measured --output measured_ci.json
+
+      - name: Run analyzer on measured JSON (no plots)
+        run: |
+          qapl-analyze measured_ci.json

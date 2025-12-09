@@ -35,6 +35,7 @@ const ensureQuantumMath = () => {
 
 class QuantumClassicalBridge {
     constructor(quantumEngine, classicalStack, config = {}) {
+        const CONST = require('./src/constants');
         ensureQuantumMath();
 
         if (!quantumEngine) {
@@ -63,8 +64,8 @@ class QuantumClassicalBridge {
         const triadEnvCount = parseInt((typeof process !== 'undefined' && process.env && process.env.QAPL_TRIAD_COMPLETIONS) || '0', 10) || 0;
         const triadEnvFlag = !!(typeof process !== 'undefined' && process.env && (process.env.QAPL_TRIAD_UNLOCK === '1' || String(process.env.QAPL_TRIAD_UNLOCK).toLowerCase() === 'true'));
         this.triad = {
-            high: 0.85,
-            low: 0.82,
+            high: CONST.TRIAD_HIGH,
+            low: CONST.TRIAD_LOW,
             aboveBand: false,
             completions: triadEnvCount,
             unlocked: triadEnvFlag
@@ -281,7 +282,13 @@ class QuantumClassicalBridge {
     aplMeasureEigen(mu = 0, field = 'Phi') {
         const tier = this._currentTier();
         const res = this.measureSingleEigenstate(mu, field, 'TRUE');
-        const token = `${field === 'Phi' ? 'Φ' : field}:T(ϕ_${mu})TRUE@${tier}`;
+        const emitCollapse = String(process.env.QAPL_EMIT_COLLAPSE_GLYPH || '').toLowerCase() 
+          in { '1':1, 'true':1, 'yes':1, 'y':1 };
+        const fieldSym = field === 'Phi' ? 'Φ' : (field === 'Pi' || field === 'π' ? 'π' : field);
+        const core = `ϕ_${mu}`;
+        const token = emitCollapse
+          ? `${fieldSym}:⟂(${core})TRUE@${tier}`
+          : `${fieldSym}:T(${core})TRUE@${tier}`;
         res.aplToken = token;
         this._recordAplMeasurement(token, res?.probability ?? 0);
         return res;
@@ -296,8 +303,12 @@ class QuantumClassicalBridge {
         let truth = 'PARADOX';
         if (field === 'Pi' || field === 'π') truth = 'UNTRUE';
         const res = this.measureSubspace(indices, field === 'π' ? 'Pi' : field, truth);
+        const emitCollapse = String(process.env.QAPL_EMIT_COLLAPSE_GLYPH || '').toLowerCase() 
+          in { '1':1, 'true':1, 'yes':1, 'y':1 };
         const fieldSym = field === 'Phi' ? 'Φ' : (field === 'Pi' || field === 'π' ? 'π' : field);
-        const token = `${fieldSym}:Π(subspace)${truth}@${tier}`;
+        const token = emitCollapse
+          ? `${fieldSym}:⟂(subspace)${truth}@${tier}`
+          : `${fieldSym}:Π(subspace)${truth}@${tier}`;
         res.aplToken = token;
         this._recordAplMeasurement(token, res?.probability ?? 0);
         return res;
@@ -312,15 +323,21 @@ class QuantumClassicalBridge {
         const tier = this._currentTier();
         const res = this.measureWithTruthRegister(components);
         const tokens = [];
+        const emitCollapse = String(process.env.QAPL_EMIT_COLLAPSE_GLYPH || '').toLowerCase() 
+          in { '1':1, 'true':1, 'yes':1, 'y':1 };
         for (const c of components) {
             if (Array.isArray(c.subspaceIndices)) {
                 const f = c.field || 'Phi';
                 const fSym = f === 'Phi' ? 'Φ' : (f === 'Pi' ? 'π' : f);
-                tokens.push(`${fSym}:Π(subspace)${c.truthChannel || 'PARADOX'}@${tier}`);
+                tokens.push(emitCollapse
+                  ? `${fSym}:⟂(subspace)${c.truthChannel || 'PARADOX'}@${tier}`
+                  : `${fSym}:Π(subspace)${c.truthChannel || 'PARADOX'}@${tier}`);
             } else if (typeof c.eigenIndex === 'number') {
                 const f = c.field || 'Phi';
                 const fSym = f === 'Phi' ? 'Φ' : (f === 'Pi' ? 'π' : f);
-                tokens.push(`${fSym}:T(ϕ_${c.eigenIndex})${c.truthChannel || 'TRUE'}@${tier}`);
+                tokens.push(emitCollapse
+                  ? `${fSym}:⟂(ϕ_${c.eigenIndex})${c.truthChannel || 'TRUE'}@${tier}`
+                  : `${fSym}:T(ϕ_${c.eigenIndex})${c.truthChannel || 'TRUE'}@${tier}`);
             }
         }
         res.aplTokens = tokens;
@@ -422,8 +439,9 @@ class QuantumClassicalBridge {
     }
 
     measureCriticalPoint() {
+        const CONST = require('./src/constants');
         const z = this.quantum.measureZ();
-        const zc = Math.sqrt(3) / 2;
+        const zc = CONST.Z_CRITICAL;
         if (Math.abs(z - zc) < 0.05) {
             return this.measureWithTruthRegister([
                 { eigenIndex: 0, truthChannel: 'TRUE', field: 'Pi', weight: 0.3 },

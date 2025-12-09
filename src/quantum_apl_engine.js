@@ -341,8 +341,9 @@ class QuantumUtils {
 
 class HelixOperatorAdvisor {
     constructor() {
-        this.Z_CRITICAL = Math.sqrt(3) / 2; // THE LENS (0.8660254)
-        this.TRIAD_THRESHOLD = 0.83;        // TRIAD-0.83 gate after 3×0.85
+        const CONST = require('./constants');
+        this.Z_CRITICAL = CONST.Z_CRITICAL;  // THE LENS (~0.8660254)
+        this.TRIAD_THRESHOLD = CONST.TRIAD_T6; // TRIAD-0.83 gate after 3×0.85
         const triadCompletions = parseInt((typeof process !== 'undefined' && process.env && process.env.QAPL_TRIAD_COMPLETIONS) || '0', 10);
         const triadFlag = (typeof process !== 'undefined' && process.env && (process.env.QAPL_TRIAD_UNLOCK === '1' || String(process.env.QAPL_TRIAD_UNLOCK).toLowerCase() === 'true'));
         this.triadUnlocked = triadFlag || (Number.isFinite(triadCompletions) && triadCompletions >= 3);

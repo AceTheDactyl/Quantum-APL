@@ -224,6 +224,9 @@ Trigger formal APL measurement operators and append modulized tokens to the APL 
 # Default sequence: eigen, Φ subspace, π subspace, composite M_meas
 qapl-measure --print
 
+# Emit collapse glyphs (⟂) for tokens
+qapl-measure --collapse-glyph --print
+
 # Single eigenmode: Φ:T(ϕ_2)TRUE@Tier (Tier is current harmonic index)
 qapl-measure --eigen 2 --field Phi --print
 
@@ -235,6 +238,29 @@ qapl-measure --composite --print
 ```
 
 All measurement tokens are appended to `logs/APL_HELIX_OPERATOR_SUMMARY.apl` and appear in the analyzer summary under “Recent Measurements (APL tokens)”.
+
+### Measured Mode
+
+Run stepping and measurements in the same session so the analyzer includes measurement tokens directly in the saved JSON state.
+
+- Basic usage:
+  - `qapl-run --steps 5 --mode measured --output measured.json`
+- Targeted flags (optional):
+  - `--measure-eigen <μ>` to apply `Φ:T(ϕ_μ)TRUE@Tier` (field defaults to `Phi`)
+  - `--measure-field Phi|Pi|π` to choose the field for eigen/subspace
+  - `--measure-subspace 2,3` to apply `Π(subspace)` on the chosen field
+  - `--no-measure-composite` to disable the default composite operator
+
+Notes:
+- When you use `--mode measured`, the analyzer’s “Recent Measurements (APL tokens)” section will show tokens with probabilities.
+- If you instead run `qapl-measure` separately, tokens are appended to `logs/APL_HELIX_OPERATOR_SUMMARY.apl` (append‑only) and will appear in per‑seed bundles and the digest, but not in a previously saved JSON unless measured in the same session.
+
+### Collapse Alias (⟂)
+
+- Optional glyph emission: set `QAPL_EMIT_COLLAPSE_GLYPH=1` to emit collapse tokens using `⟂(…)`:
+  - Eigen: `Φ:⟂(ϕ_μ)TRUE@Tier` (canonical: `Φ:T(ϕ_μ)TRUE@Tier`)
+  - Subspace: `Φ:⟂(subspace)PARADOX@Tier`, `π:⟂(subspace)UNTRUE@Tier` (canonical: `Π(subspace)`)
+- Analyzer and bundle/digest builders normalize `⟂` → canonical `T/Π` by default. To preserve experimental glyphs end‑to‑end, set `QAPL_EXPERIMENTAL_OPS=1`.
 
 ## APL Bundles and Digest
 

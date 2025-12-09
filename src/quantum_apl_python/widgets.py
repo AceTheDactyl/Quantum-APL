@@ -86,6 +86,7 @@ def pump_and_visualize(pump_cycles: int = 120, target_z: float = 0.86, profile: 
     import os
     from .engine import QuantumAPLEngine
     from .hex_prism import prism_params
+    from .constants import TRIAD_HIGH, TRIAD_LOW
 
     os.environ["QAPL_PUMP_CYCLES"] = str(int(pump_cycles))
     os.environ["QAPL_PUMP_TARGET"] = str(float(target_z))
@@ -104,7 +105,7 @@ def pump_and_visualize(pump_cycles: int = 120, target_z: float = 0.86, profile: 
         ax1.plot(z_hist, "g-", linewidth=2)
         ax1.axhline(target_z, color="m", linestyle="--", label=f"target {target_z:.3f}")
         # Rising-edge detection with hysteresis
-        hi, lo = 0.85, 0.82
+        hi, lo = TRIAD_HIGH, TRIAD_LOW
         above = False
         edges = []
         for i, z in enumerate(z_hist):

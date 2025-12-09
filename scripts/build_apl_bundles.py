@@ -5,6 +5,7 @@ import argparse
 import json
 import re
 from pathlib import Path
+import os
 
 
 def extract_assigned_ops(zwalk_md: Path) -> list[str]:
@@ -68,6 +69,7 @@ def main() -> int:
     # Global measurement tokens (append to every bundle; dedupe per-bundle)
     measurement_summary = Path('logs') / 'APL_HELIX_OPERATOR_SUMMARY.apl'
     meas_tokens = read_measurement_tokens(measurement_summary)
+    exp_ops = os.getenv('QAPL_EXPERIMENTAL_OPS', '').lower() in ('1', 'true', 'yes', 'y')
 
     for unified in sorted(sweep.glob("unified_*.txt")):
         tag = unified.stem.replace("unified_", "")
@@ -85,9 +87,10 @@ def main() -> int:
         if meas_tokens:
             seen = set(tokens)
             for t in meas_tokens:
-                if t not in seen:
-                    tokens.append(t)
-                    seen.add(t)
+                nt = t if exp_ops else t.replace('⟂(subspace)', 'Π(subspace)').replace('⟂(ϕ_', 'T(ϕ_')
+                if nt not in seen:
+                    tokens.append(nt)
+                    seen.add(nt)
 
         if tokens:
             bundle.write_text("\n".join(tokens) + "\n", encoding="utf-8")
