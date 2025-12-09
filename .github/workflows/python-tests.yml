@@ -47,6 +47,10 @@ jobs:
         run: |
           qapl-analyze analyzer_test.json
 
+      - name: Python smoke — analyzer reports critical gate when TRIAD off
+        run: |
+          python -m pytest -q tests/test_analyzer_gate_default.py
+
       - name: Generate measured-mode analyzer input
         run: |
           qapl-run --steps 3 --mode measured --output measured_ci.json

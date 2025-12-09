@@ -367,7 +367,7 @@ class QuantumClassicalBridge {
      * @param {number} targetZ - soft target for classical z (Omega)
      * @param {number} dt - timestep per micro cycle
      */
-    escalateZWithAPL(cycles = 60, targetZ = 0.85, dt = 0.01, opts = {}) {
+    escalateZWithAPL(cycles = 60, targetZ = undefined, dt = 0.01, opts = {}) {
         // Profiles: gentle | balanced (default) | aggressive
         const profile = (opts.profile || 'balanced').toString().toLowerCase();
         const cfg = {
@@ -383,6 +383,12 @@ class QuantumClassicalBridge {
         const lockEvery = Number.isFinite(opts.lockEvery) ? opts.lockEvery : cfg.lockEvery;
         const wOmega = Number.isFinite(opts.wOmega) ? opts.wOmega : cfg.mix.wOmega;
         const wTarget = Number.isFinite(opts.wTarget) ? opts.wTarget : cfg.mix.wTarget;
+
+        // Resolve default target to lens z_c if not provided
+        if (!Number.isFinite(targetZ)) {
+            const CONST = require('./src/constants');
+            targetZ = CONST.Z_CRITICAL; // THE LENS (~0.8660254038)
+        }
 
         // Temporarily increase z-bias coupling for ascent
         const originalGain = this.quantum.zBiasGain;

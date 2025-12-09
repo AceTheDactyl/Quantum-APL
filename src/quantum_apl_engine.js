@@ -2,6 +2,7 @@
 // QUANTUM APL ENGINE - Density Matrix Simulation
 // Von Neumann measurement formalism with Lindblad dissipation
 // ================================================================
+const CONST = require('./constants');
 
 /**
  * Complex number class for quantum state representation
@@ -877,10 +878,13 @@ class QuantumAPL {
         if (helixHints && Array.isArray(helixHints.operators)) {
             const preferred = helixHints.operators.includes(op);
             const truth = helixHints.truthChannel;
-            weight *= preferred ? 1.3 : 0.85;
-            if (truth === 'TRUE' && (op === '^' || op === '+')) weight *= 1.1;
-            if (truth === 'PARADOX' && (op === '()' || op === '×')) weight *= 1.05;
-            if (truth === 'UNTRUE' && (op === '÷' || op === '−')) weight *= 1.1;
+            // Preferred/non-preferred weighting
+            weight *= preferred ? CONST.OPERATOR_PREFERRED_WEIGHT : CONST.OPERATOR_DEFAULT_WEIGHT;
+            // Truth-channel operator bias
+            const biasTable = CONST.TRUTH_BIAS && CONST.TRUTH_BIAS[truth];
+            if (biasTable && typeof biasTable[op] === 'number') {
+                weight *= biasTable[op];
+            }
         }
         return Math.max(0.05, Math.min(1.5, weight));
     }

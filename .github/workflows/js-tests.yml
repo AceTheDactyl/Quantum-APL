@@ -39,3 +39,14 @@ jobs:
 
       - name: Run collapse alias emission tests
         run: node tests/test_collapse_alias.js
+
+      - name: Run constants helper tests
+        run: node tests/test_constants_helpers.js
+
+      - name: Run JS hex prism tests
+        run: node tests/test_hex_prism_js.test.js
+      - name: Verify bridge default pump target is z_c
+        run: node tests/test_bridge_pump_target.js
+
+      - name: Verify engine default t6 gate is z_c
+        run: node tests/test_engine_gate_default.js

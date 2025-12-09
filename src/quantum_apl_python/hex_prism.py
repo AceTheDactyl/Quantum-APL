@@ -29,16 +29,29 @@ def prism_params(z: float) -> Dict[str, object]:
     Returns a dict containing z, z_c, sigma, delta_s_neg, R, H, phi, z_top, z_bot,
     and a 6-element vertex list with (x, y, z_top, z_bot) for k=0..5.
     """
-    z_c = math.sqrt(3) / 2.0  # ~0.8660254
-    sigma = 0.12
-    r_max = 0.85
-    beta = 0.25
-    h_min = 0.12
-    gamma = 0.18
-    phi_base = 0.0
-    eta = math.pi / 12.0
+    # Import centralized constants
+    from .constants import (
+        Z_CRITICAL,
+        GEOM_SIGMA,
+        GEOM_R_MAX,
+        GEOM_BETA,
+        GEOM_H_MIN,
+        GEOM_GAMMA,
+        GEOM_PHI_BASE,
+        GEOM_ETA,
+    )
 
-    delta_s_neg = math.exp(-abs(z - z_c) / sigma)
+    z_c = Z_CRITICAL
+    sigma = GEOM_SIGMA
+    r_max = GEOM_R_MAX
+    beta = GEOM_BETA
+    h_min = GEOM_H_MIN
+    gamma = GEOM_GAMMA
+    phi_base = GEOM_PHI_BASE
+    eta = GEOM_ETA
+
+    from .constants import compute_delta_s_neg
+    delta_s_neg = compute_delta_s_neg(z, sigma=sigma, z_c=z_c)
     radius = r_max - beta * delta_s_neg
     height = h_min + gamma * delta_s_neg
     phi = phi_base + eta * delta_s_neg
@@ -116,4 +129,3 @@ def monotonicity_pairs(z_values: List[float]) -> List[str]:
                     f"H non-increasing with ΔS_neg: H({z_values[i+1]:.3f})={b['H']:.6f} ≤ H({z_values[i]:.3f})={a['H']:.6f}"
                 )
     return issues
-
