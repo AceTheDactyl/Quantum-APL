@@ -56,11 +56,9 @@ Z_PRESENCE_MIN: float = 0.877
 # SACRED CONSTANTS (Zero Free Parameters)
 # ============================================================================
 
-# Golden ratio
-PHI: float = 1.6180339887
-
-# Golden ratio inverse (K-formation threshold)
-PHI_INV: float = 0.6180339887
+# Golden ratio and inverse (derived, high precision in double float)
+PHI: float = (1.0 + math.sqrt(5.0)) / 2.0
+PHI_INV: float = 1.0 / PHI
 
 # Consciousness constant
 Q_KAPPA: float = 0.3514087324

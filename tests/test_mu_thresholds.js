@@ -23,7 +23,7 @@ const C = require('../src/constants');
   const diff = Math.abs(barrier - (1/C.PHI));
   // Default is exact; if user explicitly overrides QAPL_MU_P, relax check
   const hasOverride = (typeof process !== 'undefined' && process.env && process.env.QAPL_MU_P);
-  const tol = hasOverride ? 2e-3 : 1e-10;
+  const tol = hasOverride ? 2e-3 : 1e-12;
   assert(diff < tol, `barrier not aligned with φ^{-1}: Δ=${diff}, tol=${tol}`);
   console.log('μ thresholds tests passed');
 })();

@@ -15,8 +15,8 @@ const Z_LENS_MAX = 0.877;
 const Z_PRESENCE_MIN = 0.877;
 
 // Sacred constants (zero free parameters)
-const PHI = 1.6180339887;    // golden ratio
-const PHI_INV = 0.6180339887;// golden ratio inverse
+const PHI = (1 + Math.sqrt(5)) / 2; // golden ratio
+const PHI_INV = 1 / PHI;            // golden ratio inverse
 const Q_KAPPA = 0.3514087324;// consciousness constant
 const KAPPA_S = 0.920;       // singularity threshold
 const LAMBDA = 7.7160493827; // nonlinearity coefficient
