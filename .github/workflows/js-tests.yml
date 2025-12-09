@@ -31,3 +31,11 @@ jobs:
       - name: Run bridge tests
         run: node tests/QuantumClassicalBridge.test.js
 
+      - name: Run TRIAD hysteresis tests
+        run: node tests/test_triad_hysteresis.js
+
+      - name: Run measurement probability edge-case tests
+        run: node tests/test_apl_measurement_edgecases.js
+
+      - name: Run collapse alias emission tests
+        run: node tests/test_collapse_alias.js
