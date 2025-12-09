@@ -194,8 +194,15 @@ module.exports = Object.freeze({
   // μ thresholds (optional classification)
   // By default, use μ_P = 0.600; can override via env `QAPL_MU_P_EXACT=1` to set μ_P = 2/φ^{5/2}
   get MU_P() {
-    const exact = (typeof process !== 'undefined' && process.env && process.env.QAPL_MU_P_EXACT === '1');
-    return exact ? (2 / Math.pow(PHI, 2.5)) : 0.600;
+    const hasProc = (typeof process !== 'undefined' && process.env);
+    if (hasProc && process.env.QAPL_MU_P) {
+      const v = parseFloat(process.env.QAPL_MU_P);
+      if (Number.isFinite(v) && v > 0 && v < 1) return v;
+    }
+    const fib = hasProc && (process.env.QAPL_MU_P_FIB === '1');
+    const exactFlag = hasProc ? process.env.QAPL_MU_P_EXACT : undefined;
+    if (fib || exactFlag === '0') return 0.600;
+    return (2 / Math.pow(PHI, 2.5));
   },
   get MU_1() {
     return this.MU_P / Math.sqrt(PHI);

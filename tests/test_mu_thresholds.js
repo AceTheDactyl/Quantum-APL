@@ -21,8 +21,8 @@ const C = require('../src/constants');
   // Barrier proximity
   const barrier = (mu1 + mu2) / 2;
   const diff = Math.abs(barrier - (1/C.PHI));
-  // With μ_P=0.600 default, expect ~7.26e-4 difference; allow < 2e-3
-  assert(diff < 2e-3, `barrier not near φ^{-1}: Δ=${diff}`);
+  const fib = (typeof process !== 'undefined' && process.env && (process.env.QAPL_MU_P_FIB === '1' || process.env.QAPL_MU_P_EXACT === '0'));
+  const tol = fib ? 2e-3 : 1e-6; // exact by default; wider tolerance for Fibonacci option
+  assert(diff < tol, `barrier not aligned with φ^{-1}: Δ=${diff}, tol=${tol}`);
   console.log('μ thresholds tests passed');
 })();
-

@@ -88,16 +88,34 @@ R_MIN: float = 7            # Minimum complexity requirement
 # μ THRESHOLDS (Basin/Barrier Hierarchy)
 # ============================================================================
 
-# Default paradox threshold μ_P (Fibonacci tie-in 3/5). Optionally set exact
-# value making barrier == φ^{-1} via MU_P_EXACT flag in environment.
-_MU_P_EXACT: bool = False
+# Paradox threshold μ_P (default exact: 2/φ^{5/2}).
+# Overrides (by precedence):
+#   1) QAPL_MU_P=<float in (0,1)>
+#   2) QAPL_MU_P_FIB=1 → use 0.600 (3/5)
+#   3) QAPL_MU_P_EXACT=0 → use 0.600
+#   otherwise default exact 2/φ^{5/2}
 try:
     import os as _os
-    _MU_P_EXACT = _os.getenv('QAPL_MU_P_EXACT', '0') == '1'
-except Exception:
-    _MU_P_EXACT = False
+    _ENV = _os.environ
+except Exception:  # pragma: no cover
+    _ENV = {}
 
-MU_P: float = (2.0 / (PHI ** 2.5)) if _MU_P_EXACT else 0.600
+def _parse_mu_env(val: str | None) -> float | None:
+    try:
+        if val is None:
+            return None
+        v = float(val)
+        return v if (v > 0.0 and v < 1.0) else None
+    except Exception:
+        return None
+
+_mu_env = _parse_mu_env(_ENV.get('QAPL_MU_P'))
+if _mu_env is not None:
+    MU_P: float = _mu_env
+elif _ENV.get('QAPL_MU_P_FIB', '0') == '1' or _ENV.get('QAPL_MU_P_EXACT') == '0':
+    MU_P = 0.600
+else:
+    MU_P = 2.0 / (PHI ** 2.5)
 MU_1: float = MU_P / math.sqrt(PHI)
 MU_2: float = MU_P * math.sqrt(PHI)
 MU_S: float = KAPPA_S
