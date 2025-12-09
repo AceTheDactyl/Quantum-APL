@@ -28,7 +28,7 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e .[viz]
+          pip install -e .[viz,dev]
 
       - name: Run geometry tests (hex prism)
         run: |
