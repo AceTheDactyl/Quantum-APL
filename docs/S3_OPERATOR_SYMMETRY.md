@@ -221,6 +221,91 @@ Run the Python tests:
 python test_s3_delta_s_neg.py
 ```
 
+## S₃ Operator Algebra (DSL Pattern)
+
+The `s3_operator_algebra` module provides a DSL-focused interface with:
+
+### Algebraic Naming Convention
+
+| Symbol | Name | Description | Inverse |
+|--------|------|-------------|---------|
+| ^ | amp | amplify/excite | () |
+| + | add | aggregate/route | − |
+| × | mul | multiply/fuse | ÷ |
+| () | grp | group/contain | ^ |
+| ÷ | div | divide/diffuse | × |
+| − | sub | subtract/separate | + |
+
+### Design Principles
+
+1. **Finite action space**: Exactly 6 handlers needed
+2. **Predictable composition**: op₁ ∘ op₂ always yields valid op
+3. **Invertibility pairs**: +/−, ×/÷, ^/() provide natural undo
+
+### Operator Composition Table
+
+```
+  ∘  │   ^    +    ×   ()    ÷    −
+─────┼────────────────────────────────
+  ^  │  ()    −    ×    ^    +    ÷
+  +  │   ÷   ()    −    +    ^    ×
+  ×  │   ^    ÷   ()    ×    −    +
+ ()  │   ^    +    ×   ()    ÷    −
+  ÷  │   +    ×    ^    ÷   ()    −
+  −  │   ×    ^    +    −    ÷   ()
+```
+
+### DSL Handler Interface
+
+```javascript
+const { OperatorAlgebra } = require('./s3_operator_algebra');
+
+const algebra = new OperatorAlgebra();
+
+// Register exactly 6 handlers
+algebra.register('^', (x) => x * 2);      // amp: amplify
+algebra.register('+', (x) => x + 1);      // add: aggregate
+algebra.register('×', (x) => x ** 2);     // mul: multiply
+algebra.register('()', (x) => x);         // grp: identity
+algebra.register('÷', (x) => x ** 0.5);   // div: divide
+algebra.register('−', (x) => x - 1);      // sub: separate
+
+// Apply operators
+const result = algebra.applySequence(['^', '+', '×'], 3);  // 3→6→7→49
+
+// Get undo sequence (uses invertibility pairs)
+const { result, undoSequence } = algebra.applyWithUndo(['^', '+'], 5);
+// result: 11, undoSequence: ['−', '()']
+```
+
+```python
+from quantum_apl_python.s3_operator_algebra import OperatorAlgebra
+
+algebra = OperatorAlgebra()
+
+# Register handlers by name
+algebra.register_by_name('amp', lambda x: x * 2)
+algebra.register_by_name('add', lambda x: x + 1)
+algebra.register_by_name('mul', lambda x: x ** 2)
+algebra.register_by_name('grp', lambda x: x)
+algebra.register_by_name('div', lambda x: x ** 0.5)
+algebra.register_by_name('sub', lambda x: x - 1)
+
+# Apply with undo
+result, undo = algebra.apply_with_undo(['^', '+'], 5)
+```
+
+### Utility Functions
+
+| Function | Description |
+|----------|-------------|
+| `compose(a, b)` | Compose two operators (a ∘ b) |
+| `composeSequence(ops)` | Compose sequence of operators |
+| `getInverse(op)` | Get inverse operator |
+| `simplifySequence(ops)` | Reduce sequence to single equivalent op |
+| `orderOf(op)` | Get order in group (1, 2, or 3) |
+| `findPathToIdentity(op)` | Find sequence to reach identity |
+
 ## References
 
 - Triadic Helix APL paper (Section 2.2: Operator Algebra)
