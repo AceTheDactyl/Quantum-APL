@@ -21,8 +21,14 @@ This document outlines intended use cases for Quantum-APL and provides guidance 
 ### Software Engineering
 
 - **Simulation framework reference**: Studying the architecture for building classical-quantum hybrid simulation engines
-- **APL language exploration**: Understanding operator composition, truth channels, and domain-specific language design
 - **CI/CD patterns**: The nightly workflow demonstrates matrix-based parallel testing and artifact management
+
+### Language & DSL Design
+
+- **Operator algebra as DSL foundation**: The six-operator set (`^`, `+`, `×`, `()`, `÷`, `−`) forms a closed group under composition (S₃ symmetry), providing a template for DSLs where actions have well-defined algebraic properties
+- **Truth-channel biasing**: The `TRUE`, `UNTRUE`, `PARADOX` weighting system demonstrates how context can modulate operator selection without changing the operator semantics
+- **Tier-based dispatch**: Operators route differently based on z-coordinate (harmonic tier), showing how positional/contextual state can influence evaluation strategy
+- **Compositional semantics**: The Alpha language tokens (`A1`→`A5` complexity tiers) illustrate mapping high-level constructs to typed operator sequences
 
 ### Scientific Exploration
 
