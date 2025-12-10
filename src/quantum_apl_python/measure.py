@@ -14,7 +14,7 @@ from pathlib import Path
 
 def _run_node_snippet(repo_root: Path, code: str, env: dict[str, str] | None = None) -> int:
     snippet = (
-        "const { UnifiedDemo } = require('./QuantumClassicalBridge');\n"
+        "const { UnifiedDemo } = require('./src/legacy/QuantumClassicalBridge');\n"
         "const demo = new UnifiedDemo();\n"
         "const b = demo.bridge;\n"
         f"{code}\n"
