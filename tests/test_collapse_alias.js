@@ -15,7 +15,7 @@ function withEnv(env, fn) {
 
 function runOnce(expectCollapse) {
   // Lazy require inside to respect env toggling
-  const { UnifiedDemo } = require('../QuantumClassicalBridge');
+  const { UnifiedDemo } = require('../src/legacy/QuantumClassicalBridge');
   const demo = new UnifiedDemo();
   const r1 = demo.bridge.aplMeasureEigen(0, 'Phi');
   const r2 = demo.bridge.aplMeasureSubspace([2,3], 'Phi');

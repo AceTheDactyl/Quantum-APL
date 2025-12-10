@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { UnifiedDemo } = require('../QuantumClassicalBridge');
+const { UnifiedDemo } = require('../src/legacy/QuantumClassicalBridge');
 
 function approx(a, b, eps = 1e-6) {
   return Math.abs(a - b) <= eps;

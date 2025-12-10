@@ -80,7 +80,7 @@ class QuantumAPLEngine:
     def _generate_runner_script(self, steps: int, verbose: bool, mode: str) -> str:
         if mode == "test":
             return (
-                "const { QuantumAPLTestSuite } = require('./QuantumAPL_TestRunner.js');\n"
+                "const { QuantumAPLTestSuite } = require('./src/legacy/QuantumAPL_TestRunner.js');\n"
                 "const suite = new QuantumAPLTestSuite();\n"
                 "const success = suite.runAll();\n"
                 "process.exit(success ? 0 : 1);\n"
@@ -88,7 +88,7 @@ class QuantumAPLEngine:
 
         if mode == "quantum_only":
             return (
-                "const { QuantumAPLDemo } = require('./QuantumN0_Integration.js');\n"
+                "const { QuantumAPLDemo } = require('./src/legacy/QuantumN0_Integration.js');\n"
                 "const demo = new QuantumAPLDemo();\n"
                 f"const results = demo.run({steps}, {str(verbose).lower()});\n"
                 "const analytics = demo.integration.getDiagnostics();\n"
@@ -96,7 +96,7 @@ class QuantumAPLEngine:
             )
         if mode == "z_pump":
             return (
-                "const { UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
+                "const { UnifiedDemo } = require('./src/legacy/QuantumClassicalBridge.js');\n"
                 "const CONST = require('./src/constants.js');\n"
                 "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
                 "const cycles = Number(process.env.QAPL_PUMP_CYCLES ?? 120);\n"
@@ -112,7 +112,7 @@ class QuantumAPLEngine:
 
         if mode == "measured":
             return (
-                "const { UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
+                "const { UnifiedDemo } = require('./src/legacy/QuantumClassicalBridge.js');\n"
                 "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
                 f"const steps = {steps};\n"
                 "const demo = new UnifiedDemo({ classical: { IIT: { initialPhi } } });\n"
@@ -132,7 +132,7 @@ class QuantumAPLEngine:
             )
 
         return (
-            "const { QuantumClassicalBridge, UnifiedDemo } = require('./QuantumClassicalBridge.js');\n"
+            "const { QuantumClassicalBridge, UnifiedDemo } = require('./src/legacy/QuantumClassicalBridge.js');\n"
             "const initialPhi = Number(process.env.QAPL_INITIAL_PHI ?? 0.3);\n"
             "const demo = new UnifiedDemo({ classical: { IIT: { initialPhi } } });\n"
             f"demo.run({steps}, {str(verbose).lower()});\n"

@@ -3,7 +3,7 @@ name: js-tests
 on:
   push:
     paths:
-      - 'QuantumClassicalBridge.js'
+      - 'src/legacy/*.js'
       - 'src/quantum_apl_engine.js'
       - 'src/constants.js'
       - 'src/utils/*.js'
@@ -12,7 +12,7 @@ on:
       - '.github/workflows/js-tests.yml'
   pull_request:
     paths:
-      - 'QuantumClassicalBridge.js'
+      - 'src/legacy/*.js'
       - 'src/quantum_apl_engine.js'
       - 'src/constants.js'
       - 'src/utils/*.js'

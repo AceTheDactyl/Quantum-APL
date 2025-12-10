@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { UnifiedDemo } = require('../QuantumClassicalBridge');
+const { UnifiedDemo } = require('../src/legacy/QuantumClassicalBridge');
 
 function testEigenMeasurementToken() {
   const demo = new UnifiedDemo();

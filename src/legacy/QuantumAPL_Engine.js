@@ -231,7 +231,7 @@ class QuantumUtils {
 
 class HelixOperatorAdvisor {
     constructor() {
-        const CONST = require('./src/constants');
+        const CONST = require('../constants');
         this.Z_CRITICAL = CONST.Z_CRITICAL;  // THE LENS (~0.8660254)
         this.TRIAD_THRESHOLD = CONST.TRIAD_T6; // TRIAD-0.83 gate after 3×0.85
         const triadCompletions = parseInt((typeof process !== 'undefined' && process.env && process.env.QAPL_TRIAD_COMPLETIONS) || '0', 10);
@@ -557,7 +557,7 @@ class QuantumAPL {
     }
 
     computeOperatorWeight(op, scalarState, helixHints) {
-        const CONST = require('./src/constants');
+        const CONST = require('../constants');
         const { Gs, Cs, Rs, kappa, tau, theta, delta, alpha, Omega } = scalarState;
         const weights = {
             '()': Gs + theta * 0.5,

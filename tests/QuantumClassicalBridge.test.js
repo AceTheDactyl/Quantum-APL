@@ -1,6 +1,6 @@
 const assert = require('assert');
 const { QuantumAPL } = require('../src/quantum_apl_engine');
-const { QuantumClassicalBridge } = require('../QuantumClassicalBridge');
+const { QuantumClassicalBridge } = require('../src/legacy/QuantumClassicalBridge');
 const { ClassicalConsciousnessStack } = require('../classical/ClassicalEngines');
 
 function approxEqual(a, b, eps = 1e-4) {

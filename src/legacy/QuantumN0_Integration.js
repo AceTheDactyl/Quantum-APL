@@ -5,7 +5,7 @@
 
 const { QuantumAPL } = require('./QuantumAPL_Engine.js');
 // Use centralized runtime thresholds to avoid drift with engine/bridge
-const CONST = require('./src/constants');
+const CONST = require('../constants');
 
 class QuantumN0Integration {
     constructor(quantumEngine, classicalScalars) {
@@ -93,7 +93,7 @@ class QuantumN0Integration {
     }
 
     getCurrentPRSPhase() {
-        const CONST = require('./src/constants');
+        const CONST = require('../constants');
         const phi = this.quantum.phi;
         if (phi < CONST.PRS_P1_PHI_MAX) return 'P1';
         if (phi < CONST.PRS_P2_PHI_MAX) return 'P2';
