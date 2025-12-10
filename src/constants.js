@@ -225,6 +225,131 @@ const T5_MAX = Z_T5_MAX;
 const T7_MAX = Z_T7_MAX;
 const T8_MAX = Z_T8_MAX;
 
+// ============================================================================
+// EXTENDED MODULE LAZY LOADERS
+// ============================================================================
+
+/**
+ * Lazy load S₃ operator symmetry module
+ * @returns {Object} S₃ module exports
+ */
+function getS3Module() {
+  return require('./s3_operator_symmetry');
+}
+
+/**
+ * Lazy load extended ΔS⁻ module
+ * @returns {Object} Extended ΔS⁻ module exports
+ */
+function getDeltaExtendedModule() {
+  return require('./delta_s_neg_extended');
+}
+
+// Extended function re-exports (lazy loaded to avoid circular dependencies)
+
+/**
+ * Compute ΔS⁻ derivative
+ * @param {number} z - Z-coordinate
+ * @param {number} sigma - Gaussian width
+ * @returns {number} Derivative value
+ */
+function computeDeltaSNegDerivative(z, sigma = LENS_SIGMA) {
+  return getDeltaExtendedModule().computeDeltaSNegDerivative(z, sigma);
+}
+
+/**
+ * Compute signed ΔS⁻
+ * @param {number} z - Z-coordinate
+ * @param {number} sigma - Gaussian width
+ * @returns {number} Signed value
+ */
+function computeDeltaSNegSigned(z, sigma = LENS_SIGMA) {
+  return getDeltaExtendedModule().computeDeltaSNegSigned(z, sigma);
+}
+
+/**
+ * Compute Π-regime blend weights
+ * @param {number} z - Z-coordinate
+ * @param {boolean} enableBlend - Whether blending is enabled
+ * @returns {Object} Blend weights
+ */
+function computePiBlendWeights(z, enableBlend = true) {
+  return getDeltaExtendedModule().computePiBlendWeights(z, enableBlend);
+}
+
+/**
+ * Compute gate modulation parameters
+ * @param {number} z - Z-coordinate
+ * @param {Object} options - Modulation options
+ * @returns {Object} Gate modulation
+ */
+function computeGateModulation(z, options = {}) {
+  return getDeltaExtendedModule().computeGateModulation(z, options);
+}
+
+/**
+ * Compute full ΔS⁻ state
+ * @param {number} z - Z-coordinate
+ * @param {Object} options - State options
+ * @returns {Object} Full state
+ */
+function computeFullState(z, options = {}) {
+  return getDeltaExtendedModule().computeFullState(z, options);
+}
+
+/**
+ * Generate S₃ operator window
+ * @param {string} harmonic - Harmonic tier
+ * @param {number} z - Z-coordinate
+ * @param {Object} options - Window options
+ * @returns {string[]} Operator window
+ */
+function generateS3OperatorWindow(harmonic, z, options = {}) {
+  return getS3Module().generateS3OperatorWindow(harmonic, z, options);
+}
+
+/**
+ * Compute S₃ weights for operators
+ * @param {string[]} operators - Operator list
+ * @param {number} z - Z-coordinate
+ * @returns {Object} Operator weights
+ */
+function computeS3Weights(operators, z) {
+  return getS3Module().computeS3Weights(operators, z);
+}
+
+/**
+ * Compute dynamic truth bias
+ * @param {number} z - Z-coordinate
+ * @param {Object} baseBias - Base truth bias
+ * @returns {Object} Evolved truth bias
+ */
+function computeDynamicTruthBias(z, baseBias = TRUTH_BIAS) {
+  return getDeltaExtendedModule().computeDynamicTruthBias(z, baseBias);
+}
+
+/**
+ * Score operator for coherence objective
+ * @param {string} operator - Operator to score
+ * @param {number} z - Z-coordinate
+ * @param {string} objective - Coherence objective
+ * @returns {number} Score
+ */
+function scoreOperatorForCoherence(operator, z, objective = 'maximize') {
+  return getDeltaExtendedModule().scoreOperatorForCoherence(operator, z, objective);
+}
+
+/**
+ * Select best operator for coherence
+ * @param {string[]} operators - Available operators
+ * @param {number} z - Z-coordinate
+ * @param {string} objective - Coherence objective
+ * @returns {Object} Selection result
+ */
+function selectCoherenceOperator(operators, z, objective = 'maximize') {
+  return getDeltaExtendedModule().selectCoherenceOperator(operators, z, objective);
+}
+
 module.exports = Object.freeze({
   Z_CRITICAL,
   TRIAD_HIGH,
@@ -315,4 +440,22 @@ module.exports = Object.freeze({
   hexPrismRadius,
   hexPrismHeight,
   hexPrismTwist,
+
+  // Extended ΔS⁻ module exports
+  computeDeltaSNegDerivative,
+  computeDeltaSNegSigned,
+  computePiBlendWeights,
+  computeGateModulation,
+  computeFullState,
+  computeDynamicTruthBias,
+  scoreOperatorForCoherence,
+  selectCoherenceOperator,
+
+  // S₃ symmetry module exports
+  generateS3OperatorWindow,
+  computeS3Weights,
+
+  // Module loaders (for advanced use)
+  getS3Module,
+  getDeltaExtendedModule,
 });

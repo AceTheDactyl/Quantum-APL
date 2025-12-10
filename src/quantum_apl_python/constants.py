@@ -411,7 +411,87 @@ __all__ = [
     "lens_rate", "eta_from_z", "eta_from_overlap", "phi_gate_scale", "phi_rate_scaled",
     # Invariants
     "invariants",
+    # Extended module re-exports (lazy loaded)
+    "get_s3_module", "get_delta_extended_module",
+    "compute_delta_s_neg_derivative", "compute_delta_s_neg_signed",
+    "compute_pi_blend_weights", "compute_gate_modulation", "compute_full_state",
+    "compute_dynamic_truth_bias", "score_operator_for_coherence", "select_coherence_operator",
+    "generate_s3_operator_window", "compute_s3_weights",
 ]
+
+
+# ============================================================================
+# EXTENDED MODULE LAZY LOADERS
+# ============================================================================
+
+def get_s3_module():
+    """Lazy load S₃ operator symmetry module."""
+    from . import s3_operator_symmetry
+    return s3_operator_symmetry
+
+
+def get_delta_extended_module():
+    """Lazy load extended ΔS⁻ module."""
+    from . import delta_s_neg_extended
+    return delta_s_neg_extended
+
+
+# Extended function re-exports (lazy loaded to avoid circular dependencies)
+
+def compute_delta_s_neg_derivative(z: float, sigma: float = LENS_SIGMA) -> float:
+    """Compute ΔS⁻ derivative."""
+    return get_delta_extended_module().compute_delta_s_neg_derivative(z, sigma)
+
+
+def compute_delta_s_neg_signed(z: float, sigma: float = LENS_SIGMA) -> float:
+    """Compute signed ΔS⁻."""
+    return get_delta_extended_module().compute_delta_s_neg_signed(z, sigma)
+
+
+def compute_pi_blend_weights(z: float, enable_blend: bool = True):
+    """Compute Π-regime blend weights."""
+    return get_delta_extended_module().compute_pi_blend_weights(z, enable_blend)
+
+
+def compute_gate_modulation(z: float, **kwargs):
+    """Compute gate modulation parameters."""
+    return get_delta_extended_module().compute_gate_modulation(z, **kwargs)
+
+
+def compute_full_state(z: float, **kwargs):
+    """Compute full ΔS⁻ state."""
+    return get_delta_extended_module().compute_full_state(z, **kwargs)
+
+
+def compute_dynamic_truth_bias(z: float, base_bias: dict = None):
+    """Compute dynamic truth bias."""
+    if base_bias is None:
+        base_bias = TRUTH_BIAS
+    return get_delta_extended_module().compute_dynamic_truth_bias(z, base_bias)
+
+
+def score_operator_for_coherence(operator: str, z: float, objective=None) -> float:
+    """Score operator for coherence objective."""
+    if objective is None:
+        objective = get_delta_extended_module().CoherenceObjective.MAXIMIZE
+    return get_delta_extended_module().score_operator_for_coherence(operator, z, objective)
+
+
+def select_coherence_operator(operators: list, z: float, objective=None):
+    """Select best operator for coherence."""
+    if objective is None:
+        objective = get_delta_extended_module().CoherenceObjective.MAXIMIZE
+    return get_delta_extended_module().select_coherence_operator(operators, z, objective)
+
+
+def generate_s3_operator_window(harmonic: str, z: float, **kwargs) -> list:
+    """Generate S₃ operator window."""
+    return get_s3_module().generate_s3_operator_window(harmonic, z, **kwargs)
+
+
+def compute_s3_weights(operators: list, z: float) -> dict:
+    """Compute S₃ weights for operators."""
+    return get_s3_module().compute_s3_weights(operators, z)
 
 def compute_delta_s_neg(z: float, sigma: float = GEOM_SIGMA, z_c: float = Z_CRITICAL) -> float:
     """Compute negative entropy metric ΔS_neg(z) = exp(-σ (z - z_c)^2).

@@ -22,6 +22,30 @@
 
 const CONST = require('./constants');
 
+// Import S₃ and extended ΔS⁻ modules for advanced operator symmetry
+const S3 = require('./s3_operator_symmetry');
+const Delta = require('./delta_s_neg_extended');
+
+// ================================================================
+// FEATURE FLAGS (Environment-controlled backwards compatibility)
+// ================================================================
+
+/**
+ * Enable S₃ symmetry for operator window rotation
+ * When enabled, operator windows are cyclically permuted based on z
+ */
+const ENABLE_S3_SYMMETRY = (typeof process !== 'undefined' && process.env &&
+  (process.env.QAPL_ENABLE_S3_SYMMETRY === '1' ||
+   process.env.QAPL_ENABLE_S3_SYMMETRY === 'true'));
+
+/**
+ * Enable extended ΔS⁻ formalism for blending and gating
+ * When enabled, uses the full Delta module for state computation
+ */
+const ENABLE_EXTENDED_NEGENTROPY = (typeof process !== 'undefined' && process.env &&
+  (process.env.QAPL_ENABLE_EXTENDED_NEGENTROPY === '1' ||
+   process.env.QAPL_ENABLE_EXTENDED_NEGENTROPY === 'true'));
+
 // ================================================================
 // CORE CONSTANTS (Paper-Aligned)
 // ================================================================
@@ -486,10 +510,28 @@ class TriadGate {
 /**
  * HelixOperatorAdvisor: Maps z-coordinates to harmonics and operator windows
  * Integrates with TRIAD system to dynamically adjust t6 gate
+ *
+ * Enhanced with S₃ symmetry and extended ΔS⁻ formalism:
+ * - When QAPL_ENABLE_S3_SYMMETRY=1: Uses S₃-based operator window rotation
+ * - When QAPL_ENABLE_EXTENDED_NEGENTROPY=1: Uses extended ΔS⁻ for blending/gating
  */
 class HelixOperatorAdvisor {
     constructor(options = {}) {
         this.triadGate = options.triadGate || new TriadGate();
+
+        // S₃ and ΔS⁻ feature flags (can be overridden per-instance)
+        this.enableS3Symmetry = options.enableS3Symmetry !== undefined
+            ? options.enableS3Symmetry
+            : ENABLE_S3_SYMMETRY;
+        this.enableExtendedNegentropy = options.enableExtendedNegentropy !== undefined
+            ? options.enableExtendedNegentropy
+            : ENABLE_EXTENDED_NEGENTROPY;
+
+        // Keep base windows for S₃ rotation reference
+        this.baseWindows = { ...OPERATOR_WINDOWS };
+
+        // Blending configuration
+        this.blendPiEnabled = options.blendPiEnabled !== false;
     }
 
     /**
@@ -531,10 +573,17 @@ class HelixOperatorAdvisor {
 
     /**
      * Get operator window for current harmonic
+     * Enhanced with S₃ symmetry when enabled
      * @param {string} harmonic - Harmonic tier (t1-t9)
+     * @param {number} z - Optional z-coordinate for S₃ rotation
      * @returns {string[]} - Array of permitted operator symbols
      */
-    getOperatorWindow(harmonic) {
+    getOperatorWindow(harmonic, z = null) {
+        // If S₃ symmetry enabled and z provided, use rotated window
+        if (this.enableS3Symmetry && z !== null) {
+            return S3.generateS3OperatorWindow(harmonic, z);
+        }
+        // Fall back to static windows
         return OPERATOR_WINDOWS[harmonic] || ['()'];
     }
 
@@ -546,24 +595,82 @@ class HelixOperatorAdvisor {
      * @returns {number} - ΔS_neg ∈ [0,1]
      */
     computeDeltaSNeg(z, sigma = LENS_SIGMA) {
+        if (this.enableExtendedNegentropy) {
+            return Delta.computeDeltaSNeg(z, sigma);
+        }
         const d = z - Z_CRITICAL;
         return Math.exp(-sigma * d * d);
     }
 
     /**
      * Compute π-regime blend weights (Paper Section 2.3)
+     * Enhanced with extended ΔS⁻ formalism when enabled
      * @param {number} z - Z-coordinate
-     * @returns {Object} - { wPi, wLoc }
+     * @returns {Object} - { wPi, wLoc, inPiRegime? }
      */
     computeBlendWeights(z) {
+        if (this.enableExtendedNegentropy) {
+            const blend = Delta.computePiBlendWeights(z, this.blendPiEnabled);
+            return {
+                wPi: blend.wPi,
+                wLoc: blend.wLocal,
+                inPiRegime: blend.inPiRegime,
+            };
+        }
+        // Legacy blending
         const deltaSNeg = this.computeDeltaSNeg(z);
         const wPi = z >= Z_CRITICAL ? Math.max(0, Math.min(1, deltaSNeg)) : 0.0;
         const wLoc = 1.0 - wPi;
-        return { wPi, wLoc };
+        return { wPi, wLoc, inPiRegime: z >= Z_CRITICAL };
+    }
+
+    /**
+     * Compute S₃-weighted operator preferences
+     * Uses parity-based adjustments when S₃ symmetry is enabled
+     * @param {string[]} operators - Available operators
+     * @param {number} z - Z-coordinate
+     * @returns {Object} - Map of operator → weight
+     */
+    computeOperatorWeights(operators, z) {
+        if (this.enableS3Symmetry) {
+            return S3.computeS3Weights(operators, z);
+        }
+        // Legacy weighting based on truth bias
+        const truth = this.truthChannelFromZ(z);
+        const biasTable = TRUTH_BIAS[truth] || {};
+        const weights = {};
+        for (const op of operators) {
+            weights[op] = biasTable[op] || 1.0;
+        }
+        return weights;
+    }
+
+    /**
+     * Compute gate modulation parameters from ΔS⁻
+     * Only available when extended negentropy is enabled
+     * @param {number} z - Z-coordinate
+     * @returns {Object|null} - Gate modulation parameters or null
+     */
+    computeGateModulation(z) {
+        if (!this.enableExtendedNegentropy) return null;
+        return Delta.computeGateModulation(z);
+    }
+
+    /**
+     * Compute full ΔS⁻ state
+     * Only available when extended negentropy is enabled
+     * @param {number} z - Z-coordinate
+     * @param {Object} options - State options
+     * @returns {Object|null} - Full state or null
+     */
+    computeFullDeltaState(z, options = {}) {
+        if (!this.enableExtendedNegentropy) return null;
+        return Delta.computeFullState(z, options);
     }
 
     /**
      * Get complete helix description for a z-coordinate
+     * Enhanced with S₃ and ΔS⁻ information when enabled
      * @param {number} z - Normalized z-coordinate [0,1]
      * @returns {Object} - Full description
      */
@@ -572,12 +679,15 @@ class HelixOperatorAdvisor {
         const clamped = Math.max(0, Math.min(1, value));
 
         const harmonic = this.harmonicFromZ(clamped);
-        const operators = this.getOperatorWindow(harmonic);
+
+        // Get operators with optional S₃ rotation
+        const operators = this.getOperatorWindow(harmonic, clamped);
         const truthChannel = this.truthChannelFromZ(clamped);
         const deltaSNeg = this.computeDeltaSNeg(clamped);
         const weights = this.computeBlendWeights(clamped);
 
-        return {
+        // Build result object
+        const result = {
             z: clamped,
             harmonic,
             operators,
@@ -586,8 +696,27 @@ class HelixOperatorAdvisor {
             triadUnlocked: this.triadGate.unlocked,
             triadPasses: this.triadGate.passes,
             deltaSNeg,
-            weights
+            weights,
+            // Feature flags status
+            s3SymmetryEnabled: this.enableS3Symmetry,
+            extendedNegentropyEnabled: this.enableExtendedNegentropy,
         };
+
+        // Add S₃-weighted operator preferences if enabled
+        if (this.enableS3Symmetry) {
+            result.operatorWeights = this.computeOperatorWeights(operators, clamped);
+            result.s3Element = S3.s3ElementFromZ(clamped);
+            result.truthChannel = S3.truthChannelFromZ(clamped);
+        }
+
+        // Add extended ΔS⁻ state if enabled
+        if (this.enableExtendedNegentropy) {
+            result.deltaState = this.computeFullDeltaState(clamped);
+            result.gateModulation = this.computeGateModulation(clamped);
+            result.kFormation = Delta.checkKFormation(clamped);
+        }
+
+        return result;
     }
 
     /**
@@ -598,12 +727,12 @@ class HelixOperatorAdvisor {
      */
     isOperatorLegal(operator, z) {
         const harmonic = this.harmonicFromZ(z);
-        const window = this.getOperatorWindow(harmonic);
+        const window = this.getOperatorWindow(harmonic, z);
         return window.includes(operator);
     }
 
     /**
-     * Get operator weight considering truth bias
+     * Get operator weight considering truth bias and S₃ parity
      * @param {string} operator - APL operator symbol
      * @param {number} z - Normalized z-coordinate
      * @returns {number} - Weight multiplier
@@ -612,6 +741,16 @@ class HelixOperatorAdvisor {
         const isLegal = this.isOperatorLegal(operator, z);
         const baseWeight = isLegal ? 1.3 : 0.85;
 
+        // Use S₃ weights if enabled
+        if (this.enableS3Symmetry) {
+            const harmonic = this.harmonicFromZ(z);
+            const window = this.getOperatorWindow(harmonic, z);
+            const s3Weights = this.computeOperatorWeights(window, z);
+            const s3Weight = s3Weights[operator] || 1.0;
+            return baseWeight * s3Weight;
+        }
+
+        // Legacy truth bias
         const truth = this.truthChannelFromZ(z);
         const biasTable = TRUTH_BIAS[truth] || {};
         const truthMultiplier = biasTable[operator] || 1.0;
@@ -620,19 +759,59 @@ class HelixOperatorAdvisor {
     }
 
     /**
+     * Get dynamic truth bias using ΔS⁻ evolution
+     * Only affects behavior when extended negentropy is enabled
+     * @param {number} z - Z-coordinate
+     * @returns {Object} - Truth bias matrix
+     */
+    getDynamicTruthBias(z) {
+        if (this.enableExtendedNegentropy) {
+            return Delta.computeDynamicTruthBias(z, TRUTH_BIAS);
+        }
+        return TRUTH_BIAS;
+    }
+
+    /**
      * Select best operator from window with truth bias weighting
+     * Enhanced with S₃ parity weights and coherence heuristics
      * @param {number} z - Z-coordinate
      * @param {Function} rng - Random number generator (default Math.random)
+     * @param {Object} options - Selection options
      * @returns {string} - Selected operator
      */
-    selectOperator(z, rng = Math.random) {
+    selectOperator(z, rng = Math.random, options = {}) {
         const harmonic = this.harmonicFromZ(z);
-        const window = this.getOperatorWindow(harmonic);
-        const truth = this.truthChannelFromZ(z);
-        const biasTable = TRUTH_BIAS[truth] || {};
+        const window = this.getOperatorWindow(harmonic, z);
+
+        // Get weights (S₃-enhanced or legacy)
+        let opWeights;
+        if (this.enableS3Symmetry) {
+            opWeights = this.computeOperatorWeights(window, z);
+        } else {
+            const truth = this.truthChannelFromZ(z);
+            const biasTable = this.getDynamicTruthBias(z)[truth] || {};
+            opWeights = {};
+            for (const op of window) {
+                opWeights[op] = biasTable[op] || 1.0;
+            }
+        }
+
+        // Apply coherence synthesis heuristics if requested
+        if (options.coherenceObjective && this.enableExtendedNegentropy) {
+            const cohScores = {};
+            for (const op of window) {
+                cohScores[op] = Delta.scoreOperatorForCoherence(
+                    op, z, options.coherenceObjective
+                );
+            }
+            // Combine with existing weights
+            for (const op of window) {
+                opWeights[op] = (opWeights[op] || 1.0) * (cohScores[op] || 1.0);
+            }
+        }
 
         // Compute weighted probabilities
-        const weights = window.map(op => biasTable[op] || 1.0);
+        const weights = window.map(op => opWeights[op] || 1.0);
         const totalWeight = weights.reduce((a, b) => a + b, 0);
 
         // Weighted random selection
@@ -1155,12 +1334,20 @@ module.exports = {
     TRUTH_BIAS,
     APL_SENTENCES,
 
+    // Feature flags
+    ENABLE_S3_SYMMETRY,
+    ENABLE_EXTENDED_NEGENTROPY,
+
     // Classes
     TriadGate,
     HelixOperatorAdvisor,
     HelixCoordinate,
     AlphaTokenSynthesizer,
     TriadicHelixAPLSystem,
+
+    // S₃ and ΔS⁻ module re-exports for convenience
+    S3,
+    Delta,
 
     // Convenience functions
     getOperatorInfo: (symbol) => APL_OPERATORS[symbol] || null,

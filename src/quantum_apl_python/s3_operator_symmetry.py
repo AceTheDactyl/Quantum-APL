@@ -44,19 +44,14 @@ from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Literal
 from enum import Enum
 
-# Import constants (assumes constants.py is in same directory or PYTHONPATH)
-Z_CRITICAL = math.sqrt(3) / 2
+# Import from the constants module for single source of truth
+from .constants import (
+    Z_CRITICAL, TRUTH_BIAS, compute_delta_s_neg as _compute_delta_s_neg
+)
 
 def compute_delta_s_neg(z: float, sigma: float = 36.0) -> float:
-    d = z - Z_CRITICAL
-    return math.exp(-sigma * d * d)
-
-# Full nested TRUTH_BIAS for operator weighting
-TRUTH_BIAS = {
-    "TRUE": {"^": 1.5, "+": 1.4, "×": 1.2, "()": 1.1, "÷": 0.8, "−": 0.9},
-    "UNTRUE": {"÷": 1.5, "−": 1.4, "()": 1.2, "^": 0.8, "+": 0.9, "×": 1.0},
-    "PARADOX": {"()": 1.5, "×": 1.4, "^": 1.1, "+": 1.1, "÷": 1.0, "−": 1.0},
-}
+    """Compute ΔS_neg using constants module."""
+    return _compute_delta_s_neg(z, sigma=sigma, z_c=Z_CRITICAL)
 
 
 # ============================================================================

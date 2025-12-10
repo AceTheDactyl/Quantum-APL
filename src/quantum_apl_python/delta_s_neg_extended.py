@@ -30,24 +30,17 @@ from enum import Enum
 
 
 # ============================================================================
-# CONSTANTS
+# CONSTANTS - Import from single source of truth
 # ============================================================================
 
-Z_CRITICAL = math.sqrt(3) / 2  # ≈ 0.8660254037844386
-PHI = (1 + math.sqrt(5)) / 2   # ≈ 1.618033988749895
-PHI_INV = 1 / PHI              # ≈ 0.618033988749895
+from .constants import (
+    Z_CRITICAL, PHI, PHI_INV, LENS_SIGMA,
+    GEOM_R_MAX, GEOM_BETA, GEOM_H_MIN, GEOM_GAMMA, GEOM_PHI_BASE, GEOM_ETA
+)
 
 # Default parameters
-DEFAULT_SIGMA = 36.0           # Gaussian width for ΔS_neg
+DEFAULT_SIGMA = LENS_SIGMA     # Gaussian width for ΔS_neg (from constants)
 DEFAULT_ALPHA = 0.5            # Exponent for η = ΔS_neg^α
-
-# Hex-prism geometry defaults
-GEOM_R_MAX = 0.85
-GEOM_BETA = 0.25
-GEOM_H_MIN = 0.12
-GEOM_GAMMA = 0.18
-GEOM_PHI_BASE = 0.0
-GEOM_ETA = math.pi / 12
 
 
 # ============================================================================
