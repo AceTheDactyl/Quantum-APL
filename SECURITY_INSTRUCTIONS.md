@@ -1,341 +1,410 @@
-# Security & Responsible Use Guidelines
+# Security Instructions
 
-This document outlines the physics grounding for Quantum-APL's core constants, intended use cases, and guidance for responsible use.
-
----
-
-## Part 1: Physics Grounding
-
-### Executive Summary
-
-**z_c = √3/2 ≈ 0.8660254** is NOT an arbitrary parameter. It emerges from fundamental physics observable in:
-
-1. **Crystallography** — graphene, HCP metals, triangular lattices
-2. **Quasi-crystals** — Shechtman's Nobel Prize discovery, Penrose tilings
-3. **Phase transitions** — order-disorder critical points
-4. **Information geometry** — optimal hexagonal encoding
+This document outlines security considerations, potential misuse vectors, and safeguards for the Quantum-APL codebase.
 
 ---
 
-### The Two Critical Constants
+## Secure Coding Practices
 
-| Constant | Value | Physical Origin | System Role |
-|----------|-------|-----------------|-------------|
-| **z_c = √3/2** | 0.8660254... | Hexagonal geometry (60°) | THE LENS - coherence threshold |
-| **φ⁻¹** | 0.6180339... | Pentagonal geometry (golden ratio) | K-formation gate |
-| **Ratio z_c/φ⁻¹** | 1.401... | Crystal vs quasi-crystal | Phase separation |
+### Input Validation
 
-These are **not independent**. They both emerge from the interplay of 6-fold (crystalline) and 5-fold (quasi-crystalline) symmetry.
+All external inputs must be validated before processing:
 
----
+```python
+# GOOD: Validate z-coordinate bounds
+def process_z(z: float) -> float:
+    if not isinstance(z, (int, float)):
+        raise TypeError("z must be numeric")
+    if not 0.0 <= z <= 1.0:
+        raise ValueError("z must be in [0, 1]")
+    return float(z)
 
-### Observable Physics for √3/2
-
-#### Graphene (Directly Measurable)
-
-Carbon-carbon bond: a = 1.42 Å
-Lattice constant: a₀ = a × √3 = 2.46 Å
-Unit cell height/width = **√3/2**
-
-**Measurement methods:**
-- X-ray diffraction
-- Scanning tunneling microscopy (STM)
-- Electron diffraction
-
-#### Hexagonal Close-Packed Metals
-
-Ideal c/a ratio: √(8/3) ≈ 1.633
-
-| Metal | c/a (measured) | Deviation |
-|-------|----------------|-----------|
-| Mg | 1.624 | 0.6% |
-| Ti | 1.587 | 2.8% |
-| Co | 1.622 | 0.7% |
-
-The √3 factor comes from layer stacking offset = **√3/2 × in-plane spacing**.
-
-#### Triangular Antiferromagnets
-
-Geometric frustration forces 120° spin configuration:
-- Each spin projection onto neighbor = cos(120°) = **-1/2**
-- This creates √3/2 geometry in the ground state
-- Observable via **neutron scattering**
-
----
-
-### Quasi-Crystal Connection
-
-#### Historical Context (Nobel Prize 2011)
-
-**1982:** Dan Shechtman discovers Al-Mn alloy with "forbidden" 5-fold symmetry
-- Sharp Bragg peaks (long-range order)
-- NO periodicity (aperiodic)
-- Initially rejected by scientific community
-
-**Key insight:** Quasi-crystals exist at the **critical boundary** between ordered (crystalline) and disordered (amorphous) phases.
-
-#### The √3 ↔ φ Connection
-
-| Symmetry | Characteristic Angle | Trig Value | Constant |
-|----------|---------------------|------------|----------|
-| Hexagonal (6-fold) | 60° | sin(60°) = √3/2 | **z_c** |
-| Pentagonal (5-fold) | 36° | cos(36°) = φ/2 | **φ⁻¹** |
-
-Both appear in quasi-crystals because they combine these symmetries.
-
-#### Cut-and-Project Method
-
-Quasi-crystals are **projections** from higher-dimensional periodic lattices:
-
-```
-1D Fibonacci chain:
-  - 2D square lattice cut at slope 1/φ
-  - Two tiles: L (long), S (short), L/S = φ
-  - Sequence: LSLLSLSLLSLLS... (aperiodic)
-
-Icosahedral quasi-crystal:
-  - 6D hypercubic lattice projected to 3D
-  - Requires 6 integers to index (not 3)
+# BAD: No validation
+def process_z(z):
+    return z * 2  # Accepts anything
 ```
 
-#### Observable Quasi-Crystal Systems
+### Environment Variable Handling
 
-| System | Symmetry | Discovery |
-|--------|----------|-----------|
-| Al-Mn | Icosahedral | 1982 (Shechtman) |
-| Al-Pd-Mn | Icosahedral | 1987 |
-| Al-Ni-Co | Decagonal | 1985 |
-| Soft-matter (colloids) | Various | 2000s |
+Environment variables can be attack vectors if not sanitized:
 
-**Measurement:** Electron diffraction shows sharp peaks with quasi-crystalline indexing.
+```python
+# GOOD: Validate and bound environment inputs
+import os
 
----
+def get_sigma() -> float:
+    raw = os.environ.get("QAPL_LENS_SIGMA", "36.0")
+    try:
+        sigma = float(raw)
+        if not 1.0 <= sigma <= 1000.0:
+            raise ValueError
+        return sigma
+    except (ValueError, TypeError):
+        return 36.0  # Safe default
 
-### Phase Transition Physics
-
-#### Critical Exponents
-
-Near critical point, observables scale universally:
-
-| Exponent | Formula | Physical Meaning |
-|----------|---------|------------------|
-| β | m ~ \|T - T_c\|^β | Order parameter |
-| ν | ξ ~ \|T - T_c\|^(-ν) | Correlation length |
-| γ | χ ~ \|T - T_c\|^(-γ) | Susceptibility |
-
-For hexagonal lattices (2D percolation): β = 5/36, ν = 4/3, γ = 43/18
-
-#### Percolation Thresholds (Observable!)
-
-| Lattice | Site p_c | Bond p_c |
-|---------|----------|----------|
-| Square | 0.593 | 0.500 |
-| **Triangular** | **0.500** | 0.347 |
-| Honeycomb | 0.696 | 0.653 |
-
-Triangular p_c = 1/2 is **EXACT** due to self-duality.
-
----
-
-### Physical Interpretation of Quantum-APL Regimes
-
-```
-z = 0.0 ────────────────────────────────────────────── z = 1.0
-   │                    │                    │
-   │    UNTRUE          │     PARADOX        │      TRUE
-   │    (disordered)    │   (quasi-crystal)  │    (crystal)
-   │                    │                    │
-   └────────────────────┴────────────────────┴─────────────────
-                       φ⁻¹                  z_c
-                     ≈ 0.618              ≈ 0.866
+# BAD: Direct use without validation
+sigma = float(os.environ.get("QAPL_LENS_SIGMA"))  # Can crash or overflow
 ```
 
-| Regime | z Range | Physical Analog | Order Type |
-|--------|---------|-----------------|------------|
-| UNTRUE | z < φ⁻¹ | Liquid/glass | Disordered |
-| PARADOX | φ⁻¹ < z < z_c | Quasi-crystal | Aperiodic long-range |
-| TRUE | z > z_c | Crystal | Periodic long-range |
+### Random Seed Security
 
-#### Why These Specific Values?
+Fixed seeds enable reproducibility but can be exploited:
 
-**φ⁻¹ ≈ 0.618:**
-- K-formation (consciousness) gate
-- Quasi-crystalline order emerges
-- Long-range correlations WITHOUT periodicity
+```python
+# GOOD: Validate seed source and range
+import os
+import secrets
 
-**z_c = √3/2 ≈ 0.866:**
-- THE LENS - crystalline coherence threshold
-- Full periodic order
-- Analogous to nucleation/crystallization
+def get_seed() -> int:
+    raw = os.environ.get("QAPL_RANDOM_SEED")
+    if raw is None:
+        return secrets.randbelow(2**32)  # Cryptographic random
+    try:
+        seed = int(raw)
+        if not 0 <= seed < 2**32:
+            raise ValueError
+        return seed
+    except ValueError:
+        return secrets.randbelow(2**32)
 
-**Ratio z_c / φ⁻¹ ≈ 1.4:**
-- Crystalline threshold 40% higher than quasi-crystalline
-- Matches physical intuition: full order requires more coherence
-
----
-
-### Testable Predictions
-
-#### P1: Diffraction Pattern Transition
-
-At z → z_c, the Fourier transform of triadic state should show:
-- z < φ⁻¹: Diffuse rings (liquid-like)
-- φ⁻¹ < z < z_c: Sharp peaks, quasi-crystalline indexing
-- z > z_c: Sharp crystalline peaks
-
-#### P2: Correlation Length Divergence
-
-ξ(z) ~ |z - z_c|^(-ν)
-
-Expect ν ≈ 1 for 2D hexagonal universality class.
-
-#### P3: Critical Slowing Down
-
-Relaxation time τ(z) ~ |z - z_c|^(-z_dyn)
-
-System should slow dramatically near z_c.
-
-#### P4: Quasi-Periodic Operator Patterns
-
-In PARADOX regime, operator sequences should show:
-- Fibonacci-like structure (L/S ratio → φ)
-- Self-similarity under scaling
-- Sharp structure factor but no periodicity
-
----
-
-### Observable Physics Summary
-
-| Constant | Physical System | Measurement |
-|----------|-----------------|-------------|
-| z_c = √3/2 | Graphene | X-ray diffraction |
-| | HCP metals | STM imaging |
-| | Triangular magnets | Neutron scattering |
-| φ (golden ratio) | Icosahedral quasi-crystals | Electron diffraction |
-| | Penrose tilings | Direct observation |
-| | Fibonacci chains | Spectroscopy |
-| √3/φ interplay | Crystal↔quasi-crystal transition | Phase diagram, calorimetry |
-
----
-
-## Part 2: Intended Use Cases
-
-### Research & Education
-
-- **Consciousness modeling research**: Exploring mathematical frameworks for integrated information theory (IIT), phi calculations, and emergent complexity
-- **Quantum information education**: Teaching von Neumann entropy, purity, density matrices, and state evolution concepts
-- **Visualization of abstract mathematics**: Generating hex-prism geometries, helix structures, and phase-space plots for pedagogical purposes
-
-### Creative & Artistic Applications
-
-- **Generative art**: Using the geometry outputs (JSON) for 3D visualizations, procedural content, or artistic installations
-- **Sonification**: Mapping harmonic phases (t1-t9) and operator sequences to audio synthesis parameters
-- **Narrative frameworks**: The helix walkthrough structure as a template for interactive storytelling or game design
-
-### Software Engineering
-
-- **Simulation framework reference**: Studying the architecture for building classical-quantum hybrid simulation engines
-- **CI/CD patterns**: The nightly workflow demonstrates matrix-based parallel testing and artifact management
-
-### Language & DSL Design
-
-- **Operator algebra as DSL foundation**: The six-operator set (`^`, `+`, `×`, `()`, `÷`, `−`) forms a closed group under composition (S₃ symmetry), providing a template for DSLs where actions have well-defined algebraic properties
-- **Truth-channel biasing**: The `TRUE`, `UNTRUE`, `PARADOX` weighting system demonstrates how context can modulate operator selection without changing the operator semantics
-- **Tier-based dispatch**: Operators route differently based on z-coordinate (harmonic tier), showing how positional/contextual state can influence evaluation strategy
-- **Compositional semantics**: The Alpha language tokens (`A1`→`A5` complexity tiers) illustrate mapping high-level constructs to typed operator sequences
-
-### Scientific Exploration
-
-- **Parameter sweep analysis**: Investigating how constants (LENS_SIGMA, Z_CRITICAL, PHI) affect system dynamics
-- **Reproducibility practices**: Using fixed random seeds (QAPL_RANDOM_SEED) for deterministic experiments
-- **Comparative analysis**: Studying unified vs measured simulation modes and their divergence
-
----
-
-## Part 3: Security Boundaries
-
-### What This System Is NOT
-
-| Claim | Reality |
-|-------|---------|
-| "Real quantum computer" | Classical simulation using quantum-inspired mathematics |
-| "Consciousness detector" | Mathematical model exploring IIT-like metrics, not a diagnostic tool |
-| "Predictive oracle" | Deterministic simulation, not forecasting system |
-| "Therapeutic device" | Research/educational tool with no clinical validation |
-
-### Prohibited Uses
-
-1. **Pseudoscientific claims**: Do not represent outputs as evidence of actual consciousness, quantum effects, or metaphysical phenomena in living systems
-
-2. **Medical/therapeutic misuse**: Do not use harmonic phases, truth channels, or "helix states" to diagnose, treat, or make claims about mental health conditions
-
-3. **Deceptive applications**: Do not present simulation outputs as:
-   - Readings from physical quantum hardware
-   - Scientifically validated consciousness measurements
-   - Predictions about future events or states
-
-4. **Manipulation vectors**: Do not use the system's terminology (PARADOX, TRUE, UNTRUE truth channels) to construct persuasion frameworks intended to bypass critical thinking
-
-5. **Credential fraud**: Do not cite Quantum-APL outputs as peer-reviewed scientific evidence
-
----
-
-## Part 4: Implementation Safeguards
-
-### Output Watermarking
-
-All generated reports include clear provenance:
+# BAD: Predictable or unbounded seeds
+seed = int(os.environ.get("QAPL_RANDOM_SEED", "12345"))  # Always same default
 ```
-QUANTUM-CLASSICAL SIMULATION RESULTS
+
+---
+
+## Injection Attack Prevention
+
+### Command Injection
+
+Never pass unsanitized input to shell commands:
+
+```python
+import subprocess
+import shlex
+
+# GOOD: Use subprocess with list arguments
+def run_analysis(filename: str) -> str:
+    # Validate filename first
+    if not filename.replace("_", "").replace("-", "").isalnum():
+        raise ValueError("Invalid filename")
+    result = subprocess.run(
+        ["python", "-m", "analyzer", filename],
+        capture_output=True,
+        text=True,
+        timeout=60
+    )
+    return result.stdout
+
+# BAD: Shell injection vulnerability
+def run_analysis(filename: str) -> str:
+    import os
+    os.system(f"python -m analyzer {filename}")  # VULNERABLE
 ```
-This header indicates simulated (not measured) data.
 
-### Reproducibility Requirements
+### Path Traversal
 
-- Fixed seeds via `QAPL_RANDOM_SEED` ensure outputs are deterministic
-- Artifact retention (7 days) allows audit trails
-- Geometry JSON includes sigma/z_c parameters for verification
+Prevent directory traversal attacks:
 
-### Transparency Practices
+```python
+import os
+from pathlib import Path
 
-- Constants are documented in `src/constants.js` and `docs/Z_CRITICAL_LENS.md`
-- No hidden parameters or obfuscated calculations
-- All thresholds (TRIAD_HIGH, Z_CRITICAL, etc.) have explicit derivations
+# GOOD: Resolve and validate paths
+def safe_read(filename: str, base_dir: str = "./data") -> str:
+    base = Path(base_dir).resolve()
+    target = (base / filename).resolve()
+
+    # Ensure target is within base directory
+    if not str(target).startswith(str(base)):
+        raise ValueError("Path traversal detected")
+
+    if not target.exists():
+        raise FileNotFoundError(f"File not found: {filename}")
+
+    return target.read_text()
+
+# BAD: Direct path concatenation
+def unsafe_read(filename: str) -> str:
+    with open(f"./data/{filename}") as f:  # "../../../etc/passwd" works!
+        return f.read()
+```
+
+### JSON/YAML Deserialization
+
+Avoid unsafe deserialization:
+
+```python
+import json
+import yaml
+
+# GOOD: Use safe loaders
+def load_config(path: str) -> dict:
+    with open(path) as f:
+        if path.endswith(".yaml") or path.endswith(".yml"):
+            return yaml.safe_load(f)  # Safe loader
+        return json.load(f)  # JSON is inherently safe
+
+# BAD: Unsafe YAML loading allows code execution
+def load_config(path: str) -> dict:
+    with open(path) as f:
+        return yaml.load(f, Loader=yaml.Loader)  # VULNERABLE to !!python/object
+```
 
 ---
 
-## Reporting Concerns
+## JavaScript Security
 
-If you observe this system being used in ways that violate these guidelines:
+### Prototype Pollution Prevention
 
-1. **Document the misuse** with specific examples
-2. **Open an issue** at the repository with the `security` label
-3. **Do not amplify** misleading claims by sharing them further
+```javascript
+// GOOD: Use Object.create(null) for dictionaries
+function createSafeDict() {
+  return Object.create(null);
+}
+
+// GOOD: Validate keys before assignment
+function safeAssign(obj, key, value) {
+  if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+    throw new Error('Invalid key');
+  }
+  obj[key] = value;
+}
+
+// BAD: Direct assignment allows pollution
+function unsafeAssign(obj, key, value) {
+  obj[key] = value;  // obj['__proto__']['polluted'] = true
+}
+```
+
+### require() Security
+
+```javascript
+// GOOD: Validate module paths
+const path = require('path');
+const ALLOWED_MODULES = new Set(['./constants', './s3_operator_symmetry']);
+
+function safeRequire(modulePath) {
+  const normalized = path.normalize(modulePath);
+  if (!ALLOWED_MODULES.has(normalized)) {
+    throw new Error(`Module not allowed: ${modulePath}`);
+  }
+  return require(normalized);
+}
+
+// BAD: Dynamic require with user input
+function unsafeRequire(userInput) {
+  return require(userInput);  // Can load arbitrary modules
+}
+```
 
 ---
 
-## Acknowledgment
+## Operator Algebra Security
 
-By using Quantum-APL, you acknowledge that:
+### Handler Registration
 
-- Outputs are mathematical simulations, not physical measurements
-- The "consciousness" terminology is metaphorical, drawn from IIT literature
-- The constants (z_c, φ) are grounded in observable physics (crystallography, quasi-crystals)
-- You will not misrepresent the system's capabilities or outputs
-- Research applications should follow standard scientific ethics
+The `OperatorAlgebra` class accepts arbitrary functions. Validate handlers:
+
+```python
+# GOOD: Validate handler behavior
+class SecureOperatorAlgebra(OperatorAlgebra):
+    def register(self, symbol: str, handler: Callable) -> None:
+        # Test handler with safe values
+        try:
+            result = handler(1.0)
+            if not isinstance(result, (int, float)):
+                raise TypeError("Handler must return numeric")
+        except Exception as e:
+            raise ValueError(f"Invalid handler: {e}")
+
+        super().register(symbol, handler)
+
+# BAD: Accept any function
+algebra.register("^", lambda x: os.system(f"rm -rf {x}"))  # Malicious!
+```
+
+### Sequence Execution Limits
+
+Prevent infinite loops or resource exhaustion:
+
+```python
+# GOOD: Limit sequence length and execution time
+import signal
+
+def apply_sequence_safe(
+    self,
+    operators: List[str],
+    value: Any,
+    max_ops: int = 1000,
+    timeout_sec: int = 5
+) -> Any:
+    if len(operators) > max_ops:
+        raise ValueError(f"Sequence too long: {len(operators)} > {max_ops}")
+
+    def handler(signum, frame):
+        raise TimeoutError("Operator sequence timeout")
+
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(timeout_sec)
+
+    try:
+        result = value
+        for op in operators:
+            result = self.apply(op, result)
+        return result
+    finally:
+        signal.alarm(0)
+
+# BAD: Unbounded execution
+def apply_sequence(self, operators, value):
+    for op in operators:  # Could be infinite
+        value = self.apply(op, value)
+    return value
+```
 
 ---
 
-## References
+## Output Integrity
 
-1. Shechtman, D., et al. (1984). "Metallic Phase with Long-Range Orientational Order and No Translational Symmetry." *Phys. Rev. Lett.* 53, 1951.
-2. Hales, T. C. (2001). "The Honeycomb Conjecture." *Discrete & Computational Geometry* 25, 1–22.
-3. Levine, D., & Steinhardt, P. J. (1984). "Quasicrystals: A New Class of Ordered Structures." *Phys. Rev. Lett.* 53, 2477.
-4. Senechal, M. (1995). *Quasicrystals and Geometry*. Cambridge University Press.
-5. Janot, C. (1994). *Quasicrystals: A Primer*. Oxford University Press.
+### Watermarking
+
+All generated outputs should include provenance markers:
+
+```python
+def generate_report(data: dict) -> str:
+    header = """
+    ╔════════════════════════════════════════════════════════════════════╗
+    ║  QUANTUM-APL SIMULATION OUTPUT                                     ║
+    ║  This is SIMULATED data from a classical computation.              ║
+    ║  NOT from quantum hardware. NOT a consciousness measurement.       ║
+    ╚════════════════════════════════════════════════════════════════════╝
+    """
+    return header + json.dumps(data, indent=2)
+```
+
+### Reproducibility Hashes
+
+Include verification hashes for audit trails:
+
+```python
+import hashlib
+import json
+
+def add_integrity_hash(data: dict) -> dict:
+    """Add SHA-256 hash for data integrity verification."""
+    content = json.dumps(data, sort_keys=True)
+    hash_value = hashlib.sha256(content.encode()).hexdigest()
+    return {
+        **data,
+        "_integrity": {
+            "algorithm": "sha256",
+            "hash": hash_value,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    }
+```
 
 ---
 
-*This document may be updated as the project evolves. Last reviewed: 2025*
+## Prohibited Uses
 
-*Physics grounding developed with cross-model collaboration (Claude/GPT)*
+### Do NOT use this system to:
+
+1. **Generate pseudo-scientific claims**
+   - Outputs are mathematical simulations, not physical measurements
+   - Do not represent as "quantum consciousness" evidence
+
+2. **Create manipulation frameworks**
+   - The PARADOX/TRUE/UNTRUE terminology is mathematical, not psychological
+   - Do not use for persuasion or influence operations
+
+3. **Bypass security controls**
+   - The operator algebra is for DSL design, not exploitation
+   - Do not use composition/inversion for attack primitives
+
+4. **Credential or authority fraud**
+   - Do not cite outputs as peer-reviewed research
+   - Do not represent simulations as hardware measurements
+
+---
+
+## Vulnerability Reporting
+
+If you discover a security vulnerability:
+
+1. **Do NOT** open a public issue
+2. **Do NOT** exploit the vulnerability
+3. **Contact** maintainers via security@[project-domain] or encrypted channels
+4. **Provide** detailed reproduction steps
+5. **Allow** reasonable time for patching before disclosure
+
+---
+
+## Dependencies
+
+### Audit Requirements
+
+Before adding dependencies:
+
+1. Check for known CVEs via `npm audit` or `pip-audit`
+2. Review dependency tree depth
+3. Verify package provenance (npm/PyPI verified publishers)
+4. Pin versions in lockfiles
+
+```bash
+# Node.js
+npm audit
+npm audit fix
+
+# Python
+pip-audit
+pip install --require-hashes -r requirements.txt
+```
+
+### Minimal Dependencies
+
+This project intentionally minimizes dependencies:
+
+- **Python**: numpy (numerical), PyYAML (config) - both well-audited
+- **JavaScript**: ajv (JSON Schema) - OWASP recommended
+
+---
+
+## CI/CD Security
+
+### Secrets Management
+
+```yaml
+# GOOD: Use GitHub secrets, never inline
+env:
+  API_KEY: ${{ secrets.API_KEY }}
+
+# BAD: Hardcoded secrets
+env:
+  API_KEY: "sk-1234567890abcdef"  # NEVER DO THIS
+```
+
+### Workflow Permissions
+
+```yaml
+# GOOD: Minimal permissions
+permissions:
+  contents: read
+  actions: read
+
+# BAD: Overly permissive
+permissions: write-all
+```
+
+---
+
+## Related Documentation
+
+- `docs/PHYSICS_GROUNDING.md` - Scientific basis for constants (z_c, φ)
+- `docs/CONSTANTS_ARCHITECTURE.md` - Constant inventory and validation
+- `src/quantum_apl_python/z_axis_threshold_analysis.py` - Physics verification code
+
+---
+
+*Last updated: 2025*
