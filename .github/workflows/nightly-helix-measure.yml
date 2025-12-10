@@ -94,10 +94,11 @@ jobs:
       - name: Upload helix measure artifacts (combined)
         uses: actions/upload-artifact@v4
         with:
-          name: helix-measure-${{ github.run_id }}
+          name: helix-measure-${{ github.run_id }}-seed-${{ matrix.seed }}
           path: ${{ steps.run_demo.outputs.outdir }}
           if-no-files-found: error
           retention-days: 7
+          overwrite: true
 
   probe-table:
     name: probe table

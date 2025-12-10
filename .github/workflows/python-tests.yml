@@ -76,6 +76,7 @@ jobs:
             **/plot_off.png
             **/plot_on.png
           if-no-files-found: ignore
+          overwrite: true
 
       - name: Generate headless analyzer plots (artifacts)
         run: |
@@ -103,3 +104,4 @@ jobs:
           path: artifacts/*.png
           if-no-files-found: error
           retention-days: 7
+          overwrite: true
