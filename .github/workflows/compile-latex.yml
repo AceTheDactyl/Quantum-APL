@@ -36,6 +36,7 @@ jobs:
         with:
           name: apl-operators-manual
           path: docs/apl-operators-manual.pdf
+          overwrite: true
 
       - name: Commit compiled PDF
         run: |
