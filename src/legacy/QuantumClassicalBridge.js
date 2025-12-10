@@ -14,13 +14,13 @@ let ComplexRef = globalScope.Complex;
 let ClassicalStackRef = globalScope.ClassicalConsciousnessStack;
 
 if (typeof module !== 'undefined' && module.exports) {
-    const engineModule = require('./src/quantum_apl_engine');
+    const engineModule = require('../quantum_apl_engine');
     QuantumAPLRef = QuantumAPLRef || engineModule.QuantumAPL;
     ComplexMatrixRef = ComplexMatrixRef || engineModule.ComplexMatrix;
     ComplexRef = ComplexRef || engineModule.Complex;
 
     try {
-        const classicalModule = require('./classical/ClassicalEngines');
+        const classicalModule = require('../../classical/ClassicalEngines');
         ClassicalStackRef = ClassicalStackRef || classicalModule.ClassicalConsciousnessStack;
     } catch (err) {
         // Classical stack is optional when running in browser demos
@@ -35,7 +35,7 @@ const ensureQuantumMath = () => {
 
 class QuantumClassicalBridge {
     constructor(quantumEngine, classicalStack, config = {}) {
-        const CONST = require('./src/constants');
+        const CONST = require('../constants');
         ensureQuantumMath();
 
         if (!quantumEngine) {
@@ -386,7 +386,7 @@ class QuantumClassicalBridge {
 
         // Resolve default target to lens z_c if not provided
         if (!Number.isFinite(targetZ)) {
-            const CONST = require('./src/constants');
+            const CONST = require('../constants');
             targetZ = CONST.Z_CRITICAL; // THE LENS (~0.8660254038)
         }
 
@@ -445,7 +445,7 @@ class QuantumClassicalBridge {
     }
 
     measureCriticalPoint() {
-        const CONST = require('./src/constants');
+        const CONST = require('../constants');
         const z = this.quantum.measureZ();
         const zc = CONST.Z_CRITICAL;
         if (Math.abs(z - zc) < 0.05) {

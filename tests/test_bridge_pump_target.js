@@ -2,7 +2,7 @@
 const assert = (cond, msg) => { if (!cond) { throw new Error(msg || 'assertion failed'); } };
 
 const CONST = require('../src/constants');
-const { QuantumClassicalBridge: Bridge } = require('../QuantumClassicalBridge');
+const { QuantumClassicalBridge: Bridge } = require('../src/legacy/QuantumClassicalBridge');
 
 class DummyQuantum {
   constructor() {

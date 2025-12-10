@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { UnifiedDemo } = require('../QuantumClassicalBridge');
+const { UnifiedDemo } = require('../src/legacy/QuantumClassicalBridge');
 
 function ensureDir(p) { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); }
 
