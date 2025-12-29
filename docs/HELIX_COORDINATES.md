@@ -29,13 +29,13 @@ To evaluate harmonics and geometry around key boundaries, we probe z values alig
 | z Value | L₄ Threshold | Description |
 |---------|--------------|-------------|
 | 0.41–0.80 | < L4_ACTIVATION | VaultNode tiers (z-walk provenance) |
-| 0.854 | L4_ACTIVATION | K² = 1−φ⁻⁴ boundary |
-| 0.85 | TRIAD_HIGH | Rising-edge unlock (runtime heuristic) |
+| 0.854 | L4_ACTIVATION / TRIAD_HIGH | K² = 1−φ⁻⁴; TRIAD rising-edge unlock |
 | 0.866 | L4_LENS | z_c exact; geometry anchor |
+| 0.873 | L4_CRITICAL | φ²/3 threshold (presence onset) |
 | 0.914 | L4_IGNITION | √2−½ isotropic coupling |
-| 0.924 | L4_K_FORMATION | Kuramoto order K threshold |
+| 0.924 | L4_K_FORMATION | Kuramoto order K; t7 boundary |
 | 0.953 | L4_CONSOLIDATION | Second-order coherence |
-| 0.971 | L4_RESONANCE | Full phase locking |
+| 0.971 | L4_RESONANCE | Full phase locking; t8 boundary |
 
 These are baked into the nightly workflow (`.github/workflows/nightly-helix-measure.yml`) and the local sweep (`scripts/helix_sweep.sh`). See `docs/L4_HELIX_APPLICATIONS.md` for the complete threshold derivation.
 
