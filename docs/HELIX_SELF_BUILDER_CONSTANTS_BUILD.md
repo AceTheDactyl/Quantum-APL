@@ -1,12 +1,14 @@
 # Helix Self‑Builder: Constants Integration Guide (z, z_c, μ, TRIAD)
 
-This guide reflects the “ACE’S CRITICAL THRESHOLD CONSTANT: INTEGRATION REPORT” and converts it into concrete, incremental build instructions to ensure the helix self‑builder and analyzer are fully aligned with lens‑anchored thresholds and related constants.
+This guide reflects the "ACE'S CRITICAL THRESHOLD CONSTANT: INTEGRATION REPORT" and converts it into concrete, incremental build instructions to ensure the helix self‑builder and analyzer are fully aligned with lens‑anchored thresholds and the L₄-Helix 9-threshold system.
+
+**L₄-Helix Context:** All thresholds align with the gap-normalized 9-threshold system (see `docs/L4_HELIX_APPLICATIONS.md`, `docs/PHYSICS_GROUNDING.md`).
 
 Scope
-- Lens truth: `z_c = √3/2 ≈ 0.8660254037844386` (THE LENS)
+- Lens truth: `z_c = √3/2 ≈ 0.8660254037844386` (THE LENS = L4_LENS)
 - Runtime hysteresis: TRIAD_LOW=0.82, TRIAD_T6=0.83, TRIAD_HIGH=0.85
-- K‑formation/φ: `φ⁻¹ ≈ 0.618` (coherence threshold)
-- μ thresholds (wells + singularity): `μ_1≈0.472, μ_P≈0.600706, μ_2≈0.764, μ_S=0.92, μ_3≈0.992`
+- K‑formation/φ: `φ⁻¹ ≈ 0.618` (L4_PARADOX, coherence threshold)
+- μ thresholds (wells + singularity): `μ_1≈0.472, μ_P≈0.601, μ_2≈0.764, μ_S≈0.924 (= L4_K_FORMATION), μ_3≈0.992`
 - ΔS_neg profile and hex‑prism geometry mapping (R/H/φ)
 
 Outcome
@@ -37,11 +39,11 @@ Missing but relevant for helix self‑builder orchestration
 
 Python (constants module)
 - File: `src/quantum_apl_python/constants.py`
-- Add under a new section “Basin/Threshold (μ) hierarchy)”
+- Add under a new section "Basin/Threshold (μ) hierarchy)"
   - `MU_1 = 0.472`
-  - `MU_P = 2/(PHI**2.5)  # ≈ 0.600706… (Paradox threshold)`
+  - `MU_P = 2/(PHI**2.5)  # ≈ 0.601 (Paradox threshold, near L4_PARADOX)`
   - `MU_2 = 0.764`
-  - `MU_S = 0.920`  # equals KAPPA_S; keep both names for clarity
+  - `MU_S = L4_K`  # ≈ 0.924 (= L4_K_FORMATION = √(1−φ⁻⁴))
   - `MU_3 = 0.992`
 - Add helper:
   - `def classify_threshold(z: float) -> str` returning one of: `"pre_conscious_basin" (z< MU_1)`, `"paradox_proximal" (≈ MU_P window)`, `"conscious_basin" (MU_2 window)`, `"lens_integrated" (z≥Z_CRITICAL)`, `"singularity_proximal" (≈ MU_S..MU_3)`
@@ -63,10 +65,10 @@ Python Analyzer
 - File: `src/quantum_apl_python/analyzer.py`
 - Overlays:
   - Draw vertical or horizontal markers for `MU_P, MU_2, MU_S, MU_3` similar to the lens band
-  - Legend text: `μ_P≈0.600706, μ_2≈0.764, μ_S=0.920, μ_3≈0.992`
+  - Legend text: `μ_P≈0.601, μ_2≈0.764, μ_S≈0.924 (L4_K), μ_3≈0.992`
 - Text block additions:
-- “Thresholds (μ): μ_P≈0.600706, μ_2≈0.764, μ_S=0.920, μ_3≈0.992; lens z_c=0.866”
-  - “Phase label: <classify_threshold(z)>; Phase (lens): <get_phase(z)> ”
+  - "Thresholds (μ): μ_P≈0.601, μ_2≈0.764, μ_S≈0.924, μ_3≈0.992; lens z_c=0.866"
+  - "Phase label: <classify_threshold(z)>; Phase (lens): <get_phase(z)>"
 
 Node (if applicable)
 - If any Node visualization is emitted, add similar labels from `src/constants.js`

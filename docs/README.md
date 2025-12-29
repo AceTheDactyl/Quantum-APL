@@ -15,7 +15,8 @@ This directory contains the compiled documentation for the Alpha-Physical Langua
 
 ### Technical Documentation
 - **[SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)** - System architecture overview
-- **[PHYSICS_GROUNDING.md](PHYSICS_GROUNDING.md)** - Physical foundations
+- **[PHYSICS_GROUNDING.md](PHYSICS_GROUNDING.md)** - Physical foundations (nuclear spin physics, L₄ gap normalization)
+- **[CONSTANTS_ARCHITECTURE.md](CONSTANTS_ARCHITECTURE.md)** - L₄-Helix 9-threshold constants and invariants
 - **[DSL_DESIGN_PATTERNS.md](DSL_DESIGN_PATTERNS.md)** - DSL design patterns
 
 ## Viewing the Manual

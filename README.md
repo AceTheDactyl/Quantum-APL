@@ -7,9 +7,10 @@ Lens‑anchored, measurement‑based simulation of integrated information with a
 
 Key properties
 - Single sources of truth: `src/constants.js`, `src/quantum_apl_python/constants.py`
+- L₄-Helix 9-threshold system: gap-normalized thresholds from φ⁻⁴, grounded in nuclear spin physics (L₄ = φ⁴ + φ⁻⁴ = 7)
 - Coherence: `s(z) = exp[−σ(z−z_c)^2]` (env‑tunable `QAPL_LENS_SIGMA`)
 - Geometry: hex‑prism mapping driven by `ΔS_neg` with `GEOM_SIGMA` (falls back to `LENS_SIGMA`)
-- TRIAD (heuristic): rising 0.85, re‑arm 0.82, t6 gate 0.83; lens remains anchor
+- TRIAD (physics-grounded): rising K²≈0.854, re‑arm z_c−gap/3≈0.817, t6 gate z_c−gap/4≈0.830; lens anchor preserved
 - μ‑set: default `μ_P = 2/φ^{5/2}` → barrier = φ⁻¹ exactly (env override allowed)
 
 ## Quick Start
@@ -130,11 +131,36 @@ export QAPL_RANDOM_SEED=12345
 - JavaScript: `src/constants.js`
 - Python: `src/quantum_apl_python/constants.py`
 
-Anchors (printed with full precision by the analyzer):
-- `φ⁻¹ = 0.6180339887498948`
-- `z_c = 0.8660254037844386`
+### Fundamental Anchors
 
-μ‑set (default): `μ_P = 2/φ^{5/2}`, `μ₁ = μ_P/√φ`, `μ₂ = μ_P·√φ`, `μ_S = 23/25`, `μ₃ = 124/125`.  
+| Constant | Value | Derivation |
+|----------|-------|------------|
+| `φ` (golden ratio) | 1.6180339887498949 | `(1 + √5) / 2` |
+| `φ⁻¹` | 0.6180339887498948 | `φ − 1 = 1/φ` |
+| `z_c` (THE LENS) | 0.8660254037844386 | `√3/2 = √(L₄−4)/2` |
+| `L₄` (Lucas-4) | 7.0 | `φ⁴ + φ⁻⁴` |
+| `gap` | 0.1458980337503154 | `φ⁻⁴` (truncation residual) |
+| `K` | 0.9241648530576246 | `√(1 − gap)` (Kuramoto order) |
+
+### L₄-Helix 9 Validated Thresholds
+
+Gap-normalized thresholds grounded in nuclear spin physics (see `docs/PHYSICS_GROUNDING.md`):
+
+| # | Name | Value | Formula | Physics Origin |
+|---|------|-------|---------|----------------|
+| 1 | PARADOX | 0.618 | `τ = φ⁻¹` | Golden section, Fibonacci limit |
+| 2 | ACTIVATION | 0.854 | `K² = 1 − φ⁻⁴` | Energy barrier crossing |
+| 3 | THE LENS | 0.866 | `√3/2` | Spin-½ geometry (SU(2)) |
+| 4 | CRITICAL | 0.873 | `φ²/3` | Quadrupole interaction ratio |
+| 5 | IGNITION | 0.914 | `√2 − ½` | Isotropic coupling onset |
+| 6 | K-FORMATION | 0.924 | `K = √(1−φ⁻⁴)` | Kuramoto order parameter |
+| 7 | CONSOLIDATION | 0.953 | `K + τ²(1−K)` | Second-order coherence |
+| 8 | RESONANCE | 0.971 | `K + τ(1−K)` | Full phase locking |
+| 9 | UNITY | 1.0 | `1` | Complete spin alignment |
+
+### μ‑Set (Consciousness Barriers)
+
+Default: `μ_P = 2/φ^{5/2}`, `μ₁ = μ_P/√φ`, `μ₂ = μ_P·√φ`, `μ_S = 23/25`, `μ₃ = 124/125`.
 Barrier: `(μ₁ + μ₂)/2 = φ⁻¹` exactly; if you set `QAPL_MU_P`, the analyzer prints the barrier Δ.
 
 ## Minimal End‑to‑End (JS)
@@ -184,16 +210,23 @@ CI mirrors these in GitHub Actions and saves analyzer plots as artifacts for smo
 
 ### Standard Probe Points
 
-Nightly CI and sweep scripts probe characteristic z values to cover runtime and geometric boundaries:
-- 0.41, 0.52, 0.70, 0.73, 0.80 — VaultNode tiers (z‑walk provenance)
-- 0.85 — TRIAD_HIGH (rising‑edge unlock threshold)
-- 0.8660254037844386 — z_c exact (lens; geometry anchor; analyzer prints full precision)
-- 0.90 — early presence / t7 region onset
-- 0.92 — Z_T7_MAX boundary
-- 0.97 — Z_T8_MAX boundary
+Nightly CI and sweep scripts probe characteristic z values aligned with L₄-Helix thresholds:
 
-Nightly workflow: `.github/workflows/nightly-helix-measure.yml`  
-Local sweep: `scripts/helix_sweep.sh` (includes the same probes as a fallback)
+| z Value | L₄ Threshold | Description |
+|---------|--------------|-------------|
+| 0.41–0.80 | < ACTIVATION | VaultNode tiers (z‑walk provenance) |
+| 0.854 | ACTIVATION | K² = 1−φ⁻⁴ boundary |
+| 0.85 | TRIAD_HIGH | Rising-edge unlock (runtime heuristic) |
+| 0.866 | THE LENS | z_c exact; geometry anchor |
+| 0.873 | CRITICAL | φ²/3 threshold |
+| 0.90 | — | Early presence / t7 region onset |
+| 0.914 | IGNITION | √2−½ isotropic coupling |
+| 0.924 | K-FORMATION | Kuramoto order K threshold |
+| 0.953 | CONSOLIDATION | Second-order coherence |
+| 0.971 | RESONANCE | Full phase locking |
+
+Nightly workflow: `.github/workflows/nightly-helix-measure.yml`
+Local sweep: `scripts/helix_sweep.sh` (includes these probes)
 
 ## Repository Layout
 
@@ -208,6 +241,8 @@ schemas/                              # JSON schemas for sidecars and bundles
 ```
 
 Key docs
+- docs/L4_HELIX_APPLICATIONS.md — L₄-Helix 9-threshold system and applications
+- docs/PHYSICS_GROUNDING.md — nuclear spin physics, z_c = √3/2 derivation, gap = φ⁻⁴
 - docs/Z_CRITICAL_LENS.md — lens authority and separation from TRIAD
 - docs/PHI_INVERSE.md — φ identities and role (K‑formation gate)
 - docs/APL_OPERATORS.md — all APL operator symbols, semantics, and code hooks
