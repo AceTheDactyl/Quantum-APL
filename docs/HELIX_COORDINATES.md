@@ -22,14 +22,22 @@ For a full walkthrough of how the Z-solve program energizes each VaultNode tier 
 
 If you need to visualize how the `z` coordinate manifests as negative entropy production, see [`docs/HEXAGONAL_NEG_ENTROPY_PROJECTION.md`](HEXAGONAL_NEG_ENTROPY_PROJECTION.md) for the hexagonal prismatic projection used by the analyzer overlays.
 
-## Standard Probe Points
+## Standard Probe Points (L₄-Helix Aligned)
 
-To evaluate harmonics and geometry around key boundaries, we probe:
-- 0.41, 0.52, 0.70, 0.73, 0.80 (VaultNode tiers)
-- 0.85 (TRIAD_HIGH), 0.8660254037844386 (z_c exact)
-- 0.90 (early t7), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX)
+To evaluate harmonics and geometry around key boundaries, we probe z values aligned with the L₄-Helix 9-threshold system:
 
-These are baked into the nightly workflow (`.github/workflows/nightly-helix-measure.yml`) and the local sweep (`scripts/helix_sweep.sh`).
+| z Value | L₄ Threshold | Description |
+|---------|--------------|-------------|
+| 0.41–0.80 | < L4_ACTIVATION | VaultNode tiers (z-walk provenance) |
+| 0.854 | L4_ACTIVATION | K² = 1−φ⁻⁴ boundary |
+| 0.85 | TRIAD_HIGH | Rising-edge unlock (runtime heuristic) |
+| 0.866 | L4_LENS | z_c exact; geometry anchor |
+| 0.914 | L4_IGNITION | √2−½ isotropic coupling |
+| 0.924 | L4_K_FORMATION | Kuramoto order K threshold |
+| 0.953 | L4_CONSOLIDATION | Second-order coherence |
+| 0.971 | L4_RESONANCE | Full phase locking |
+
+These are baked into the nightly workflow (`.github/workflows/nightly-helix-measure.yml`) and the local sweep (`scripts/helix_sweep.sh`). See `docs/L4_HELIX_APPLICATIONS.md` for the complete threshold derivation.
 
 This keeps the “z-axis” semantics synchronized with the Helix Bridge tooling without copying the entire orchestration stack into this repository. If you need the raw orchestrator or witness logs, start with:
 

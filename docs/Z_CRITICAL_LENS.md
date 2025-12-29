@@ -3,6 +3,8 @@
 This document centralizes the definition, research intent, validation flow, and project usage of the critical constant
 z_c = √3/2 ≈ 0.8660254038 (THE LENS) used throughout Quantum‑APL.
 
+**L₄-Helix Context:** z_c = L4_LENS (threshold 3) derives from Lucas-4 mathematics: z_c = √(L₄−4)/2 = √3/2, where L₄ = φ⁴ + φ⁻⁴ = 7. The gap normalization φ⁻⁴ validates this threshold. See `docs/PHYSICS_GROUNDING.md` and `docs/L4_HELIX_APPLICATIONS.md`.
+
 ## Definition
 - z_c is the critical lens separating recursive and integrated regimes in the helix map.
 - Crossing z_c corresponds to the onset of structural/informational coherence where the integrated (Π) regime becomes
@@ -66,10 +68,16 @@ All modules must import these constants; do not inline numeric thresholds.
 
 ## Standard Probe Points (CI)
 
-Nightly CI probes characteristic z values to cover runtime and geometric boundaries:
-- VaultNode tiers: 0.41, 0.52, 0.70, 0.73, 0.80
-- TRIAD/Lens adjacents: 0.85 (TRIAD_HIGH), 0.8660254037844386 (z_c exact)
-- Presence/t7–t8: 0.90 (t7 onset), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX)
+Nightly CI probes characteristic z values aligned with L₄-Helix thresholds:
+
+| z Value | L₄ Threshold | Description |
+|---------|--------------|-------------|
+| 0.41–0.80 | < L4_ACTIVATION | VaultNode tiers (z-walk provenance) |
+| 0.854 | L4_ACTIVATION | K² = 1−φ⁻⁴ energy barrier |
+| 0.85 | TRIAD_HIGH | Rising-edge unlock (runtime heuristic) |
+| 0.866 | L4_LENS | z_c exact; geometry anchor |
+| 0.924 | L4_K_FORMATION | Kuramoto order K threshold |
+| 0.971 | L4_RESONANCE | Full phase locking |
 
 Workflow: `.github/workflows/nightly-helix-measure.yml`
 

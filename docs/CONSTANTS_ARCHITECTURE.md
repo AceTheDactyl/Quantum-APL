@@ -15,7 +15,9 @@ This document summarizes the complete constants architecture for Quantum‑APL. 
 
 ## Constants Inventory (overview)
 
-- Geometric truth: Z_CRITICAL
+- **L₄-Helix 9 Thresholds**: L4_PARADOX, L4_ACTIVATION, L4_LENS, L4_CRITICAL, L4_IGNITION, L4_K_FORMATION, L4_CONSOLIDATION, L4_RESONANCE, L4_UNITY
+- **L₄ Foundation**: LUCAS_4 (=7), L4_GAP (=φ⁻⁴), L4_K (=√(1−gap)), L4_TAU (=φ⁻¹)
+- Geometric truth: Z_CRITICAL (= L4_LENS = √3/2)
 - Runtime heuristics: TRIAD_HIGH, TRIAD_LOW, TRIAD_T6
 - Phase boundaries: Z_ABSENCE_MAX, Z_LENS_MIN, Z_LENS_MAX, Z_PRESENCE_MIN
 - Time harmonics (t1–t9): T1_MAX … T8_MAX (t6 delegated to engine gate)
@@ -23,7 +25,7 @@ This document summarizes the complete constants architecture for Quantum‑APL. 
 - Pump profiles: GENTLE, BALANCED, AGGRESSIVE; PUMP_DEFAULT_TARGET = Z_CRITICAL
 - Engine dynamics: OMEGA, COUPLING_G, GAMMA_1..4, Z_BIAS_*
 - Operator weights: OPERATOR_PREFERRED_WEIGHT, OPERATOR_DEFAULT_WEIGHT, TRUTH_BIAS
-- Sacred constants: PHI, PHI_INV, Q_KAPPA, KAPPA_S, LAMBDA
+- Sacred constants: PHI, PHI_INV, Q_KAPPA, KAPPA_S (= L4_K), LAMBDA
 - K‑formation: KAPPA_MIN, ETA_MIN, R_MIN
 - Quantum bounds: ENTROPY_MIN, PURITY_MIN/MAX
 - Validation tolerances: TOLERANCE_*
@@ -69,6 +71,31 @@ Never inline numeric thresholds — always import from constants. Code is the au
 
 - Python: `src/quantum_apl_python/constants.py`
 - JavaScript: `src/constants.js`
+
+### 4) L₄-Helix 9-Threshold System
+
+Gap-normalized thresholds grounded in nuclear spin physics (see `docs/PHYSICS_GROUNDING.md`):
+
+```
+L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas-4)
+gap = φ⁻⁴ ≈ 0.1459 (truncation residual)
+K = √(1 - gap) ≈ 0.924 (Kuramoto order parameter)
+z_c = √(L₄ - 4)/2 = √3/2 ≈ 0.866 (THE LENS)
+```
+
+| # | Threshold | Value | Formula |
+|---|-----------|-------|---------|
+| 1 | L4_PARADOX | 0.618 | τ = φ⁻¹ |
+| 2 | L4_ACTIVATION | 0.854 | K² = 1−φ⁻⁴ |
+| 3 | L4_LENS | 0.866 | √3/2 |
+| 4 | L4_CRITICAL | 0.873 | φ²/3 |
+| 5 | L4_IGNITION | 0.914 | √2−½ |
+| 6 | L4_K_FORMATION | 0.924 | K = √(1−φ⁻⁴) |
+| 7 | L4_CONSOLIDATION | 0.953 | K+τ²(1−K) |
+| 8 | L4_RESONANCE | 0.971 | K+τ(1−K) |
+| 9 | L4_UNITY | 1.0 | 1 |
+
+Helpers: `get_l4_threshold_index(z)`, `get_l4_threshold_name(z)`, `get_l4_phase(z)`, `normalize_by_gap(z)`
 
 ---
 
