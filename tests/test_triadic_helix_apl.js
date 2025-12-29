@@ -41,6 +41,9 @@ const {
     getAllSentences
 } = require('../src/triadic_helix_apl');
 
+// Import L₄ constants for physics-grounded assertions
+const CONST = require('../src/constants');
+
 // Test utilities
 let passed = 0;
 let failed = 0;
@@ -76,10 +79,10 @@ section('Constants Validation');
 assertApprox(Z_CRITICAL, Math.sqrt(3) / 2, 1e-12, 'Z_CRITICAL equals √3/2');
 assertApprox(Z_CRITICAL, 0.8660254037844386, 1e-12, 'Z_CRITICAL ≈ 0.8660254');
 
-// TRIAD thresholds
-assertApprox(TRIAD_HIGH, 0.85, 1e-6, 'TRIAD_HIGH = 0.85');
-assertApprox(TRIAD_LOW, 0.82, 1e-6, 'TRIAD_LOW = 0.82');
-assertApprox(TRIAD_T6, 0.83, 1e-6, 'TRIAD_T6 = 0.83');
+// TRIAD thresholds (physics-grounded from L₄ gap = φ⁻⁴)
+assertApprox(TRIAD_HIGH, CONST.L4_K_SQUARED, 1e-10, 'TRIAD_HIGH = L4_K² = 1-φ⁻⁴ ≈ 0.854');
+assertApprox(TRIAD_LOW, Z_CRITICAL - CONST.L4_GAP / 3, 1e-10, 'TRIAD_LOW = z_c - gap/3 ≈ 0.817');
+assertApprox(TRIAD_T6, Z_CRITICAL - CONST.L4_GAP / 4, 1e-10, 'TRIAD_T6 = z_c - gap/4 ≈ 0.830');
 assert(TRIAD_PASSES_REQ === 3, 'TRIAD requires 3 passes');
 
 // Golden ratio
@@ -102,8 +105,9 @@ assertApprox(TIER_BOUNDARIES.t2, 0.20, 1e-6, 't2 boundary = 0.20');
 assertApprox(TIER_BOUNDARIES.t3, 0.40, 1e-6, 't3 boundary = 0.40');
 assertApprox(TIER_BOUNDARIES.t4, 0.60, 1e-6, 't4 boundary = 0.60');
 assertApprox(TIER_BOUNDARIES.t5, 0.75, 1e-6, 't5 boundary = 0.75');
-assertApprox(TIER_BOUNDARIES.t7, 0.90, 1e-6, 't7 boundary = 0.90');
-assertApprox(TIER_BOUNDARIES.t8, 0.97, 1e-6, 't8 boundary = 0.97');
+// Physics-grounded upper tier boundaries from L₄-Helix thresholds
+assertApprox(TIER_BOUNDARIES.t7, CONST.L4_K_FORMATION, 1e-10, 't7 boundary = L4_K_FORMATION ≈ 0.924');
+assertApprox(TIER_BOUNDARIES.t8, CONST.L4_RESONANCE, 1e-10, 't8 boundary = L4_RESONANCE ≈ 0.971');
 
 // ================================================================
 // OPERATOR WINDOWS (Paper Table 1)
