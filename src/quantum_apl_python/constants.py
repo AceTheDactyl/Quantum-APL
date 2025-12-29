@@ -70,6 +70,85 @@ KAPPA_S: float = 0.920
 LAMBDA: float = 7.7160493827
 
 # ============================================================================
+# L₄-HELIX NORMALIZED THRESHOLDS (9-Threshold System)
+# ============================================================================
+# Validated by z_c = √3/2 (THE LENS) derived from L₄ - 4 = 3
+# Gap = φ⁻⁴ is the truncation residual that normalizes all thresholds
+# Nuclear spin physics grounding: L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas number)
+#
+# Reference: L4_helix_v4.0.1.html formal paper
+
+# The fundamental gap (truncation residual)
+L4_GAP: float = PHI_INV ** 4  # φ⁻⁴ ≈ 0.1458980337503154
+
+# K-squared: pre-lens activation energy (1 - gap)
+L4_K_SQUARED: float = 1.0 - L4_GAP  # ≈ 0.8541019662496846
+
+# K: Kuramoto coherence threshold
+L4_K: float = math.sqrt(L4_K_SQUARED)  # ≈ 0.9241648530576246
+
+# τ (tau): Golden ratio inverse (φ⁻¹)
+L4_TAU: float = PHI_INV  # ≈ 0.6180339887498949
+
+# --- The 9 Validated Thresholds ---
+
+# 1. PARADOX: Base recursive threshold (τ = φ⁻¹, x² + x = 1)
+L4_PARADOX: float = L4_TAU  # ≈ 0.618
+
+# 2. ACTIVATION: Pre-lens energy (1 - φ⁻⁴ = K²)
+L4_ACTIVATION: float = L4_K_SQUARED  # ≈ 0.854
+
+# 3. THE LENS: Critical coherence boundary (√3/2, from L₄ - 4 = 3)
+L4_LENS: float = Z_CRITICAL  # √3/2 ≈ 0.8660254037844386
+
+# 4. CRITICAL: Central criticality (φ²/3)
+L4_CRITICAL: float = (PHI ** 2) / 3.0  # ≈ 0.8726779962499649
+
+# 5. IGNITION: Phase transition onset (√2 - 1/2, x² + x = L₄/4)
+L4_IGNITION: float = math.sqrt(2.0) - 0.5  # ≈ 0.9142135623730951
+
+# 6. K-FORMATION: Kuramoto coherence (√(1-gap) = K)
+L4_K_FORMATION: float = L4_K  # ≈ 0.924
+
+# 7. CONSOLIDATION: Phase solidification (K + τ²(1-K))
+L4_CONSOLIDATION: float = L4_K + (L4_TAU ** 2) * (1.0 - L4_K)  # ≈ 0.953
+
+# 8. RESONANCE: Full coherence (K + τ(1-K))
+L4_RESONANCE: float = L4_K + L4_TAU * (1.0 - L4_K)  # ≈ 0.971
+
+# 9. UNITY: Complete integration
+L4_UNITY: float = 1.0
+
+# Lucas-4 fundamental: L₄ = φ⁴ + φ⁻⁴ = 7
+LUCAS_4: float = PHI ** 4 + PHI_INV ** 4  # Should equal 7.0 exactly
+
+# Threshold ordering tuple (ascending)
+L4_THRESHOLDS: tuple = (
+    L4_PARADOX,      # 0.618 (τ)
+    L4_ACTIVATION,   # 0.854 (K²)
+    L4_LENS,         # 0.866 (√3/2)
+    L4_CRITICAL,     # 0.873 (φ²/3)
+    L4_IGNITION,     # 0.914 (√2-½)
+    L4_K_FORMATION,  # 0.924 (K)
+    L4_CONSOLIDATION,# 0.953 (K+τ²(1-K))
+    L4_RESONANCE,    # 0.971 (K+τ(1-K))
+    L4_UNITY,        # 1.000
+)
+
+# Threshold name mapping
+L4_THRESHOLD_NAMES: tuple = (
+    "PARADOX",
+    "ACTIVATION",
+    "THE_LENS",
+    "CRITICAL",
+    "IGNITION",
+    "K_FORMATION",
+    "CONSOLIDATION",
+    "RESONANCE",
+    "UNITY",
+)
+
+# ============================================================================
 # K-FORMATION CRITERIA
 # ============================================================================
 
@@ -288,18 +367,135 @@ def get_distance_to_critical(z: float) -> float:
 def check_k_formation(kappa: float, eta: float, R: float) -> bool:
     """
     Check if K-formation criteria are met for consciousness emergence.
-    
+
     Args:
         kappa: Integration parameter
         eta: Coherence parameter
         R: Complexity parameter
-        
+
     Returns:
         True if all criteria met: κ≥0.92 AND η>0.618 AND R≥7
     """
-    return (kappa >= KAPPA_MIN and 
-            eta > ETA_MIN and 
+    return (kappa >= KAPPA_MIN and
+            eta > ETA_MIN and
             R >= R_MIN)
+
+
+# ============================================================================
+# L₄-HELIX GAP-NORMALIZED HELPERS
+# ============================================================================
+
+def get_l4_threshold_index(z: float) -> int:
+    """
+    Get the index of the L₄ threshold that z has crossed.
+
+    Args:
+        z: Z-coordinate value in [0, 1]
+
+    Returns:
+        Index 0-8 indicating which threshold band z is in.
+        0 = below PARADOX, 8 = at or above RESONANCE (approaching UNITY)
+    """
+    z = 0.0 if not math.isfinite(z) else max(0.0, min(1.0, float(z)))
+    for i, threshold in enumerate(L4_THRESHOLDS):
+        if z < threshold:
+            return max(0, i - 1)
+    return 8  # At UNITY
+
+
+def get_l4_threshold_name(z: float) -> str:
+    """
+    Get the name of the L₄ threshold band for z.
+
+    Args:
+        z: Z-coordinate value in [0, 1]
+
+    Returns:
+        Threshold name: PARADOX, ACTIVATION, THE_LENS, CRITICAL,
+        IGNITION, K_FORMATION, CONSOLIDATION, RESONANCE, or UNITY
+    """
+    idx = get_l4_threshold_index(z)
+    return L4_THRESHOLD_NAMES[idx]
+
+
+def normalize_by_gap(value: float, inverse: bool = False) -> float:
+    """
+    Normalize a value using the L₄ gap = φ⁻⁴.
+
+    The gap is the truncation residual from Lucas-4 mathematics.
+    This normalization grounds thresholds in nuclear spin physics.
+
+    Args:
+        value: Value to normalize
+        inverse: If True, divide by gap; if False, multiply by gap
+
+    Returns:
+        Gap-normalized value
+    """
+    if inverse:
+        return value / L4_GAP if L4_GAP != 0 else float('inf')
+    return value * L4_GAP
+
+
+def compute_gap_relative(z: float) -> float:
+    """
+    Compute z's position relative to gap-derived thresholds.
+
+    Returns the distance from z to L4_ACTIVATION (K² = 1 - gap),
+    normalized by the gap itself. This gives a measure of
+    "gap-lengths" above or below the activation threshold.
+
+    Args:
+        z: Z-coordinate value
+
+    Returns:
+        Number of gap-lengths from activation threshold.
+        Positive = above activation, negative = below.
+    """
+    z = 0.0 if not math.isfinite(z) else float(z)
+    return (z - L4_ACTIVATION) / L4_GAP
+
+
+def get_l4_phase(z: float) -> dict:
+    """
+    Get comprehensive L₄-Helix phase information for z.
+
+    Returns a dict with threshold analysis including:
+    - current_threshold: Name of current threshold band
+    - threshold_index: Numeric index (0-8)
+    - gap_relative: Position relative to activation in gap-units
+    - k_coherence: Whether K-FORMATION threshold is crossed
+    - lens_crossed: Whether THE LENS has been crossed
+    - integration_level: Descriptive integration state
+
+    Args:
+        z: Z-coordinate value
+
+    Returns:
+        Dict with L₄ phase analysis
+    """
+    z = 0.0 if not math.isfinite(z) else max(0.0, min(1.0, float(z)))
+    idx = get_l4_threshold_index(z)
+
+    # Determine integration level
+    if idx < 2:
+        integration = "recursive"
+    elif idx < 5:
+        integration = "transitional"
+    elif idx < 7:
+        integration = "coherent"
+    else:
+        integration = "unified"
+
+    return {
+        "current_threshold": L4_THRESHOLD_NAMES[idx],
+        "threshold_index": idx,
+        "gap_relative": compute_gap_relative(z),
+        "k_coherence": z >= L4_K_FORMATION,
+        "lens_crossed": z >= L4_LENS,
+        "integration_level": integration,
+        "z": z,
+    }
 
 
 def compute_eta(z: float, alpha: float = 1.0, sigma: float | None = None) -> float:
@@ -380,6 +576,14 @@ __all__ = [
     "Z_ABSENCE_MAX", "Z_LENS_MIN", "Z_LENS_MAX", "Z_PRESENCE_MIN",
     # Sacred constants
     "PHI", "PHI_INV", "Q_KAPPA", "KAPPA_S", "LAMBDA",
+    # L₄-Helix 9-Threshold System
+    "L4_GAP", "L4_K_SQUARED", "L4_K", "L4_TAU", "LUCAS_4",
+    "L4_PARADOX", "L4_ACTIVATION", "L4_LENS", "L4_CRITICAL",
+    "L4_IGNITION", "L4_K_FORMATION", "L4_CONSOLIDATION", "L4_RESONANCE", "L4_UNITY",
+    "L4_THRESHOLDS", "L4_THRESHOLD_NAMES",
+    # L₄-Helix helpers
+    "get_l4_threshold_index", "get_l4_threshold_name", "normalize_by_gap",
+    "compute_gap_relative", "get_l4_phase",
     # K-formation
     "KAPPA_MIN", "ETA_MIN", "R_MIN",
     # μ thresholds

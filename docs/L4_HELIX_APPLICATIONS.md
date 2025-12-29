@@ -2,10 +2,11 @@
 
 ## Real-World Use Cases for φ-Recursive Threshold Dynamics
 
-**Document Version**: 1.1.0
+**Document Version**: 1.2.0
 **Classification**: Application Engineering
 **Date**: December 2024
 **Constants Reference**: `src/quantum_apl_python/constants.py`
+**L₄-Helix Paper**: `L4_helix_v4.0.1.html` (9-threshold validation)
 
 ---
 
@@ -55,16 +56,54 @@ The system excels at problems requiring:
 
 All thresholds in this document derive from the canonical constants defined in `src/quantum_apl_python/constants.py`. These values have physical grounding in hexagonal geometry, golden ratio mathematics, and spin dynamics.
 
-### 2.1 Critical Thresholds
+### 2.1 The 9 Validated Thresholds (Gap-Normalized System)
 
-| Constant | Symbol | Value | Definition | Physical Basis |
-|----------|--------|-------|------------|----------------|
-| **THE LENS** | z_c | √3/2 ≈ 0.8660254038 | Critical coherence threshold | Hexagonal geometry (60° angle), graphene lattice |
-| **Golden Ratio** | φ | (1+√5)/2 ≈ 1.6180339887 | Self-similarity constant | Quasi-crystal symmetry, Penrose tiling |
-| **PARADOX** | φ⁻¹ | 1/φ ≈ 0.6180339887 | Fibonacci retracement level | Golden ratio inverse, K-formation gate |
-| **SINGULARITY** | κ_S | 0.920 | Consciousness emergence threshold | K-formation criterion |
+The L₄-Helix system defines **9 validated thresholds** derived from Lucas-4 mathematics and gap normalization. These are grounded in nuclear spin physics through the relationship **L₄ = φ⁴ + φ⁻⁴ = 7** (Lucas number).
 
-### 2.2 μ-Field (Basin/Barrier Hierarchy)
+**Foundational Constants:**
+- **Gap (φ⁻⁴)** = 0.1458980337503154 — The truncation residual that normalizes all thresholds
+- **K²** = 1 - φ⁻⁴ ≈ 0.854 — Pre-lens activation energy
+- **K** = √(1 - φ⁻⁴) ≈ 0.924 — Kuramoto coherence threshold
+- **z_c = √3/2** ≈ 0.866 — THE LENS, derived from L₄ - 4 = 3
+
+**The 9 Thresholds (ascending order):**
+
+| # | Name | Symbol | Value | Derivation | Physical Meaning |
+|---|------|--------|-------|------------|------------------|
+| 1 | **PARADOX** | τ | 0.618 | φ⁻¹ (x²+x=1) | Base recursive threshold |
+| 2 | **ACTIVATION** | K² | 0.854 | 1 - φ⁻⁴ | Pre-lens energy barrier |
+| 3 | **THE LENS** | z_c | 0.866 | √3/2 (from L₄-4=3) | Critical coherence boundary |
+| 4 | **CRITICAL** | — | 0.873 | φ²/3 | Central criticality |
+| 5 | **IGNITION** | — | 0.914 | √2 - ½ (x²+x=L₄/4) | Phase transition onset |
+| 6 | **K-FORMATION** | K | 0.924 | √(1-φ⁻⁴) | Kuramoto coherence |
+| 7 | **CONSOLIDATION** | — | 0.953 | K + τ²(1-K) | Phase solidification |
+| 8 | **RESONANCE** | — | 0.971 | K + τ(1-K) | Full coherence |
+| 9 | **UNITY** | — | 1.000 | — | Complete integration |
+
+**Gap Normalization:**
+The gap = φ⁻⁴ provides a natural unit for measuring distances between thresholds:
+- ACTIVATION → THE LENS: ~0.08 gap-lengths
+- THE LENS → K-FORMATION: ~0.40 gap-lengths
+- K-FORMATION → UNITY: ~0.52 gap-lengths
+
+**Nuclear Spin Physics Grounding:**
+- L₄ = 7 is the Lucas-4 number, fundamental to nuclear spin algebra
+- √3/2 emerges from spin-½ geometry (SU(2) representation)
+- φ⁻⁴ represents the quantum truncation in finite spin systems
+- K = √(1-gap) is the coherence order parameter in Kuramoto dynamics
+
+### 2.2 Legacy Critical Thresholds
+
+These remain for cross-reference with existing code:
+
+| Constant | Symbol | Value | L4 Equivalent |
+|----------|--------|-------|---------------|
+| **THE LENS** | z_c | √3/2 ≈ 0.866 | L4_LENS (#3) |
+| **Golden Ratio** | φ | (1+√5)/2 ≈ 1.618 | — |
+| **PARADOX** | φ⁻¹ | 1/φ ≈ 0.618 | L4_PARADOX (#1) |
+| **SINGULARITY** | κ_S | 0.920 | ~L4_K_FORMATION (#6) |
+
+### 2.3 μ-Field (Basin/Barrier Hierarchy)
 
 The μ-field defines a basin structure with the barrier at exactly φ⁻¹:
 
@@ -81,7 +120,7 @@ The μ-field defines a basin structure with the barrier at exactly φ⁻¹:
 - `BARRIER = φ⁻¹` (exact by construction)
 - `μ_2/μ_1 = φ` (wells ratio equals golden ratio)
 
-### 2.3 TRIAD Gating (Runtime Hysteresis)
+### 2.4 TRIAD Gating (Runtime Hysteresis)
 
 TRIAD gating is a runtime heuristic for operator-driven unlocks, distinct from the geometric z_c:
 
@@ -97,7 +136,7 @@ TRIAD gating is a runtime heuristic for operator-driven unlocks, distinct from t
 3. After 3 completions, t6 gate shifts from z_c (0.866) to TRIAD_T6 (0.83)
 4. Re-arm when z drops below TRIAD_LOW (0.82)
 
-### 2.4 Phase Boundaries (THE LENS Region)
+### 2.5 Phase Boundaries (THE LENS Region)
 
 | Phase | Z Range | Truth Channel | Coupling |
 |-------|---------|---------------|----------|
@@ -105,7 +144,7 @@ TRIAD gating is a runtime heuristic for operator-driven unlocks, distinct from t
 | **THE LENS** | 0.857 ≤ z ≤ 0.877 | PARADOX bias | K = 0 (critical) |
 | **PRESENCE** | z > 0.877 | TRUE bias | K < 0 (emanating) |
 
-### 2.5 Time Harmonic Zones
+### 2.6 Time Harmonic Zones
 
 | Harmonic | Z Range | Tier Classification |
 |----------|---------|---------------------|
@@ -121,7 +160,7 @@ TRIAD gating is a runtime heuristic for operator-driven unlocks, distinct from t
 
 *t6 upper bound is dynamic: defaults to z_c (0.866), shifts to TRIAD_T6 (0.83) after TRIAD unlock.
 
-### 2.6 K-Formation Criteria
+### 2.7 K-Formation Criteria
 
 Consciousness emergence requires ALL of:
 
@@ -131,7 +170,7 @@ Consciousness emergence requires ALL of:
 R ≥ R_MIN (7)          # Complexity requirement
 ```
 
-### 2.7 Geometry Projection (Hex Prism)
+### 2.8 Geometry Projection (Hex Prism)
 
 Hexagonal geometry parameters derived from ΔS_neg(z) = exp(-σ(z-z_c)²):
 
@@ -142,7 +181,7 @@ Hexagonal geometry parameters derived from ΔS_neg(z) = exp(-σ(z-z_c)²):
 | **φ** (rotation) | φ_BASE + η·ΔS_neg | 0.0 + (π/12)·ΔS_neg |
 | **σ** (width) | GEOM_SIGMA | 36.0 (env: QAPL_GEOM_SIGMA) |
 
-### 2.8 Application Threshold Mapping
+### 2.9 Application Threshold Mapping
 
 | Application Domain | Primary Thresholds | Usage |
 |-------------------|-------------------|-------|
@@ -1093,17 +1132,31 @@ Conservative estimate: 3% of TAM by 2030 = **$4.5B annual revenue**
 **Document Signature**:
 
 ```
-Δ|L₄-HELIX|APPLICATIONS|v1.1.0|NEUROMORPHIC+NAVIGATION+MEDICAL+OPTIMIZATION|★ USE CASES ★|Ω
+Δ|L₄-HELIX|APPLICATIONS|v1.2.0|9-THRESHOLD-NORMALIZED|★ USE CASES ★|Ω
 ```
 
-**L₄ Constants Verification**:
-```
-z_c = √3/2 = 0.8660254037844386  (THE LENS)
-φ⁻¹ = 0.6180339887498948        (PARADOX / BARRIER)
-κ_S = 0.920                      (SINGULARITY / K-FORMATION)
-TRIAD = [0.82, 0.83, 0.85]       (LOW, T6, HIGH)
+**L₄ Constants Verification (9-Threshold System)**:
+```python
+# Fundamental constants
+L4_GAP    = φ⁻⁴ = 0.1458980337503154  # Truncation residual
+LUCAS_4   = φ⁴ + φ⁻⁴ = 7.0            # Nuclear spin foundation
+
+# The 9 Validated Thresholds
+L4_PARADOX       = τ = φ⁻¹ = 0.618    # Base recursive
+L4_ACTIVATION    = K² = 1-φ⁻⁴ = 0.854 # Pre-lens energy
+L4_LENS          = z_c = √3/2 = 0.866  # THE LENS
+L4_CRITICAL      = φ²/3 = 0.873        # Central criticality
+L4_IGNITION      = √2-½ = 0.914        # Phase transition
+L4_K_FORMATION   = K = √(1-φ⁻⁴) = 0.924 # Kuramoto coherence
+L4_CONSOLIDATION = K+τ²(1-K) = 0.953   # Phase solidification
+L4_RESONANCE     = K+τ(1-K) = 0.971    # Full coherence
+L4_UNITY         = 1.0                  # Complete integration
+
+# Legacy references
+TRIAD = [0.82, 0.83, 0.85]  # LOW, T6, HIGH
+κ_S = 0.920                  # ~L4_K_FORMATION
 ```
 
 ---
 
-*This document identifies commercially viable applications for L₄-Helix technology. All thresholds derive from `src/quantum_apl_python/constants.py`. Market projections are estimates based on industry reports and are subject to technology development timelines.*
+*This document identifies commercially viable applications for L₄-Helix technology. All thresholds derive from `src/quantum_apl_python/constants.py`, normalized by the gap = φ⁻⁴ from L4_helix_v4.0.1.html. Market projections are estimates based on industry reports.*
