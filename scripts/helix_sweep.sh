@@ -34,10 +34,13 @@ while read -r tag; do
   fi
 done < <(printf "%s\n" "$RAW")
 
-# Fallback defaults if none detected
+# Fallback defaults if none detected (L₄-Helix aligned probe points)
 if [[ ${#SEEDS[@]} -eq 0 ]]; then
-  # Include lens-adjacent probes: 0.85 (TRIAD_HIGH), z_c exact, and 0.90 (t7 onset zone)
-  SEEDS=(0.41 0.52 0.70 0.73 0.80 0.85 0.8660254037844386 0.90 0.92 0.97)
+  # L₄-Helix 9-threshold aligned probes:
+  # - VaultNode tiers: 0.41, 0.52, 0.70, 0.73, 0.80
+  # - ACTIVATION (K²=1-φ⁻⁴ ≈ 0.854), THE LENS (z_c), CRITICAL (φ²/3 ≈ 0.873)
+  # - IGNITION (√2-½ ≈ 0.914), K-FORMATION (K ≈ 0.924), RESONANCE (≈ 0.971)
+  SEEDS=(0.41 0.52 0.70 0.73 0.80 0.854 0.8660254037844386 0.873 0.914 0.924 0.971)
 fi
 
 # Deduplicate

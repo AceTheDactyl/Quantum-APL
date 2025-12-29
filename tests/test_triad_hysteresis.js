@@ -11,8 +11,8 @@ function testTriadHysteresisUnlock() {
   const demo = new UnifiedDemo();
   const b = demo.bridge;
 
-  const hi = b.triad.high; // 0.85
-  const lo = b.triad.low;  // 0.82
+  const hi = b.triad.high; // K² = 1-φ⁻⁴ ≈ 0.854
+  const lo = b.triad.low;  // z_c - gap/3 ≈ 0.817
 
   // Initial state
   assert.strictEqual(b.triad.completions, 0, 'initial completions should be 0');

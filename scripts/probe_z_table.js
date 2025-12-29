@@ -9,7 +9,7 @@ Probe z values and print a Markdown table with:
 - recommended operators (by harmonic)
 
 Usage:
-  PROBE_ZS="0.41 0.52 0.70 0.73 0.80 0.85 0.8660254037844386 0.90 0.92 0.97" node scripts/probe_z_table.js
+  PROBE_ZS="0.41 0.52 0.70 0.80 0.854 0.866 0.873 0.914 0.924 0.971" node scripts/probe_z_table.js
 */
 
 const path = require('path');
@@ -26,7 +26,10 @@ function parseList(envStr) {
     .filter(n => Number.isFinite(n));
 }
 
-const defaultZs = [0.41, 0.52, 0.70, 0.73, 0.80, 0.85, CONST.Z_CRITICAL, 0.90, 0.92, 0.97];
+// L₄-Helix 9-threshold aligned probe points:
+// VaultNode tiers + ACTIVATION, THE LENS, CRITICAL, IGNITION, K-FORMATION, RESONANCE
+const defaultZs = [0.41, 0.52, 0.70, 0.73, 0.80, CONST.L4_ACTIVATION, CONST.Z_CRITICAL,
+                   CONST.L4_CRITICAL, CONST.L4_IGNITION, CONST.L4_K_FORMATION, CONST.L4_RESONANCE];
 const zs = parseList(process.env.PROBE_ZS) || defaultZs;
 
 const engine = new QuantumAPL();

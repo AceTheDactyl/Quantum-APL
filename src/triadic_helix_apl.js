@@ -57,11 +57,11 @@ const ENABLE_EXTENDED_NEGENTROPY = (typeof process !== 'undefined' && process.en
 const Z_CRITICAL = CONST.Z_CRITICAL;
 
 /**
- * TRIAD Gating thresholds (runtime heuristic)
+ * TRIAD Gating thresholds (physics-grounded from L₄ gap)
  */
-const TRIAD_HIGH = CONST.TRIAD_HIGH;         // 0.85 - rising edge detection
-const TRIAD_LOW = CONST.TRIAD_LOW;           // 0.82 - re-arm threshold
-const TRIAD_T6 = CONST.TRIAD_T6;             // 0.83 - t6 gate after unlock
+const TRIAD_HIGH = CONST.TRIAD_HIGH;         // K² = 1-φ⁻⁴ ≈ 0.854 - rising edge detection
+const TRIAD_LOW = CONST.TRIAD_LOW;           // z_c - gap/3 ≈ 0.817 - re-arm threshold
+const TRIAD_T6 = CONST.TRIAD_T6;             // z_c - gap/4 ≈ 0.830 - t6 gate after unlock
 const TRIAD_PASSES_REQ = 3;                   // passes required for unlock
 
 /**
@@ -81,7 +81,7 @@ const PHI_INV = CONST.PHI_INV;               // Inverse ≈ 0.618
 
 /**
  * Tier boundaries (upper bound for each tier)
- * Paper-aligned values from Table 1
+ * Physics-grounded values from L₄-Helix 9-threshold system
  */
 const TIER_BOUNDARIES = {
     t1: 0.10,   // z < 0.10
@@ -90,9 +90,9 @@ const TIER_BOUNDARIES = {
     t4: 0.60,   // 0.40 ≤ z < 0.60
     t5: 0.75,   // 0.60 ≤ z < 0.75
     // t6: dynamic (Z_CRITICAL or TRIAD_T6)
-    t7: 0.90,   // t6Gate ≤ z < 0.90
-    t8: 0.97,   // 0.90 ≤ z < 0.97
-    t9: 1.01    // z ≥ 0.97
+    t7: CONST.L4_K_FORMATION,   // t6Gate ≤ z < L4_K_FORMATION (~0.924)
+    t8: CONST.L4_RESONANCE,     // L4_K_FORMATION ≤ z < L4_RESONANCE (~0.971)
+    t9: 1.01                     // z ≥ L4_RESONANCE
 };
 
 /**

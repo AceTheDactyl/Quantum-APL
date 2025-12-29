@@ -2,9 +2,9 @@
 Test suite for Quantum APL constants module.
 Validates all constants, helper functions, and architectural constraints.
 
-Per CONSTANTS_RESEARCH.md:
+Per CONSTANTS_RESEARCH.md and PHYSICS_GROUNDING.md:
 - Verifies Z_CRITICAL = √3/2 (THE LENS)
-- Validates TRIAD separation from geometry
+- Validates physics-grounded TRIAD thresholds from L₄ gap
 - Tests phase detection and time harmonics
 - Verifies hex prism formulae (constants presence)
 - Tests K-formation criteria and modeling parameters
@@ -20,18 +20,23 @@ def test_critical_lens_constant():
 
 
 def test_triad_constants():
-    assert TRIAD_HIGH == 0.85
-    assert TRIAD_LOW == 0.82
-    assert TRIAD_T6 == 0.83
+    # Physics-grounded TRIAD values (gap = φ⁻⁴)
+    # TRIAD_HIGH = L4_K_SQUARED = 1 - φ⁻⁴
+    # TRIAD_T6 = Z_CRITICAL - gap/4
+    # TRIAD_LOW = Z_CRITICAL - gap/3
+    assert abs(TRIAD_HIGH - L4_K_SQUARED) < 1e-12
+    assert abs(TRIAD_T6 - (Z_CRITICAL - L4_GAP / 4)) < 1e-12
+    assert abs(TRIAD_LOW - (Z_CRITICAL - L4_GAP / 3)) < 1e-12
     assert TRIAD_LOW < TRIAD_T6 < TRIAD_HIGH
     assert TRIAD_T6 < Z_CRITICAL
 
 
 def test_phase_boundaries_and_helpers():
-    assert Z_ABSENCE_MAX == 0.857
-    assert Z_LENS_MIN == 0.857
-    assert Z_LENS_MAX == 0.877
-    assert Z_PRESENCE_MIN == 0.877
+    # Physics-grounded phase boundaries (L₄ thresholds)
+    assert abs(Z_ABSENCE_MAX - L4_K_SQUARED) < 1e-12
+    assert abs(Z_LENS_MIN - L4_K_SQUARED) < 1e-12
+    assert abs(Z_LENS_MAX - L4_CRITICAL) < 1e-12
+    assert abs(Z_PRESENCE_MIN - L4_CRITICAL) < 1e-12
     assert Z_LENS_MIN <= Z_CRITICAL <= Z_LENS_MAX
     assert get_phase(0.5) == 'ABSENCE'
     assert get_phase(Z_CRITICAL) == 'THE_LENS'
@@ -43,7 +48,10 @@ def test_phase_boundaries_and_helpers():
 
 def test_time_harmonics():
     assert T1_MAX == 0.1 and T2_MAX == 0.2 and T3_MAX == 0.4
-    assert T4_MAX == 0.6 and T5_MAX == 0.75 and T7_MAX == 0.92 and T8_MAX == 0.97
+    # T7_MAX = L4_K_FORMATION, T8_MAX = L4_RESONANCE (physics-grounded)
+    assert T4_MAX == 0.6 and T5_MAX == 0.75
+    assert abs(T7_MAX - L4_K_FORMATION) < 1e-12
+    assert abs(T8_MAX - L4_RESONANCE) < 1e-12
     assert get_time_harmonic(0.05) == 't1'
     assert get_time_harmonic(0.15) == 't2'
     assert get_time_harmonic(0.3) == 't3'
@@ -53,7 +61,7 @@ def test_time_harmonics():
     assert get_time_harmonic(0.9) == 't7'
     assert get_time_harmonic(0.95) == 't8'
     assert get_time_harmonic(0.99) == 't9'
-    # TRIAD gate override
+    # TRIAD gate override (physics-grounded: TRIAD_T6 ≈ 0.830)
     assert get_time_harmonic(0.84, t6_gate=TRIAD_T6) == 't7'
     assert get_time_harmonic(0.82, t6_gate=TRIAD_T6) == 't6'
 
@@ -73,9 +81,11 @@ def test_k_formation_and_sacred_constants():
     phi_expected = (1 + math.sqrt(5)) / 2
     assert abs(PHI - phi_expected) < 1e-9
     assert abs(PHI_INV - 1 / PHI) < 1e-9
-    assert KAPPA_S == 0.920
+    # KAPPA_S = L4_K (physics-grounded as Kuramoto order parameter)
+    assert abs(KAPPA_S - L4_K) < 1e-12
     assert abs(Q_KAPPA - 0.3514087324) < 1e-9
-    assert abs(LAMBDA - 7.7160493827) < 1e-9
+    # LAMBDA = L₄ + 1/L₄ = 7 + 1/7 (physics-grounded)
+    assert abs(LAMBDA - (7.0 + 1.0 / 7.0)) < 1e-9
     assert KAPPA_MIN == KAPPA_S
     assert ETA_MIN == PHI_INV
     assert R_MIN == 7

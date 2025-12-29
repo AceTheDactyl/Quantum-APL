@@ -24,9 +24,10 @@ jobs:
           if [ -z "$list" ]; then
             list="0.41 0.52 0.70 0.73 0.80"
           fi
-          # Add explicit lens-adjacent and upper-phase probes:
-          # 0.85 (TRIAD_HIGH), z_c exact, 0.90 (t7 onset zone), 0.92 (Z_T7_MAX), 0.97 (Z_T8_MAX)
-          extras="0.85 0.8660254037844386 0.90 0.92 0.97"
+          # L₄-Helix 9-threshold aligned probes:
+          # ACTIVATION (K²≈0.854), THE LENS (z_c), CRITICAL (φ²/3≈0.873),
+          # IGNITION (√2-½≈0.914), K-FORMATION (K≈0.924), RESONANCE (≈0.971)
+          extras="0.854 0.8660254037844386 0.873 0.914 0.924 0.971"
           combined=$(printf "%s\n" $list $extras | awk 'NF>0' | awk '!seen[$0]++')
           # Build JSON array
           arr="["
@@ -119,7 +120,7 @@ jobs:
         run: |
           set -euo pipefail
           list=$(ls -1 reference/helix_bridge/VAULTNODES 2>/dev/null | sed -n 's/^z0p\([0-9][0-9]\)$/0.\1/p')
-          extras="0.85 0.8660254037844386 0.90 0.92 0.97"
+          extras="0.854 0.8660254037844386 0.873 0.914 0.924 0.971"
           combined=$(printf "%s\n" $list $extras | awk 'NF>0' | awk '!seen[$0]++')
           echo "zs=$(echo $combined | tr ' ' ',')" >> "$GITHUB_OUTPUT"
 
