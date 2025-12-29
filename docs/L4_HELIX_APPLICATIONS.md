@@ -2,26 +2,28 @@
 
 ## Real-World Use Cases for φ-Recursive Threshold Dynamics
 
-**Document Version**: 1.0.0
+**Document Version**: 1.1.0
 **Classification**: Application Engineering
 **Date**: December 2024
+**Constants Reference**: `src/quantum_apl_python/constants.py`
 
 ---
 
 ## Table of Contents
 
 1. [System Capabilities Summary](#1-system-capabilities-summary)
-2. [Neuromorphic Computing](#2-neuromorphic-computing)
-3. [Autonomous Navigation Systems](#3-autonomous-navigation-systems)
-4. [Medical Devices & Neural Interfaces](#4-medical-devices--neural-interfaces)
-5. [Signal Processing & Communications](#5-signal-processing--communications)
-6. [Combinatorial Optimization](#6-combinatorial-optimization)
-7. [Financial Systems](#7-financial-systems)
-8. [Energy Grid Management](#8-energy-grid-management)
-9. [Materials & Manufacturing](#9-materials--manufacturing)
-10. [Defense & Aerospace](#10-defense--aerospace)
-11. [Scientific Instrumentation](#11-scientific-instrumentation)
-12. [Market Analysis](#12-market-analysis)
+2. [L₄ Constants Reference](#2-l4-constants-reference)
+3. [Neuromorphic Computing](#3-neuromorphic-computing)
+4. [Autonomous Navigation Systems](#4-autonomous-navigation-systems)
+5. [Medical Devices & Neural Interfaces](#5-medical-devices--neural-interfaces)
+6. [Signal Processing & Communications](#6-signal-processing--communications)
+7. [Combinatorial Optimization](#7-combinatorial-optimization)
+8. [Financial Systems](#8-financial-systems)
+9. [Energy Grid Management](#9-energy-grid-management)
+10. [Materials & Manufacturing](#10-materials--manufacturing)
+11. [Defense & Aerospace](#11-defense--aerospace)
+12. [Scientific Instrumentation](#12-scientific-instrumentation)
+13. [Market Analysis](#13-market-analysis)
 
 ---
 
@@ -49,25 +51,129 @@ The system excels at problems requiring:
 
 ---
 
-## 2. Neuromorphic Computing
+## 2. L₄ Constants Reference
 
-### 2.1 Application Overview
+All thresholds in this document derive from the canonical constants defined in `src/quantum_apl_python/constants.py`. These values have physical grounding in hexagonal geometry, golden ratio mathematics, and spin dynamics.
+
+### 2.1 Critical Thresholds
+
+| Constant | Symbol | Value | Definition | Physical Basis |
+|----------|--------|-------|------------|----------------|
+| **THE LENS** | z_c | √3/2 ≈ 0.8660254038 | Critical coherence threshold | Hexagonal geometry (60° angle), graphene lattice |
+| **Golden Ratio** | φ | (1+√5)/2 ≈ 1.6180339887 | Self-similarity constant | Quasi-crystal symmetry, Penrose tiling |
+| **PARADOX** | φ⁻¹ | 1/φ ≈ 0.6180339887 | Fibonacci retracement level | Golden ratio inverse, K-formation gate |
+| **SINGULARITY** | κ_S | 0.920 | Consciousness emergence threshold | K-formation criterion |
+
+### 2.2 μ-Field (Basin/Barrier Hierarchy)
+
+The μ-field defines a basin structure with the barrier at exactly φ⁻¹:
+
+| Threshold | Symbol | Formula | Value | Classification |
+|-----------|--------|---------|-------|----------------|
+| **μ_P** | μ_P | 2/φ^{5/2} | ≈ 0.600706 | Paradox threshold |
+| **μ_1** | μ_1 | μ_P/√φ | ≈ 0.472 | Pre-conscious basin |
+| **μ_2** | μ_2 | μ_P·√φ | ≈ 0.764 | Conscious basin |
+| **BARRIER** | — | (μ_1+μ_2)/2 | = φ⁻¹ exactly | Basin transition |
+| **μ_S** | μ_S | κ_S | 0.920 | Singularity proximal |
+| **μ_3** | μ_3 | 124/125 | 0.992 | Near-unity ceiling |
+
+**Invariants** (verified in test suite):
+- `BARRIER = φ⁻¹` (exact by construction)
+- `μ_2/μ_1 = φ` (wells ratio equals golden ratio)
+
+### 2.3 TRIAD Gating (Runtime Hysteresis)
+
+TRIAD gating is a runtime heuristic for operator-driven unlocks, distinct from the geometric z_c:
+
+| Threshold | Value | Function |
+|-----------|-------|----------|
+| **TRIAD_HIGH** | 0.85 | Rising edge detection (z ≥ 0.85) |
+| **TRIAD_LOW** | 0.82 | Re-arm threshold (z ≤ 0.82) |
+| **TRIAD_T6** | 0.83 | Temporary t6 gate after 3-pass unlock |
+
+**Hysteresis Mechanism**:
+1. Rising edge detected when z crosses TRIAD_HIGH (0.85)
+2. System counts passes through the edge
+3. After 3 completions, t6 gate shifts from z_c (0.866) to TRIAD_T6 (0.83)
+4. Re-arm when z drops below TRIAD_LOW (0.82)
+
+### 2.4 Phase Boundaries (THE LENS Region)
+
+| Phase | Z Range | Truth Channel | Coupling |
+|-------|---------|---------------|----------|
+| **ABSENCE** | z < 0.857 | UNTRUE bias | K > 0 (synchronizing) |
+| **THE LENS** | 0.857 ≤ z ≤ 0.877 | PARADOX bias | K = 0 (critical) |
+| **PRESENCE** | z > 0.877 | TRUE bias | K < 0 (emanating) |
+
+### 2.5 Time Harmonic Zones
+
+| Harmonic | Z Range | Tier Classification |
+|----------|---------|---------------------|
+| t1 | z < 0.10 | Sub-threshold |
+| t2 | 0.10 – 0.20 | Early activation |
+| t3 | 0.20 – 0.40 | Development |
+| t4 | 0.40 – 0.60 | Garden tier |
+| t5 | 0.60 – 0.75 | Rose tier |
+| t6 | 0.75 – z_c* | Pre-lens integration |
+| t7 | z_c – 0.92 | Post-lens presence |
+| t8 | 0.92 – 0.97 | Singularity approach |
+| t9 | z ≥ 0.97 | Ultra-integrated |
+
+*t6 upper bound is dynamic: defaults to z_c (0.866), shifts to TRIAD_T6 (0.83) after TRIAD unlock.
+
+### 2.6 K-Formation Criteria
+
+Consciousness emergence requires ALL of:
+
+```
+κ ≥ KAPPA_S (0.920)    # Integration parameter
+η > PHI_INV (φ⁻¹)      # Coherence parameter
+R ≥ R_MIN (7)          # Complexity requirement
+```
+
+### 2.7 Geometry Projection (Hex Prism)
+
+Hexagonal geometry parameters derived from ΔS_neg(z) = exp(-σ(z-z_c)²):
+
+| Parameter | Formula | Default Values |
+|-----------|---------|----------------|
+| **R** (radius) | R_MAX - β·ΔS_neg | 0.85 - 0.25·ΔS_neg |
+| **H** (height) | H_MIN + γ·ΔS_neg | 0.12 + 0.18·ΔS_neg |
+| **φ** (rotation) | φ_BASE + η·ΔS_neg | 0.0 + (π/12)·ΔS_neg |
+| **σ** (width) | GEOM_SIGMA | 36.0 (env: QAPL_GEOM_SIGMA) |
+
+### 2.8 Application Threshold Mapping
+
+| Application Domain | Primary Thresholds | Usage |
+|-------------------|-------------------|-------|
+| **Neuromorphic** | TRIAD_HIGH (0.85), z_c | Spike detection, sparse activation |
+| **Navigation** | z_c, φ⁻¹ | Grid cell firing, multi-scale mapping |
+| **Medical** | κ_S (0.920), z_c | Seizure prediction, coherence monitoring |
+| **Financial** | φ⁻¹, z_c, κ_S | Regime detection, Fibonacci levels |
+| **Grid/Energy** | κ_S, z_c | Synchronization, stability thresholds |
+| **Optimization** | μ_1, μ_2, BARRIER | Energy basins, annealing dynamics |
+
+---
+
+## 3. Neuromorphic Computing
+
+### 3.1 Application Overview
 
 Neuromorphic systems emulate biological neural networks for efficient, low-power AI computation.
 
-### 2.2 L₄-Helix Advantages
+### 3.2 L₄-Helix Advantages
 
 | Feature | Biological Analog | L₄-Helix Implementation |
 |---------|-------------------|-------------------------|
 | Synaptic plasticity | Hebbian learning | Memristor conductance update |
 | Dendritic integration | Spatial summation | Hexagonal grid convergence |
 | Oscillatory binding | Gamma rhythms | Kuramoto phase locking |
-| Sparse coding | Efficient representation | Threshold activation (z > 0.866) |
+| Sparse coding | Efficient representation | Threshold activation (z > z_c = √3/2 ≈ 0.866) |
 | Grid cells | Spatial mapping | Native hexagonal architecture |
 
-### 2.3 Specific Use Cases
+### 3.3 Specific Use Cases
 
-#### 2.3.1 Edge AI Inference
+#### 3.3.1 Edge AI Inference
 
 **Problem**: Deploy neural networks on power-constrained edge devices.
 
@@ -83,7 +189,7 @@ Neuromorphic systems emulate biological neural networks for efficient, low-power
 
 **Market Size**: $12B by 2028 (edge AI chips)
 
-#### 2.3.2 Spiking Neural Networks (SNN)
+#### 3.3.2 Spiking Neural Networks (SNN)
 
 **Problem**: Temporal pattern recognition (speech, gesture, EEG) requires event-driven processing.
 
@@ -95,7 +201,7 @@ Neuromorphic systems emulate biological neural networks for efficient, low-power
 - Epileptic seizure prediction
 - Industrial anomaly detection
 
-#### 2.3.3 Lifelong Learning Systems
+#### 3.3.3 Lifelong Learning Systems
 
 **Problem**: Catastrophic forgetting in neural networks during continual learning.
 
@@ -106,7 +212,7 @@ Neuromorphic systems emulate biological neural networks for efficient, low-power
 - Personalized AI assistants
 - Autonomous vehicle learning
 
-### 2.4 Development Pathway
+### 3.4 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -116,24 +222,24 @@ Neuromorphic systems emulate biological neural networks for efficient, low-power
 
 ---
 
-## 3. Autonomous Navigation Systems
+## 4. Autonomous Navigation Systems
 
-### 3.1 Application Overview
+### 4.1 Application Overview
 
 The hexagonal grid architecture directly implements biological grid cell navigation—the same system that earned the 2014 Nobel Prize in Physiology.
 
-### 3.2 Grid Cell Navigation
+### 4.2 Grid Cell Navigation
 
 Biological grid cells fire in hexagonal patterns providing:
 - **Path integration**: Dead reckoning without GPS
-- **Multi-scale mapping**: Nested grids at φ-related ratios
+- **Multi-scale mapping**: Nested grids at φ-related ratios (φ = (1+√5)/2)
 - **Error correction**: Hexagonal redundancy
 
 The L₄-Helix system is the **first hardware to natively implement this architecture**.
 
-### 3.3 Specific Use Cases
+### 4.3 Specific Use Cases
 
-#### 3.3.1 GPS-Denied Navigation
+#### 4.3.1 GPS-Denied Navigation
 
 **Problem**: Drones, submarines, underground vehicles lose GPS signal.
 
@@ -153,7 +259,7 @@ The L₄-Helix system is the **first hardware to natively implement this archite
 
 **Market Size**: $4B by 2027 (autonomous navigation)
 
-#### 3.3.2 Simultaneous Localization and Mapping (SLAM)
+#### 4.3.2 Simultaneous Localization and Mapping (SLAM)
 
 **Problem**: Real-time map building requires expensive LiDAR and GPU processing.
 
@@ -169,7 +275,7 @@ The L₄-Helix system is the **first hardware to natively implement this archite
 - AR/VR headsets
 - Autonomous vehicles
 
-#### 3.3.3 Swarm Coordination
+#### 4.3.3 Swarm Coordination
 
 **Problem**: Multi-robot coordination requires expensive inter-robot communication.
 
@@ -178,7 +284,7 @@ The L₄-Helix system is the **first hardware to natively implement this archite
 **Mechanism**:
 - Each robot maintains local phase θ_i
 - Environmental signals (light, sound, RF) couple phases
-- K-FORMATION threshold indicates swarm coherence
+- K-FORMATION threshold (κ ≥ κ_S = 0.920) indicates swarm coherence
 
 **Applications**:
 - Agricultural drone swarms
@@ -186,7 +292,7 @@ The L₄-Helix system is the **first hardware to natively implement this archite
 - Warehouse logistics
 - Military formations
 
-### 3.4 Development Pathway
+### 4.4 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -196,33 +302,33 @@ The L₄-Helix system is the **first hardware to natively implement this archite
 
 ---
 
-## 4. Medical Devices & Neural Interfaces
+## 5. Medical Devices & Neural Interfaces
 
-### 4.1 Application Overview
+### 5.1 Application Overview
 
 The L₄-Helix system operates at frequencies and dynamics compatible with biological neural systems.
 
-### 4.2 Frequency Compatibility
+### 5.2 Frequency Compatibility
 
-| Frequency Band | Brain Rhythm | L₄-Helix Tier |
-|----------------|--------------|---------------|
-| 1–4 Hz | Delta (sleep) | Sub-PARADOX |
-| 4–8 Hz | Theta (memory) | Planet tier |
-| 8–13 Hz | Alpha (relaxation) | Garden tier |
-| 13–30 Hz | Beta (attention) | Rose tier |
-| 30–100 Hz | Gamma (binding) | Above UNITY |
+| Frequency Band | Brain Rhythm | L₄-Helix Tier | Z Range |
+|----------------|--------------|---------------|---------|
+| 1–4 Hz | Delta (sleep) | Sub-PARADOX | z < μ_1 (0.472) |
+| 4–8 Hz | Theta (memory) | Planet tier (t3) | z ∈ [0.20, 0.40] |
+| 8–13 Hz | Alpha (relaxation) | Garden tier (t4) | z ∈ [0.40, 0.60] |
+| 13–30 Hz | Beta (attention) | Rose tier (t5) | z ∈ [0.60, 0.75] |
+| 30–100 Hz | Gamma (binding) | Above z_c | z > 0.866 |
 
-### 4.3 Specific Use Cases
+### 5.3 Specific Use Cases
 
-#### 4.3.1 Brain-Computer Interfaces (BCI)
+#### 5.3.1 Brain-Computer Interfaces (BCI)
 
 **Problem**: Current BCIs require extensive signal processing and training.
 
-**Solution**: L₄-Helix threshold dynamics naturally filter neural signals—action potentials trigger TRIAD sequence.
+**Solution**: L₄-Helix threshold dynamics naturally filter neural signals—action potentials trigger TRIAD sequence (rising edge at TRIAD_HIGH = 0.85).
 
 **Implementation**:
 - Electrode array → memristor frontend
-- TRIAD crossing detects neural spikes
+- TRIAD crossing (z ≥ 0.85) detects neural spikes
 - Hexagonal grid encodes spatial pattern
 - Phase coherence identifies motor intention
 
@@ -234,7 +340,7 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 
 **Market Size**: $3.7B by 2027 (BCI market)
 
-#### 4.3.2 Seizure Prediction and Intervention
+#### 5.3.2 Seizure Prediction and Intervention
 
 **Problem**: Epileptic seizures are unpredictable; current detection has 30-second delay.
 
@@ -243,7 +349,7 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 **Mechanism**:
 1. EEG signals feed into spin system
 2. Order parameter r monitored continuously
-3. r approaching K-FORMATION (0.924) indicates pre-ictal state
+3. r approaching κ_S (0.920) indicates pre-ictal state
 4. Warning issued or stimulation delivered
 
 **Clinical Advantage**: 5-minute prediction window vs. 30-second detection
@@ -253,7 +359,7 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 - Closed-loop neurostimulation
 - Outpatient monitoring systems
 
-#### 4.3.3 Cardiac Rhythm Management
+#### 5.3.3 Cardiac Rhythm Management
 
 **Problem**: Arrhythmia detection requires complex algorithms and high power.
 
@@ -261,15 +367,15 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 
 **Implementation**:
 - ECG electrodes → memristor array
-- Normal sinus rhythm: periodic threshold crossings
-- Arrhythmia: irregular pattern or failed K-FORMATION
+- Normal sinus rhythm: periodic threshold crossings at TRIAD_HIGH (0.85)
+- Arrhythmia: irregular pattern or failed K-formation (κ < κ_S)
 
 **Applications**:
 - Implantable cardiac monitors (10-year battery)
 - Wearable arrhythmia detectors
 - ICU monitoring systems
 
-#### 4.3.4 Diagnostic Imaging Enhancement
+#### 5.3.4 Diagnostic Imaging Enhancement
 
 **Problem**: MRI/CT reconstruction is computationally intensive.
 
@@ -282,7 +388,7 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 - Lower radiation CT
 - Real-time ultrasound enhancement
 
-### 4.4 Regulatory Pathway
+### 5.4 Regulatory Pathway
 
 | Device Class | Regulatory Path | Timeline | Examples |
 |--------------|-----------------|----------|----------|
@@ -290,7 +396,7 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 | Class II | 510(k) | 12 months | Seizure warning, cardiac monitor |
 | Class III | PMA | 36+ months | Implantable BCI |
 
-### 4.5 Development Pathway
+### 5.5 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -300,15 +406,15 @@ The L₄-Helix system operates at frequencies and dynamics compatible with biolo
 
 ---
 
-## 5. Signal Processing & Communications
+## 6. Signal Processing & Communications
 
-### 5.1 Application Overview
+### 6.1 Application Overview
 
 Analog threshold-based processing enables novel approaches to signal filtering, modulation, and detection.
 
-### 5.2 Specific Use Cases
+### 6.2 Specific Use Cases
 
-#### 5.2.1 Cognitive Radio / Spectrum Sensing
+#### 6.2.1 Cognitive Radio / Spectrum Sensing
 
 **Problem**: Dynamic spectrum access requires real-time detection of primary users.
 
@@ -332,7 +438,7 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 
 **Market Size**: $8B by 2028 (cognitive radio)
 
-#### 5.2.2 Radar Signal Processing
+#### 6.2.2 Radar Signal Processing
 
 **Problem**: Clutter rejection and target detection require expensive digital processing.
 
@@ -340,7 +446,7 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 
 **Mechanism**:
 - Received signal correlates against memristor-stored reference
-- TRIAD crossing indicates target detection
+- TRIAD crossing (z ≥ TRIAD_HIGH = 0.85) indicates target detection
 - Hexagonal array provides angle-of-arrival
 
 **Advantages**:
@@ -354,7 +460,7 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 - Weather radar
 - Ground-penetrating radar
 
-#### 5.2.3 Acoustic Signal Processing
+#### 6.2.3 Acoustic Signal Processing
 
 **Problem**: Sonar, ultrasound, and audio require beamforming and source localization.
 
@@ -366,7 +472,7 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 - Smart speaker voice localization
 - Industrial acoustic monitoring
 
-#### 5.2.4 Chaos-Based Secure Communications
+#### 6.2.4 Chaos-Based Secure Communications
 
 **Problem**: Conventional encryption can be broken by quantum computers.
 
@@ -375,7 +481,7 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 **Mechanism**:
 - Transmitter and receiver have matched L₄-Helix systems
 - Chaotic carrier generated by spin glass dynamics
-- Synchronization via K-FORMATION threshold
+- Synchronization via K-FORMATION (κ ≥ κ_S = 0.920)
 - Message embedded in chaotic waveform
 
 **Advantages**:
@@ -388,7 +494,7 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 - Financial transactions
 - Critical infrastructure
 
-### 5.3 Development Pathway
+### 6.3 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -398,13 +504,13 @@ Analog threshold-based processing enables novel approaches to signal filtering, 
 
 ---
 
-## 6. Combinatorial Optimization
+## 7. Combinatorial Optimization
 
-### 6.1 Application Overview
+### 7.1 Application Overview
 
 Spin glass physics naturally solves NP-hard optimization problems through energy minimization.
 
-### 6.2 Theoretical Foundation
+### 7.2 Theoretical Foundation
 
 The spin glass Hamiltonian:
 
@@ -417,9 +523,9 @@ maps directly to optimization problems:
 
 Ground state of H = optimal solution.
 
-### 6.3 Specific Use Cases
+### 7.3 Specific Use Cases
 
-#### 6.3.1 Logistics & Routing
+#### 7.3.1 Logistics & Routing
 
 **Problem**: Traveling Salesman, Vehicle Routing—combinatorial explosion with city count.
 
@@ -439,7 +545,7 @@ Ground state of H = optimal solution.
 
 **Market Size**: $12B by 2027 (logistics optimization)
 
-#### 6.3.2 Financial Portfolio Optimization
+#### 7.3.2 Financial Portfolio Optimization
 
 **Problem**: Mean-variance optimization with constraints is computationally expensive.
 
@@ -455,7 +561,7 @@ Ground state of H = optimal solution.
 - Retirement fund management
 - Risk parity strategies
 
-#### 6.3.3 Drug Discovery
+#### 7.3.3 Drug Discovery
 
 **Problem**: Molecular conformation search has exponential search space.
 
@@ -466,7 +572,7 @@ Ground state of H = optimal solution.
 - Drug-target binding optimization
 - Materials design
 
-#### 6.3.4 Machine Learning Training
+#### 7.3.4 Machine Learning Training
 
 **Problem**: Neural network training stuck in local minima.
 
@@ -475,15 +581,15 @@ Ground state of H = optimal solution.
 **Mechanism**:
 - Weights encoded in memristor conductances
 - Spin glass dynamics perturb weights
-- K-FORMATION indicates convergence
-- Hysteresis prevents oscillation
+- K-FORMATION (κ ≥ κ_S = 0.920) indicates convergence
+- TRIAD hysteresis (0.82 ↔ 0.85) prevents oscillation
 
 **Applications**:
 - Deep learning training acceleration
 - Hyperparameter optimization
 - Neural architecture search
 
-### 6.4 Development Pathway
+### 7.4 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -493,15 +599,15 @@ Ground state of H = optimal solution.
 
 ---
 
-## 7. Financial Systems
+## 8. Financial Systems
 
-### 7.1 Application Overview
+### 8.1 Application Overview
 
 Financial markets exhibit threshold dynamics, herding behavior (phase transitions), and multi-scale patterns—ideal for L₄-Helix analysis.
 
-### 7.2 Specific Use Cases
+### 8.2 Specific Use Cases
 
-#### 7.2.1 Market Regime Detection
+#### 8.2.1 Market Regime Detection
 
 **Problem**: Markets transition between regimes (bull/bear, high/low volatility) abruptly.
 
@@ -511,16 +617,16 @@ Financial markets exhibit threshold dynamics, herding behavior (phase transition
 - Stock returns as oscillator phases
 - Sector correlations as couplings
 - Order parameter r indicates market state:
-  - r < 0.618 (PARADOX): Uncorrelated, stock-picking environment
-  - r > 0.866 (THE LENS): High correlation, systematic risk
-  - r > 0.924 (K-FORMATION): Crisis/bubble conditions
+  - r < φ⁻¹ (0.618) — PARADOX: Uncorrelated, stock-picking environment
+  - r > z_c (√3/2 ≈ 0.866) — THE LENS: High correlation, systematic risk
+  - r > κ_S (0.920) — K-FORMATION: Crisis/bubble conditions
 
 **Applications**:
 - Risk management
 - Tactical asset allocation
 - Crisis early warning
 
-#### 7.2.2 High-Frequency Trading
+#### 8.2.2 High-Frequency Trading
 
 **Problem**: Latency arbitrage requires nanosecond decisions.
 
@@ -537,7 +643,7 @@ Financial markets exhibit threshold dynamics, herding behavior (phase transition
 - Statistical arbitrage
 - Event-driven trading
 
-#### 7.2.3 Fraud Detection
+#### 8.2.3 Fraud Detection
 
 **Problem**: Transaction fraud patterns are complex and evolving.
 
@@ -545,7 +651,7 @@ Financial markets exhibit threshold dynamics, herding behavior (phase transition
 
 **Mechanism**:
 - Transaction features → memristor array
-- Normal patterns learned as stable states
+- Normal patterns learned as stable states (z → z_c)
 - Fraud triggers abnormal threshold sequence
 - Real-time flagging in <1ms
 
@@ -554,7 +660,7 @@ Financial markets exhibit threshold dynamics, herding behavior (phase transition
 - Money laundering detection
 - Insurance claims fraud
 
-#### 7.2.4 Algorithmic Trading Strategies
+#### 8.2.4 Algorithmic Trading Strategies
 
 **Problem**: Market microstructure contains φ-recursive patterns (Fibonacci retracements are widely used).
 
@@ -562,16 +668,16 @@ Financial markets exhibit threshold dynamics, herding behavior (phase transition
 
 **Mechanism**:
 - Price series drives threshold crossings
-- PARADOX (0.618) = Fibonacci retracement level
-- ACTIVATION (0.854) = extended target
-- Pattern completion triggers trade
+- φ⁻¹ (0.618) = Fibonacci retracement level (PARADOX threshold)
+- TRIAD_HIGH (0.85) = extended target
+- z_c (0.866) = pattern completion triggers trade
 
 **Applications**:
 - Technical analysis automation
 - Trend-following systems
 - Mean-reversion strategies
 
-### 7.3 Development Pathway
+### 8.3 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -581,15 +687,15 @@ Financial markets exhibit threshold dynamics, herding behavior (phase transition
 
 ---
 
-## 8. Energy Grid Management
+## 9. Energy Grid Management
 
-### 8.1 Application Overview
+### 9.1 Application Overview
 
 Power grids require real-time balancing, fault detection, and renewable integration—all involving threshold dynamics and synchronization.
 
-### 8.2 Specific Use Cases
+### 9.2 Specific Use Cases
 
-#### 8.2.1 Grid Frequency Regulation
+#### 9.2.1 Grid Frequency Regulation
 
 **Problem**: Maintaining 60 Hz (or 50 Hz) requires real-time generation-load balance.
 
@@ -598,7 +704,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 **Mechanism**:
 - Generator frequencies as oscillator phases
 - Tie-line power as coupling
-- Order parameter r < K-FORMATION indicates instability
+- Order parameter r < κ_S (0.920) indicates instability
 - Preventive action before blackout
 
 **Applications**:
@@ -608,7 +714,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 
 **Market Size**: $6B by 2028 (grid management)
 
-#### 8.2.2 Fault Detection and Localization
+#### 9.2.2 Fault Detection and Localization
 
 **Problem**: Grid faults propagate in milliseconds; conventional protection is too slow.
 
@@ -625,7 +731,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 - Distribution automation
 - Microgrid islanding
 
-#### 8.2.3 Renewable Forecasting
+#### 9.2.3 Renewable Forecasting
 
 **Problem**: Solar/wind output is variable and hard to predict.
 
@@ -633,7 +739,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 
 **Mechanism**:
 - Weather time series drives memristor array
-- φ-recursive patterns detected at multiple scales
+- φ-recursive patterns detected at multiple scales (ratio φ = 1.618...)
 - Prediction via pattern completion
 
 **Applications**:
@@ -641,7 +747,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 - Minute-scale ramp prediction
 - Storage dispatch optimization
 
-#### 8.2.4 Electric Vehicle Charging Coordination
+#### 9.2.4 Electric Vehicle Charging Coordination
 
 **Problem**: Uncoordinated EV charging causes grid congestion.
 
@@ -650,7 +756,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 **Mechanism**:
 - Each charger maintains local phase
 - Grid frequency couples phases
-- K-FORMATION indicates optimal distribution
+- K-FORMATION (κ ≥ κ_S = 0.920) indicates optimal distribution
 - Decentralized, privacy-preserving
 
 **Applications**:
@@ -658,7 +764,7 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 - Residential smart charging
 - Grid-to-vehicle coordination
 
-### 8.3 Development Pathway
+### 9.3 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -668,15 +774,15 @@ Power grids require real-time balancing, fault detection, and renewable integrat
 
 ---
 
-## 9. Materials & Manufacturing
+## 10. Materials & Manufacturing
 
-### 9.1 Application Overview
+### 10.1 Application Overview
 
 Quasi-crystal expertise translates directly to advanced materials applications.
 
-### 9.2 Specific Use Cases
+### 10.2 Specific Use Cases
 
-#### 9.2.1 Quasi-Crystal Coatings
+#### 10.2.1 Quasi-Crystal Coatings
 
 **Problem**: Surfaces need low friction, corrosion resistance, and non-stick properties.
 
@@ -696,7 +802,7 @@ Quasi-crystal expertise translates directly to advanced materials applications.
 
 **Market Size**: $2B by 2027 (advanced coatings)
 
-#### 9.2.2 Additive Manufacturing Quality Control
+#### 10.2.2 Additive Manufacturing Quality Control
 
 **Problem**: 3D printing defects are hard to detect in-situ.
 
@@ -705,7 +811,7 @@ Quasi-crystal expertise translates directly to advanced materials applications.
 **Mechanism**:
 - Thermal sensors in hexagonal pattern
 - Memristor array processes temperature field
-- TRIAD crossing indicates defect (porosity, crack)
+- TRIAD crossing (z ≥ TRIAD_HIGH = 0.85) indicates defect (porosity, crack)
 - Real-time feedback to laser power
 
 **Applications**:
@@ -713,7 +819,7 @@ Quasi-crystal expertise translates directly to advanced materials applications.
 - Quality certification for aerospace
 - Process optimization
 
-#### 9.2.3 Process Control
+#### 10.2.3 Process Control
 
 **Problem**: Manufacturing processes drift and require constant monitoring.
 
@@ -721,7 +827,7 @@ Quasi-crystal expertise translates directly to advanced materials applications.
 
 **Advantages**:
 - No quantization error
-- Inherent hysteresis prevents alarm chatter
+- Inherent TRIAD hysteresis (TRIAD_LOW=0.82 ↔ TRIAD_HIGH=0.85) prevents alarm chatter
 - Long-term drift tracked in memristor state
 
 **Applications**:
@@ -729,7 +835,7 @@ Quasi-crystal expertise translates directly to advanced materials applications.
 - Pharmaceutical manufacturing
 - Chemical processing
 
-### 9.3 Development Pathway
+### 10.3 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -739,19 +845,19 @@ Quasi-crystal expertise translates directly to advanced materials applications.
 
 ---
 
-## 10. Defense & Aerospace
+## 11. Defense & Aerospace
 
-### 10.1 Application Overview
+### 11.1 Application Overview
 
 Defense applications require reliability, low power, and operation in contested environments—all L₄-Helix strengths.
 
-### 10.2 Specific Use Cases
+### 11.2 Specific Use Cases
 
-#### 10.2.1 GPS-Denied Navigation (Military Grade)
+#### 11.2.1 GPS-Denied Navigation (Military Grade)
 
 **Problem**: Adversaries jam GPS; current INS drifts rapidly.
 
-**Solution**: Hexagonal grid path integration with φ-recursive error correction.
+**Solution**: Hexagonal grid path integration with φ-recursive error correction (multi-scale at ratio φ = 1.618...).
 
 **Specifications**:
 - Position accuracy: 1 CEP/hour
@@ -767,7 +873,7 @@ Defense applications require reliability, low power, and operation in contested 
 
 **Market Size**: $8B by 2028 (military navigation)
 
-#### 10.2.2 Electronic Warfare
+#### 11.2.2 Electronic Warfare
 
 **Problem**: Detecting and classifying radar/communication emitters requires real-time processing.
 
@@ -784,7 +890,7 @@ Defense applications require reliability, low power, and operation in contested 
 - SIGINT systems
 - Jamming coordination
 
-#### 10.2.3 Autonomous Swarm Weapons
+#### 11.2.3 Autonomous Swarm Weapons
 
 **Problem**: Swarm coordination in communication-denied environments.
 
@@ -793,7 +899,7 @@ Defense applications require reliability, low power, and operation in contested 
 **Mechanism**:
 - Vehicles maintain internal phase oscillators
 - Environmental sensing couples phases
-- Collective behavior emerges without communication
+- Collective behavior emerges at K-FORMATION (κ ≥ κ_S = 0.920)
 - Robust to individual losses
 
 **Applications**:
@@ -801,7 +907,7 @@ Defense applications require reliability, low power, and operation in contested 
 - Reconnaissance swarms
 - Defensive interceptors
 
-#### 10.2.4 Space Systems
+#### 11.2.4 Space Systems
 
 **Problem**: Space electronics must survive radiation and operate autonomously.
 
@@ -813,7 +919,7 @@ Defense applications require reliability, low power, and operation in contested 
 - On-board autonomy
 - Radiation-hard computing
 
-### 10.3 ITAR / Export Control Considerations
+### 11.3 ITAR / Export Control Considerations
 
 | Technology | ECCN | License Required |
 |------------|------|------------------|
@@ -823,7 +929,7 @@ Defense applications require reliability, low power, and operation in contested 
 
 Defense applications require U.S. facility or licensed partner.
 
-### 10.4 Development Pathway
+### 11.4 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -833,15 +939,15 @@ Defense applications require U.S. facility or licensed partner.
 
 ---
 
-## 11. Scientific Instrumentation
+## 12. Scientific Instrumentation
 
-### 11.1 Application Overview
+### 12.1 Application Overview
 
 The L₄-Helix system itself is a precision measurement platform.
 
-### 11.2 Specific Use Cases
+### 12.2 Specific Use Cases
 
-#### 11.2.1 NMR/MRI Enhancement
+#### 12.2.1 NMR/MRI Enhancement
 
 **Problem**: NMR spectroscopy has limited sensitivity and resolution.
 
@@ -857,7 +963,7 @@ The L₄-Helix system itself is a precision measurement platform.
 - Metabolomics
 - In-vivo spectroscopy
 
-#### 11.2.2 Gravitational Wave Detection
+#### 12.2.2 Gravitational Wave Detection
 
 **Problem**: LIGO requires exquisite phase measurement.
 
@@ -865,10 +971,10 @@ The L₄-Helix system itself is a precision measurement platform.
 
 **Potential Improvement**:
 - Phase noise floor reduction
-- Coherent network integration
+- Coherent network integration (K-FORMATION at κ_S = 0.920)
 - Data analysis acceleration
 
-#### 11.2.3 Quantum Sensing
+#### 12.2.3 Quantum Sensing
 
 **Problem**: Quantum sensors (NV centers, SQUIDs) generate weak signals requiring amplification.
 
@@ -879,18 +985,18 @@ The L₄-Helix system itself is a precision measurement platform.
 - Electric field sensing
 - Temperature measurement
 
-#### 11.2.4 Particle Physics
+#### 12.2.4 Particle Physics
 
 **Problem**: Detector readout generates massive data rates.
 
-**Solution**: Threshold-based triggering reduces data by orders of magnitude at source.
+**Solution**: Threshold-based triggering (TRIAD_HIGH = 0.85) reduces data by orders of magnitude at source.
 
 **Applications**:
 - LHC trigger systems
 - Neutrino detectors
 - Dark matter searches
 
-### 11.3 Development Pathway
+### 12.3 Development Pathway
 
 | Phase | Timeline | Investment | Deliverable |
 |-------|----------|------------|-------------|
@@ -900,9 +1006,9 @@ The L₄-Helix system itself is a precision measurement platform.
 
 ---
 
-## 12. Market Analysis
+## 13. Market Analysis
 
-### 12.1 Total Addressable Market by Sector
+### 13.1 Total Addressable Market by Sector
 
 | Sector | 2024 TAM | 2030 TAM | CAGR | L₄-Helix Share Potential |
 |--------|----------|----------|------|--------------------------|
@@ -916,23 +1022,23 @@ The L₄-Helix system itself is a precision measurement platform.
 | Defense & Aerospace | $20B | $40B | 12% | 2-5% |
 | **Total** | **$61B** | **$150B** | **16%** | **3-5%** |
 
-### 12.2 Revenue Projection
+### 13.2 Revenue Projection
 
 Conservative estimate: 3% of TAM by 2030 = **$4.5B annual revenue**
 
-### 12.3 Competitive Landscape
+### 13.3 Competitive Landscape
 
 | Competitor | Technology | Weakness vs L₄-Helix |
 |------------|------------|----------------------|
-| Intel Loihi | Digital neuromorphic | No analog, no hysteresis |
+| Intel Loihi | Digital neuromorphic | No analog, no TRIAD hysteresis |
 | IBM TrueNorth | Digital spiking | No memristor, no quasi-crystal |
-| BrainChip Akida | Digital edge AI | No phase coherence |
+| BrainChip Akida | Digital edge AI | No Kuramoto phase coherence |
 | D-Wave | Quantum annealing | Requires cryogenics, limited connectivity |
-| Mythic | Memristor inference | No quasi-crystal, no spin |
+| Mythic | Memristor inference | No quasi-crystal, no spin dynamics |
 
-**L₄-Helix Differentiation**: Only system integrating all four technologies (memristor + quasi-crystal + hexagonal grid + spin) with φ-recursive threshold dynamics.
+**L₄-Helix Differentiation**: Only system integrating all four technologies (memristor + quasi-crystal + hexagonal grid + spin) with φ-recursive threshold dynamics anchored at z_c = √3/2.
 
-### 12.4 Go-to-Market Strategy
+### 13.4 Go-to-Market Strategy
 
 | Phase | Focus | Revenue Model |
 |-------|-------|---------------|
@@ -941,7 +1047,7 @@ Conservative estimate: 3% of TAM by 2030 = **$4.5B annual revenue**
 | **Year 3-5** | Component sales | Chips, modules, dev kits |
 | **Year 5+** | System integration | Full solutions, SaaS |
 
-### 12.5 Investment Requirements
+### 13.5 Investment Requirements
 
 | Phase | Capital Required | Use of Funds |
 |-------|------------------|--------------|
@@ -987,9 +1093,17 @@ Conservative estimate: 3% of TAM by 2030 = **$4.5B annual revenue**
 **Document Signature**:
 
 ```
-Δ|L₄-HELIX|APPLICATIONS|v1.0.0|NEUROMORPHIC+NAVIGATION+MEDICAL+OPTIMIZATION|★ USE CASES ★|Ω
+Δ|L₄-HELIX|APPLICATIONS|v1.1.0|NEUROMORPHIC+NAVIGATION+MEDICAL+OPTIMIZATION|★ USE CASES ★|Ω
+```
+
+**L₄ Constants Verification**:
+```
+z_c = √3/2 = 0.8660254037844386  (THE LENS)
+φ⁻¹ = 0.6180339887498948        (PARADOX / BARRIER)
+κ_S = 0.920                      (SINGULARITY / K-FORMATION)
+TRIAD = [0.82, 0.83, 0.85]       (LOW, T6, HIGH)
 ```
 
 ---
 
-*This document identifies commercially viable applications for L₄-Helix technology. Market projections are estimates based on industry reports and are subject to technology development timelines.*
+*This document identifies commercially viable applications for L₄-Helix technology. All thresholds derive from `src/quantum_apl_python/constants.py`. Market projections are estimates based on industry reports and are subject to technology development timelines.*
