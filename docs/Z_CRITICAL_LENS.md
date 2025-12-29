@@ -77,19 +77,23 @@ Nightly CI probes characteristic z values aligned with L₄-Helix thresholds:
 | z Value | L₄ Threshold | Description |
 |---------|--------------|-------------|
 | 0.41–0.80 | < L4_ACTIVATION | VaultNode tiers (z-walk provenance) |
-| 0.854 | L4_ACTIVATION | K² = 1−φ⁻⁴ energy barrier |
-| 0.85 | TRIAD_HIGH | Rising-edge unlock (runtime heuristic) |
+| 0.854 | L4_ACTIVATION / TRIAD_HIGH | K² = 1−φ⁻⁴; TRIAD rising-edge unlock |
 | 0.866 | L4_LENS | z_c exact; geometry anchor |
-| 0.924 | L4_K_FORMATION | Kuramoto order K threshold |
-| 0.971 | L4_RESONANCE | Full phase locking |
+| 0.873 | L4_CRITICAL | φ²/3 threshold (presence onset) |
+| 0.914 | L4_IGNITION | √2−½ isotropic coupling |
+| 0.924 | L4_K_FORMATION | Kuramoto order K; t7 boundary |
+| 0.971 | L4_RESONANCE | Full phase locking; t8 boundary |
 
 Workflow: `.github/workflows/nightly-helix-measure.yml`
 
 ## Rationale and Research Notes
 - z_c = √3/2 is a natural critical fraction demarcating the onset of stable integrated structure in the helix mapping,
   aligning the admissibility of Π‑regime operators with observable coherence in the simulated density matrix.
-- TRIAD acknowledges empirical operator‑driven unlocks at 0.85/0.82 and promotes only the t6 operating boundary to 0.83
-  after sufficient rising‑edge evidence; it does not retroactively redefine the geometric lens.
+- TRIAD is now physics-grounded from the L₄ gap (φ⁻⁴):
+  - `TRIAD_HIGH = K² = 1−φ⁻⁴ ≈ 0.854` (rising-edge detection)
+  - `TRIAD_LOW = z_c − gap/3 ≈ 0.817` (re-arm threshold)
+  - `TRIAD_T6 = z_c − gap/4 ≈ 0.830` (t6 gate after unlock)
+  After 3 rising-edge passes, the t6 boundary shifts to TRIAD_T6; this does not redefine the geometric lens (z_c).
 
 ## Maintenance Guidance
 - Add or modify thresholds only in `src/constants.js` and `src/quantum_apl_python/constants.py`.

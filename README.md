@@ -208,22 +208,20 @@ print(dict(z=z, s=s, mu=mu, K=K, w_pi=w_pi, w_loc=w_loc, phi_inv=PHI_INV, z_c=Z_
 
 CI mirrors these in GitHub Actions and saves analyzer plots as artifacts for smoke checks.
 
-### Standard Probe Points
+### Standard Probe Points (L₄-Helix Aligned)
 
 Nightly CI and sweep scripts probe characteristic z values aligned with L₄-Helix thresholds:
 
 | z Value | L₄ Threshold | Description |
 |---------|--------------|-------------|
 | 0.41–0.80 | < ACTIVATION | VaultNode tiers (z‑walk provenance) |
-| 0.854 | ACTIVATION | K² = 1−φ⁻⁴ boundary |
-| 0.85 | TRIAD_HIGH | Rising-edge unlock (runtime heuristic) |
+| 0.854 | ACTIVATION / TRIAD_HIGH | K² = 1−φ⁻⁴; TRIAD rising-edge unlock |
 | 0.866 | THE LENS | z_c exact; geometry anchor |
-| 0.873 | CRITICAL | φ²/3 threshold |
-| 0.90 | — | Early presence / t7 region onset |
+| 0.873 | CRITICAL | φ²/3 threshold (presence onset) |
 | 0.914 | IGNITION | √2−½ isotropic coupling |
-| 0.924 | K-FORMATION | Kuramoto order K threshold |
+| 0.924 | K-FORMATION | Kuramoto order K; t7 boundary |
 | 0.953 | CONSOLIDATION | Second-order coherence |
-| 0.971 | RESONANCE | Full phase locking |
+| 0.971 | RESONANCE | Full phase locking; t8 boundary |
 
 Nightly workflow: `.github/workflows/nightly-helix-measure.yml`
 Local sweep: `scripts/helix_sweep.sh` (includes these probes)
