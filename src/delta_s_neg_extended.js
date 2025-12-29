@@ -33,6 +33,8 @@ const Z_CRITICAL = CONST.Z_CRITICAL;
 const PHI = CONST.PHI;
 const PHI_INV = CONST.PHI_INV;
 const LENS_SIGMA = CONST.LENS_SIGMA || 36.0;
+const KAPPA_S = CONST.KAPPA_S;
+const R_MIN = CONST.R_MIN || 7;
 
 // Hex-prism geometry defaults
 const GEOM_R_MAX = CONST.GEOM_R_MAX || 0.85;
@@ -335,12 +337,12 @@ function selectCoherenceOperator(availableOperators, currentZ, objective = Coher
  */
 function checkKFormation(z, options = {}) {
   const {
-    kappa = 0.92,
-    R = 7,
+    kappa = KAPPA_S,
+    R = R_MIN,
     alpha = DEFAULT_ALPHA,
-    kappaMin = 0.92,
+    kappaMin = KAPPA_S,
     etaMin = PHI_INV,
-    rMin = 7,
+    rMin = R_MIN,
   } = options;
 
   const s = computeDeltaSNeg(z);
@@ -401,7 +403,7 @@ function computePiBlendWeights(z, enableBlend = true) {
  * @returns {Object} Complete derived state
  */
 function computeFullState(z, options = {}) {
-  const { kappa = 0.92, R = 7 } = options;
+  const { kappa = KAPPA_S, R = R_MIN } = options;
 
   return {
     z,

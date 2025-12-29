@@ -25,15 +25,13 @@ from dataclasses import dataclass, field
 from typing import Optional, Tuple, List
 from enum import Enum
 
-
 # ============================================================================
-# CONSTANTS
+# CONSTANTS - Import from canonical source
 # ============================================================================
-
-TRIAD_HIGH = 0.85       # Rising edge detection threshold
-TRIAD_LOW = 0.82        # Re-arm threshold
-TRIAD_T6 = 0.83         # Unlocked t6 gate value
-Z_CRITICAL = math.sqrt(3) / 2  # ≈ 0.8660254037844386
+from .constants import (
+    TRIAD_HIGH, TRIAD_LOW, TRIAD_T6, Z_CRITICAL,
+    L4_ACTIVATION, L4_LENS, L4_K_FORMATION,
+)
 
 
 class TriadEvent(Enum):

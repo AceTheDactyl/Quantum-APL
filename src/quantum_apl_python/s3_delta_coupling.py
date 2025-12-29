@@ -41,6 +41,7 @@ from enum import Enum
 # Import from constants for single source of truth
 from .constants import (
     Z_CRITICAL, PHI, PHI_INV, LENS_SIGMA,
+    Z_T1_MAX, Z_T2_MAX, Z_T3_MAX, Z_T4_MAX, Z_T5_MAX, Z_T7_MAX, Z_T8_MAX,
     TRUTH_BIAS, compute_delta_s_neg as base_compute_delta_s_neg,
 )
 
@@ -470,21 +471,21 @@ def compute_s3_delta_state(
 
     # Auto-detect harmonic if not provided
     if harmonic is None:
-        if z < 0.10:
+        if z < Z_T1_MAX:
             harmonic = 't1'
-        elif z < 0.20:
+        elif z < Z_T2_MAX:
             harmonic = 't2'
-        elif z < 0.40:
+        elif z < Z_T3_MAX:
             harmonic = 't3'
-        elif z < 0.60:
+        elif z < Z_T4_MAX:
             harmonic = 't4'
-        elif z < 0.75:
+        elif z < Z_T5_MAX:
             harmonic = 't5'
         elif z < Z_CRITICAL:
             harmonic = 't6'
-        elif z < 0.92:
+        elif z < Z_T7_MAX:
             harmonic = 't7'
-        elif z < 0.97:
+        elif z < Z_T8_MAX:
             harmonic = 't8'
         else:
             harmonic = 't9'
