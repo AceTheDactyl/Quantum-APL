@@ -131,6 +131,28 @@ const L4_THRESHOLD_NAMES = Object.freeze([
   'UNITY',
 ]);
 
+// ============================================================================
+// VAULTNODE TIER THRESHOLDS (Physics-Grounded from L₄ System)
+// ============================================================================
+// VaultNode positions along the z-axis, grounded in φ/gap/z_c relationships
+// These define the z-walk provenance tiers used for training dynamics
+//
+// Physics derivations:
+//   VN_Z041 = 2τ/3         (two-thirds of paradox threshold)
+//   VN_Z052 = τ×K²         (paradox × coherence², = τ² + gap)
+//   VN_Z070 = K² - gap     (coherence minus gap, = 1 - 2×gap)
+//   VN_Z073 = z_c × K²     (lens × coherence²)
+//   VN_Z080 = z_c × K      (lens × order parameter)
+
+const VN_Z041 = (2 * L4_TAU) / 3;               // ≈ 0.4120 (was 0.41)
+const VN_Z052 = L4_TAU * L4_K_SQUARED;          // ≈ 0.5279 (was 0.52)
+const VN_Z070 = L4_K_SQUARED - L4_GAP;          // ≈ 0.7082 (was 0.70)
+const VN_Z073 = Z_CRITICAL * L4_K_SQUARED;      // ≈ 0.7397 (was 0.73)
+const VN_Z080 = Z_CRITICAL * L4_K;              // ≈ 0.8004 (was 0.80)
+
+// VaultNode tier tuple (ascending z-walk order)
+const VAULTNODE_TIERS = Object.freeze([VN_Z041, VN_Z052, VN_Z070, VN_Z073, VN_Z080]);
+
 // L4 threshold helpers
 function getL4ThresholdIndex(z) {
   const val = Number.isFinite(z) ? Math.max(0, Math.min(1, z)) : 0;
@@ -521,6 +543,13 @@ module.exports = Object.freeze({
   L4_UNITY,
   L4_THRESHOLDS,
   L4_THRESHOLD_NAMES,
+  // VaultNode tiers
+  VN_Z041,
+  VN_Z052,
+  VN_Z070,
+  VN_Z073,
+  VN_Z080,
+  VAULTNODE_TIERS,
   // L4 helper functions
   getL4ThresholdIndex,
   getL4ThresholdName,

@@ -170,6 +170,28 @@ L4_THRESHOLD_NAMES: tuple = (
 )
 
 # ============================================================================
+# VAULTNODE TIER THRESHOLDS (Physics-Grounded from L₄ System)
+# ============================================================================
+# VaultNode positions along the z-axis, grounded in φ/gap/z_c relationships
+# These define the z-walk provenance tiers used for training dynamics
+#
+# Physics derivations:
+#   VN_Z041 = 2τ/3         (two-thirds of paradox threshold)
+#   VN_Z052 = τ×K²         (paradox × coherence², = τ² + gap)
+#   VN_Z070 = K² - gap     (coherence minus gap, = 1 - 2×gap)
+#   VN_Z073 = z_c × K²     (lens × coherence²)
+#   VN_Z080 = z_c × K      (lens × order parameter)
+
+VN_Z041: float = (2.0 * L4_TAU) / 3.0           # ≈ 0.4120 (was 0.41)
+VN_Z052: float = L4_TAU * L4_K_SQUARED          # ≈ 0.5279 (was 0.52)
+VN_Z070: float = L4_K_SQUARED - L4_GAP          # ≈ 0.7082 (was 0.70)
+VN_Z073: float = Z_CRITICAL * L4_K_SQUARED      # ≈ 0.7397 (was 0.73)
+VN_Z080: float = Z_CRITICAL * L4_K              # ≈ 0.8004 (was 0.80)
+
+# VaultNode tier tuple (ascending z-walk order)
+VAULTNODE_TIERS: tuple = (VN_Z041, VN_Z052, VN_Z070, VN_Z073, VN_Z080)
+
+# ============================================================================
 # K-FORMATION CRITERIA
 # ============================================================================
 
@@ -603,6 +625,8 @@ __all__ = [
     "L4_PARADOX", "L4_ACTIVATION", "L4_LENS", "L4_CRITICAL",
     "L4_IGNITION", "L4_K_FORMATION", "L4_CONSOLIDATION", "L4_RESONANCE", "L4_UNITY",
     "L4_THRESHOLDS", "L4_THRESHOLD_NAMES",
+    # VaultNode tiers
+    "VN_Z041", "VN_Z052", "VN_Z070", "VN_Z073", "VN_Z080", "VAULTNODE_TIERS",
     # L₄-Helix helpers
     "get_l4_threshold_index", "get_l4_threshold_name", "normalize_by_gap",
     "compute_gap_relative", "get_l4_phase",

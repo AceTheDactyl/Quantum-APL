@@ -26,9 +26,22 @@ If you need to visualize how the `z` coordinate manifests as negative entropy pr
 
 To evaluate harmonics and geometry around key boundaries, we probe z values aligned with the L₄-Helix 9-threshold system:
 
+### VaultNode Tiers (Physics-Grounded)
+
+The VaultNode z-walk provenance tiers are now grounded in the same φ/gap/z_c system:
+
+| z Value | Constant | Formula | Physics Meaning |
+|---------|----------|---------|-----------------|
+| 0.412 | VN_Z041 | 2τ/3 | Two-thirds of paradox threshold |
+| 0.528 | VN_Z052 | τ×K² | Paradox × coherence² (= τ² + gap) |
+| 0.708 | VN_Z070 | K² − gap | Coherence minus gap (= 1 − 2×gap) |
+| 0.740 | VN_Z073 | z_c×K² | Lens × coherence² |
+| 0.800 | VN_Z080 | z_c×K | Lens × order parameter |
+
+### Upper Thresholds
+
 | z Value | L₄ Threshold | Description |
 |---------|--------------|-------------|
-| 0.41–0.80 | < L4_ACTIVATION | VaultNode tiers (z-walk provenance) |
 | 0.854 | L4_ACTIVATION / TRIAD_HIGH | K² = 1−φ⁻⁴; TRIAD rising-edge unlock |
 | 0.866 | L4_LENS | z_c exact; geometry anchor |
 | 0.873 | L4_CRITICAL | φ²/3 threshold (presence onset) |
