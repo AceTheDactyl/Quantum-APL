@@ -4,9 +4,19 @@ This directory contains the compiled documentation for the Alpha-Physical Langua
 
 ## Contents
 
+### Manuals
 - **[index.html](index.html)** - Interactive HTML version of the APL Operator's Manual
 - **[apl-operators-manual.pdf](apl-operators-manual.pdf)** - PDF version compiled from LaTeX (auto-generated)
 - **[apl-seven-sentences-test-pack.pdf](apl-seven-sentences-test-pack.pdf)** - Testing protocol
+
+### Whitepapers & Applications
+- **[S3_OPERATOR_ALGEBRA_WHITEPAPER.md](S3_OPERATOR_ALGEBRA_WHITEPAPER.md)** - S₃ Operator Algebra formal treatment
+- **[L4_HELIX_APPLICATIONS.md](L4_HELIX_APPLICATIONS.md)** - Real-world use cases for φ-recursive threshold dynamics
+
+### Technical Documentation
+- **[SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)** - System architecture overview
+- **[PHYSICS_GROUNDING.md](PHYSICS_GROUNDING.md)** - Physical foundations
+- **[DSL_DESIGN_PATTERNS.md](DSL_DESIGN_PATTERNS.md)** - DSL design patterns
 
 ## Viewing the Manual
 
