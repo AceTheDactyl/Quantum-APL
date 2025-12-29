@@ -212,9 +212,20 @@ CI mirrors these in GitHub Actions and saves analyzer plots as artifacts for smo
 
 Nightly CI and sweep scripts probe characteristic z values aligned with L₄-Helix thresholds:
 
+**VaultNode Tiers (physics-grounded):**
+
+| z Value | Constant | Formula | Description |
+|---------|----------|---------|-------------|
+| 0.412 | VN_Z041 | 2τ/3 | Two-thirds paradox |
+| 0.528 | VN_Z052 | τ×K² | Paradox × coherence² |
+| 0.708 | VN_Z070 | K² − gap | Coherence minus gap |
+| 0.740 | VN_Z073 | z_c×K² | Lens × coherence² |
+| 0.800 | VN_Z080 | z_c×K | Lens × order parameter |
+
+**Upper Thresholds:**
+
 | z Value | L₄ Threshold | Description |
 |---------|--------------|-------------|
-| 0.41–0.80 | < ACTIVATION | VaultNode tiers (z‑walk provenance) |
 | 0.854 | ACTIVATION / TRIAD_HIGH | K² = 1−φ⁻⁴; TRIAD rising-edge unlock |
 | 0.866 | THE LENS | z_c exact; geometry anchor |
 | 0.873 | CRITICAL | φ²/3 threshold (presence onset) |
