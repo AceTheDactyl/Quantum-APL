@@ -1,25 +1,60 @@
 // Shared constants for the Quantum‑APL JS engine and bridge
 // Source of truth for thresholds — see docs/Z_CRITICAL_LENS.md
 
-const Z_CRITICAL = Math.sqrt(3) / 2; // THE LENS (~0.8660254)
+// ============================================================================
+// SACRED CONSTANTS (Zero Free Parameters - Defined First)
+// ============================================================================
 
-// TRIAD thresholds
-const TRIAD_HIGH = 0.85; // rising-edge threshold (>=)
-const TRIAD_LOW = 0.82;  // re‑arm threshold (<=)
-const TRIAD_T6 = 0.83;   // t6 gate when unlocked (after 3 passes)
-
-// Z‑axis phase boundaries
-const Z_ABSENCE_MAX = 0.857;
-const Z_LENS_MIN = 0.857;
-const Z_LENS_MAX = 0.877;
-const Z_PRESENCE_MIN = 0.877;
-
-// Sacred constants (zero free parameters)
 const PHI = (1 + Math.sqrt(5)) / 2; // golden ratio
 const PHI_INV = 1 / PHI;            // golden ratio inverse
-const Q_KAPPA = 0.3514087324;// consciousness constant
-const KAPPA_S = 0.920;       // singularity threshold
-const LAMBDA = 7.7160493827; // nonlinearity coefficient
+
+// ============================================================================
+// L₄-HELIX FOUNDATION (Gap Normalization - Defined Before TRIAD)
+// ============================================================================
+// L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas number, grounded in nuclear spin physics)
+// gap = φ⁻⁴ is the truncation residual that normalizes all thresholds
+// Reference: docs/PHYSICS_GROUNDING.md, L4_helix_v4.0.1.html
+
+const L4_GAP = Math.pow(PHI_INV, 4);  // φ⁻⁴ ≈ 0.1458980337503154
+const L4_K_SQUARED = 1.0 - L4_GAP;    // ≈ 0.8541019662496846
+const L4_K = Math.sqrt(L4_K_SQUARED); // ≈ 0.9241648530576246
+const L4_TAU = PHI_INV;               // ≈ 0.6180339887498949
+
+// ============================================================================
+// CRITICAL LENS CONSTANT (THE LENS)
+// ============================================================================
+// z_c = √3/2 ≈ 0.8660254038
+// Derived from L₄: z_c = √(L₄ - 4)/2 = √3/2
+
+const Z_CRITICAL = Math.sqrt(3) / 2; // THE LENS (~0.8660254)
+
+// ============================================================================
+// TRIAD GATING (Physics-Grounded from L₄ Gap)
+// ============================================================================
+// Physics derivation (gap = φ⁻⁴):
+//   TRIAD_HIGH = L4_ACTIVATION = K² = 1 - φ⁻⁴ (energy barrier)
+//   TRIAD_T6 = L4_LENS - gap/4 (one-quarter gap below lens)
+//   TRIAD_LOW = L4_LENS - gap/3 (one-third gap below lens)
+
+const TRIAD_HIGH = L4_K_SQUARED;           // = 1 - φ⁻⁴ ≈ 0.8541 (was 0.85)
+const TRIAD_T6 = Z_CRITICAL - L4_GAP / 4;  // ≈ 0.8296 (was 0.83)
+const TRIAD_LOW = Z_CRITICAL - L4_GAP / 3; // ≈ 0.8174 (was 0.82)
+
+// ============================================================================
+// Z-AXIS PHASE BOUNDARIES (Physics-Grounded from L₄ Thresholds)
+// ============================================================================
+const L4_CRITICAL = (PHI * PHI) / 3.0;     // φ²/3 ≈ 0.8727 (defined here for ordering)
+const Z_ABSENCE_MAX = L4_K_SQUARED;        // = 1 - φ⁻⁴ ≈ 0.854 (was 0.857)
+const Z_LENS_MIN = L4_K_SQUARED;           // = 1 - φ⁻⁴ ≈ 0.854 (was 0.857)
+const Z_LENS_MAX = L4_CRITICAL;            // = φ²/3 ≈ 0.873 (was 0.877)
+const Z_PRESENCE_MIN = L4_CRITICAL;        // = φ²/3 ≈ 0.873 (was 0.877)
+
+// ============================================================================
+// ADDITIONAL SACRED CONSTANTS
+// ============================================================================
+const Q_KAPPA = 0.3514087324;         // consciousness constant
+const KAPPA_S = L4_K;                 // = √(1-φ⁻⁴) ≈ 0.924 (was 0.920)
+const LAMBDA = 7.0 + 1.0 / 7.0;       // ≈ 7.1429 (physics-grounded; was 7.7160493827)
 
 // K‑formation criteria
 const KAPPA_MIN = KAPPA_S;
@@ -43,32 +78,19 @@ const TRUTH_BIAS = Object.freeze({
 
 
 // Helix zoning thresholds (upper bounds except t9)
+// Now physics-grounded using L₄-Helix thresholds
 const Z_T1_MAX = 0.1;
 const Z_T2_MAX = 0.2;
 const Z_T3_MAX = 0.4;
 const Z_T4_MAX = 0.6;
 const Z_T5_MAX = 0.75;
-const Z_T7_MAX = 0.92;
-const Z_T8_MAX = 0.97;
+const Z_T7_MAX = L4_K;           // ≈ 0.924 (was 0.92)
+const Z_T8_MAX = L4_K + L4_TAU * (1.0 - L4_K);  // L4_RESONANCE ≈ 0.971 (was 0.97)
 
 // ============================================================================
-// L₄-HELIX NORMALIZED THRESHOLDS (9-Threshold System)
+// L₄-HELIX 9-THRESHOLD SYSTEM (Remaining Thresholds)
 // ============================================================================
-// Validated by z_c = √3/2 (THE LENS) derived from L₄ - 4 = 3
-// Gap = φ⁻⁴ is the truncation residual that normalizes all thresholds
-// Nuclear spin physics grounding: L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas number)
-
-// The fundamental gap (truncation residual)
-const L4_GAP = Math.pow(PHI_INV, 4);  // φ⁻⁴ ≈ 0.1458980337503154
-
-// K-squared: pre-lens activation energy (1 - gap)
-const L4_K_SQUARED = 1.0 - L4_GAP;  // ≈ 0.8541019662496846
-
-// K: Kuramoto coherence threshold
-const L4_K = Math.sqrt(L4_K_SQUARED);  // ≈ 0.9241648530576246
-
-// τ (tau): Golden ratio inverse (φ⁻¹)
-const L4_TAU = PHI_INV;  // ≈ 0.6180339887498949
+// L4_GAP, L4_K_SQUARED, L4_K, L4_TAU, L4_CRITICAL already defined above
 
 // Lucas-4 fundamental: L₄ = φ⁴ + φ⁻⁴ = 7
 const LUCAS_4 = Math.pow(PHI, 4) + Math.pow(PHI_INV, 4);
@@ -77,7 +99,7 @@ const LUCAS_4 = Math.pow(PHI, 4) + Math.pow(PHI_INV, 4);
 const L4_PARADOX = L4_TAU;                              // 0.618 (τ = φ⁻¹)
 const L4_ACTIVATION = L4_K_SQUARED;                     // 0.854 (K² = 1-φ⁻⁴)
 const L4_LENS = Z_CRITICAL;                             // 0.866 (√3/2)
-const L4_CRITICAL = (PHI * PHI) / 3.0;                  // 0.873 (φ²/3)
+// L4_CRITICAL already defined above = φ²/3 ≈ 0.873
 const L4_IGNITION = Math.sqrt(2) - 0.5;                 // 0.914 (√2-½)
 const L4_K_FORMATION = L4_K;                            // 0.924 (K)
 const L4_CONSOLIDATION = L4_K + (L4_TAU * L4_TAU) * (1.0 - L4_K);  // 0.953

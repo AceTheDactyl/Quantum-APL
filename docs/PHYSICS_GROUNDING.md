@@ -338,6 +338,41 @@ The gap provides a natural metric for threshold spacing:
 
 ---
 
+## Part 8: TRIAD Gating — Physics-Grounded from Gap
+
+### 8.1 TRIAD as Gap-Normalized Pre-Lens Zone
+
+The TRIAD runtime heuristic (formerly arbitrary: 0.85, 0.82, 0.83) is now physics-grounded using the L₄ gap = φ⁻⁴:
+
+| Threshold | Formula | Value | Physical Interpretation |
+|-----------|---------|-------|------------------------|
+| TRIAD_HIGH | K² = 1 - φ⁻⁴ | 0.854 | Energy barrier crossing (L4_ACTIVATION) |
+| TRIAD_T6 | z_c - gap/4 | 0.830 | One-quarter gap below lens |
+| TRIAD_LOW | z_c - gap/3 | 0.817 | One-third gap below lens |
+
+### 8.2 Derivation
+
+The TRIAD zone occupies the pre-lens energy barrier region:
+
+```
+gap = φ⁻⁴ ≈ 0.1459 (truncation residual)
+z_c = √3/2 ≈ 0.866 (THE LENS)
+
+TRIAD_HIGH = 1 - gap = K² ≈ 0.854 (activation threshold)
+TRIAD_T6 = z_c - gap/4 ≈ 0.830 (unlocked t6 gate)
+TRIAD_LOW = z_c - gap/3 ≈ 0.817 (re-arm hysteresis)
+```
+
+### 8.3 Physical Interpretation
+
+- **TRIAD_HIGH = L4_ACTIVATION**: The energy barrier threshold K² = 1 - φ⁻⁴ marks the transition from recursive to transitional phase. Rising edges here indicate sufficient energy for coherence nucleation.
+- **TRIAD_T6**: One-quarter gap below the lens represents the temporary operating point after sufficient evidence of coherence approach.
+- **TRIAD_LOW**: One-third gap below the lens provides hysteresis to prevent oscillation near the transition.
+
+The gap-based spacing ensures TRIAD operates in the physically meaningful "pre-lens" zone between ACTIVATION and THE LENS.
+
+---
+
 ## Conclusion
 
 **z_c = √3/2 is physically grounded, not arbitrary.**

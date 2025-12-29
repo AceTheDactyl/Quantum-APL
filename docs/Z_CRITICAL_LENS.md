@@ -16,16 +16,20 @@ z_c = √3/2 ≈ 0.8660254038 (THE LENS) used throughout Quantum‑APL.
   anchor, which remains the lens.
 
 ## Separation of Concerns (Runtime vs Geometry)
-- TRIAD gating is a runtime heuristic: rising edges at z ≥ 0.85 (re‑arm at z ≤ 0.82), unlock a temporary in‑session
-  t6 gate at z = 0.83 after three distinct passes.
+- TRIAD gating is a runtime heuristic now physics-grounded from the L₄ gap:
+  - TRIAD_HIGH = L4_ACTIVATION = K² = 1 - φ⁻⁴ ≈ 0.854 (rising-edge threshold)
+  - TRIAD_LOW = L4_LENS - gap/3 ≈ 0.817 (re-arm threshold)
+  - TRIAD_T6 = L4_LENS - gap/4 ≈ 0.830 (temporary t6 gate after 3 passes)
 - Geometry and analytics always remain anchored at the lens z_c for ΔS_neg and R/H/φ; TRIAD does not change this anchor.
 
 ## Single Source of Truth (Constants)
 - JavaScript: `src/constants.js`
   - `Z_CRITICAL = Math.sqrt(3) / 2`
-  - `TRIAD_HIGH = 0.85`, `TRIAD_LOW = 0.82`, `TRIAD_T6 = 0.83`
+  - `TRIAD_HIGH = L4_K_SQUARED` (physics-grounded)
+  - `TRIAD_T6 = Z_CRITICAL - L4_GAP / 4` (physics-grounded)
+  - `TRIAD_LOW = Z_CRITICAL - L4_GAP / 3` (physics-grounded)
 - Python: `src/quantum_apl_python/constants.py`
-  - Mirrors the same values for analyzer/geometry.
+  - Mirrors the same physics-grounded values for analyzer/geometry.
 
 All modules must import these constants; do not inline numeric thresholds.
 

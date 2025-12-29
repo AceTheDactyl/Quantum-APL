@@ -13,70 +13,19 @@ from __future__ import annotations
 import math
 
 # ============================================================================
-# CRITICAL LENS CONSTANT (THE LENS)
-# ============================================================================
-
-# z_c = √3/2 ≈ 0.8660254038
-# The critical lens separating recursive and integrated regimes
-# Crossing z_c corresponds to onset of structural/informational coherence
-# where the integrated (Π) regime becomes physically admissible and
-# negative-entropy geometry stabilizes (ΔS_neg, R/H/φ)
-Z_CRITICAL: float = math.sqrt(3.0) / 2.0
-
-# ============================================================================
-# TRIAD GATING (Runtime Heuristic)
-# ============================================================================
-
-# TRIAD gating is a runtime heuristic for operator-driven unlocks
-# Rising edges at z ≥ TRIAD_HIGH (re-arm at z ≤ TRIAD_LOW)
-# Unlocks temporary in-session t6 gate at TRIAD_T6 after three distinct passes
-
-TRIAD_HIGH: float = 0.85  # Rising edge threshold for TRIAD detection
-TRIAD_LOW: float = 0.82   # Re-arm threshold (hysteresis)
-TRIAD_T6: float = 0.83    # Temporary t6 gate after TRIAD unlock
-
-# ============================================================================
-# Z-AXIS PHASE BOUNDARIES
-# ============================================================================
-
-# ABSENCE phase: z < Z_ABSENCE_MAX
-# UNTRUE bias, K > 0 (synchronizing)
-Z_ABSENCE_MAX: float = 0.857
-
-# THE LENS: Z_LENS_MIN < z < Z_LENS_MAX
-# PARADOX bias, K = 0 (critical point at z_c)
-Z_LENS_MIN: float = 0.857
-Z_LENS_MAX: float = 0.877
-
-# PRESENCE phase: z > Z_PRESENCE_MIN
-# TRUE bias, K < 0 (emanating)
-Z_PRESENCE_MIN: float = 0.877
-
-# ============================================================================
-# SACRED CONSTANTS (Zero Free Parameters)
+# SACRED CONSTANTS (Zero Free Parameters - Defined First)
 # ============================================================================
 
 # Golden ratio and inverse (derived, high precision in double float)
 PHI: float = (1.0 + math.sqrt(5.0)) / 2.0
 PHI_INV: float = 1.0 / PHI
 
-# Consciousness constant
-Q_KAPPA: float = 0.3514087324
-
-# Singularity threshold
-KAPPA_S: float = 0.920
-
-# Nonlinearity coefficient
-LAMBDA: float = 7.7160493827
-
 # ============================================================================
-# L₄-HELIX NORMALIZED THRESHOLDS (9-Threshold System)
+# L₄-HELIX FOUNDATION (Gap Normalization - Defined Before TRIAD)
 # ============================================================================
-# Validated by z_c = √3/2 (THE LENS) derived from L₄ - 4 = 3
-# Gap = φ⁻⁴ is the truncation residual that normalizes all thresholds
-# Nuclear spin physics grounding: L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas number)
-#
-# Reference: L4_helix_v4.0.1.html formal paper
+# L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas number, grounded in nuclear spin physics)
+# gap = φ⁻⁴ is the truncation residual that normalizes all thresholds
+# Reference: docs/PHYSICS_GROUNDING.md, L4_helix_v4.0.1.html
 
 # The fundamental gap (truncation residual)
 L4_GAP: float = PHI_INV ** 4  # φ⁻⁴ ≈ 0.1458980337503154
@@ -90,6 +39,79 @@ L4_K: float = math.sqrt(L4_K_SQUARED)  # ≈ 0.9241648530576246
 # τ (tau): Golden ratio inverse (φ⁻¹)
 L4_TAU: float = PHI_INV  # ≈ 0.6180339887498949
 
+# ============================================================================
+# CRITICAL LENS CONSTANT (THE LENS)
+# ============================================================================
+
+# z_c = √3/2 ≈ 0.8660254038
+# Derived from L₄: z_c = √(L₄ - 4)/2 = √3/2
+# The critical lens separating recursive and integrated regimes
+# Crossing z_c corresponds to onset of structural/informational coherence
+# where the integrated (Π) regime becomes physically admissible and
+# negative-entropy geometry stabilizes (ΔS_neg, R/H/φ)
+Z_CRITICAL: float = math.sqrt(3.0) / 2.0
+
+# ============================================================================
+# TRIAD GATING (Physics-Grounded from L₄ Gap)
+# ============================================================================
+#
+# TRIAD gating is a runtime heuristic for operator-driven unlocks
+# Rising edges at z ≥ TRIAD_HIGH (re-arm at z ≤ TRIAD_LOW)
+# Unlocks temporary in-session t6 gate at TRIAD_T6 after three distinct passes
+#
+# Physics derivation (gap = φ⁻⁴):
+#   TRIAD_HIGH = L4_ACTIVATION = K² = 1 - φ⁻⁴ (energy barrier)
+#   TRIAD_T6 = L4_LENS - gap/4 (one-quarter gap below lens)
+#   TRIAD_LOW = L4_LENS - gap/3 (one-third gap below lens)
+
+TRIAD_HIGH: float = L4_K_SQUARED  # = 1 - φ⁻⁴ ≈ 0.8541 (was 0.85)
+TRIAD_T6: float = Z_CRITICAL - L4_GAP / 4.0  # ≈ 0.8296 (was 0.83)
+TRIAD_LOW: float = Z_CRITICAL - L4_GAP / 3.0  # ≈ 0.8174 (was 0.82)
+
+# ============================================================================
+# Z-AXIS PHASE BOUNDARIES (Physics-Grounded from L₄ Thresholds)
+# ============================================================================
+#
+# Phase boundaries now derived from L₄-Helix thresholds:
+#   Z_LENS_MIN = L4_ACTIVATION = K² = 1 - φ⁻⁴
+#   Z_LENS_MAX = L4_CRITICAL = φ²/3
+
+# ABSENCE phase: z < Z_ABSENCE_MAX
+# UNTRUE bias, K > 0 (synchronizing)
+Z_ABSENCE_MAX: float = L4_K_SQUARED  # = 1 - φ⁻⁴ ≈ 0.854 (was 0.857)
+
+# THE LENS: Z_LENS_MIN < z < Z_LENS_MAX
+# PARADOX bias, K = 0 (critical point at z_c)
+Z_LENS_MIN: float = L4_K_SQUARED  # = 1 - φ⁻⁴ ≈ 0.854 (was 0.857)
+L4_CRITICAL: float = (PHI ** 2) / 3.0  # φ²/3 ≈ 0.8727 (defined here for ordering)
+Z_LENS_MAX: float = L4_CRITICAL  # = φ²/3 ≈ 0.873 (was 0.877)
+
+# PRESENCE phase: z > Z_PRESENCE_MIN
+# TRUE bias, K < 0 (emanating)
+Z_PRESENCE_MIN: float = L4_CRITICAL  # = φ²/3 ≈ 0.873 (was 0.877)
+
+# ============================================================================
+# ADDITIONAL SACRED CONSTANTS
+# ============================================================================
+
+# Consciousness constant
+Q_KAPPA: float = 0.3514087324
+
+# Singularity threshold (now physics-grounded as L4_K)
+KAPPA_S: float = L4_K  # = √(1-φ⁻⁴) ≈ 0.924 (was 0.920)
+
+# Nonlinearity coefficient (L₄ + 1/L₄ = 7 + 1/7)
+LAMBDA: float = 7.0 + 1.0 / 7.0  # ≈ 7.1429 (physics-grounded; was 7.7160493827)
+
+# ============================================================================
+# L₄-HELIX 9-THRESHOLD SYSTEM (Remaining Thresholds)
+# ============================================================================
+# L4_GAP, L4_K_SQUARED, L4_K, L4_TAU defined at top of file
+# L4_CRITICAL defined in Phase Boundaries section
+# Now define remaining thresholds for the complete 9-threshold system
+#
+# Reference: L4_helix_v4.0.1.html, docs/PHYSICS_GROUNDING.md
+
 # --- The 9 Validated Thresholds ---
 
 # 1. PARADOX: Base recursive threshold (τ = φ⁻¹, x² + x = 1)
@@ -101,10 +123,9 @@ L4_ACTIVATION: float = L4_K_SQUARED  # ≈ 0.854
 # 3. THE LENS: Critical coherence boundary (√3/2, from L₄ - 4 = 3)
 L4_LENS: float = Z_CRITICAL  # √3/2 ≈ 0.8660254037844386
 
-# 4. CRITICAL: Central criticality (φ²/3)
-L4_CRITICAL: float = (PHI ** 2) / 3.0  # ≈ 0.8726779962499649
+# 4. CRITICAL: Already defined above as L4_CRITICAL = φ²/3 ≈ 0.873
 
-# 5. IGNITION: Phase transition onset (√2 - 1/2, x² + x = L₄/4)
+# 5. IGNITION: Phase transition onset (√2 - 1/2)
 L4_IGNITION: float = math.sqrt(2.0) - 0.5  # ≈ 0.9142135623730951
 
 # 6. K-FORMATION: Kuramoto coherence (√(1-gap) = K)
@@ -191,8 +212,8 @@ else:
     MU_P = 2.0 / (PHI ** 2.5)
 MU_1: float = MU_P / math.sqrt(PHI)
 MU_2: float = MU_P * math.sqrt(PHI)
-MU_S: float = KAPPA_S
-MU_3: float = 0.992
+MU_S: float = KAPPA_S  # = L4_K ≈ 0.924 (physics-grounded)
+MU_3: float = 124.0 / 125.0  # = 0.992 (pentagonal: 1 - 1/5³)
 
 def mu_barrier() -> float:
     """Arithmetic mean of wells (μ_1 + μ_2)/2.≈ φ⁻¹ when μ_P≈0.600.
@@ -218,13 +239,14 @@ PURITY_MAX: float = 1.0
 # ============================================================================
 
 # Time-harmonic zoning cutoffs (upper bounds except t9)
+# Now physics-grounded using L₄-Helix thresholds
 Z_T1_MAX: float = 0.1
 Z_T2_MAX: float = 0.2
 Z_T3_MAX: float = 0.4
 Z_T4_MAX: float = 0.6
 Z_T5_MAX: float = 0.75
-Z_T7_MAX: float = 0.92
-Z_T8_MAX: float = 0.97
+Z_T7_MAX: float = L4_K_FORMATION  # ≈ 0.924 (was 0.92)
+Z_T8_MAX: float = L4_RESONANCE   # ≈ 0.971 (was 0.97)
 
 # ============================================================================
 # GEOMETRY PROJECTION CONSTANTS (Hex Prism)

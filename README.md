@@ -10,7 +10,7 @@ Key properties
 - L₄-Helix 9-threshold system: gap-normalized thresholds from φ⁻⁴, grounded in nuclear spin physics (L₄ = φ⁴ + φ⁻⁴ = 7)
 - Coherence: `s(z) = exp[−σ(z−z_c)^2]` (env‑tunable `QAPL_LENS_SIGMA`)
 - Geometry: hex‑prism mapping driven by `ΔS_neg` with `GEOM_SIGMA` (falls back to `LENS_SIGMA`)
-- TRIAD (heuristic): rising 0.85, re‑arm 0.82, t6 gate 0.83; lens remains anchor
+- TRIAD (physics-grounded): rising K²≈0.854, re‑arm z_c−gap/3≈0.817, t6 gate z_c−gap/4≈0.830; lens anchor preserved
 - μ‑set: default `μ_P = 2/φ^{5/2}` → barrier = φ⁻¹ exactly (env override allowed)
 
 ## Quick Start
