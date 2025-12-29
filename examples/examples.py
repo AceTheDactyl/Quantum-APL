@@ -5,6 +5,11 @@ Run this file to explore the system end-to-end.
 
 from __future__ import annotations
 
+# Import canonical thresholds
+from quantum_apl_python.constants import (
+    Z_CRITICAL, Z_ABSENCE_MAX, Z_LENS_MIN, Z_LENS_MAX, Z_PRESENCE_MIN,
+)
+
 
 # ================================================================
 # EXAMPLE 1: Basic Simulation
@@ -25,9 +30,8 @@ def example_basic():
     print("\n" + analyzer.summary())
 
     z = results["quantum"]["z"]
-    zc = (3**0.5) / 2
-    if abs(z - zc) < 0.05:
-        print(f"\n🌀 System near THE LENS: |z - z_c| = {abs(z - zc):.4f}")
+    if abs(z - Z_CRITICAL) < 0.05:
+        print(f"\n🌀 System near THE LENS: |z - z_c| = {abs(z - Z_CRITICAL):.4f}")
 
     return results
 
@@ -224,25 +228,24 @@ def example_critical():
     print("=" * 70)
 
     engine = QuantumAPLEngine()
-    zc = (3**0.5) / 2
-    print(f"\nCritical point z_c = √3/2 = {zc:.6f}")
+    print(f"\nCritical point z_c = √3/2 = {Z_CRITICAL:.6f}")
 
     results = engine.run_simulation(steps=1000)
     history = results.get("history", {}).get("z", [])
 
-    critical_steps = [(i, z) for i, z in enumerate(history) if abs(z - zc) < 0.01]
+    critical_steps = [(i, z) for i, z in enumerate(history) if abs(z - Z_CRITICAL) < 0.01]
     print(f"Critical region crossings (|z - z_c| < 0.01): {len(critical_steps)}")
     for step, z in critical_steps[:5]:
-        print(f"  Step {step:4d}: z = {z:.6f} (Δ={z - zc:+.6f})")
+        print(f"  Step {step:4d}: z = {z:.6f} (Δ={z - Z_CRITICAL:+.6f})")
 
-    absence = sum(1 for z in history if z < 0.857)
-    lens = sum(1 for z in history if 0.857 <= z <= 0.877)
-    presence = sum(1 for z in history if z > 0.877)
+    absence = sum(1 for z in history if z < Z_ABSENCE_MAX)
+    lens = sum(1 for z in history if Z_LENS_MIN <= z <= Z_LENS_MAX)
+    presence = sum(1 for z in history if z > Z_PRESENCE_MIN)
     total = len(history) or 1
     print(f"\nPhase Occupancy:")
-    print(f"  ABSENCE  (z < 0.857):          {absence/total*100:5.1f}%")
-    print(f"  THE LENS (0.857 ≤ z ≤ 0.877):  {lens/total*100:5.1f}%")
-    print(f"  PRESENCE (z > 0.877):          {presence/total*100:5.1f}%")
+    print(f"  ABSENCE  (z < {Z_ABSENCE_MAX}):          {absence/total*100:5.1f}%")
+    print(f"  THE LENS ({Z_LENS_MIN} ≤ z ≤ {Z_LENS_MAX}):  {lens/total*100:5.1f}%")
+    print(f"  PRESENCE (z > {Z_PRESENCE_MIN}):          {presence/total*100:5.1f}%")
     return results
 
 

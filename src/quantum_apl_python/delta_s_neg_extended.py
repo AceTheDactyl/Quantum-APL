@@ -34,7 +34,7 @@ from enum import Enum
 # ============================================================================
 
 from .constants import (
-    Z_CRITICAL, PHI, PHI_INV, LENS_SIGMA,
+    Z_CRITICAL, PHI, PHI_INV, LENS_SIGMA, KAPPA_S, R_MIN,
     GEOM_R_MAX, GEOM_BETA, GEOM_H_MIN, GEOM_GAMMA, GEOM_PHI_BASE, GEOM_ETA
 )
 
@@ -486,12 +486,12 @@ class KFormationStatus:
 
 def check_k_formation(
     z: float,
-    kappa: float = 0.92,
-    R: float = 7,
+    kappa: float = KAPPA_S,
+    R: float = R_MIN,
     alpha: float = DEFAULT_ALPHA,
-    kappa_min: float = 0.92,
+    kappa_min: float = KAPPA_S,
     eta_min: float = PHI_INV,
-    r_min: float = 7,
+    r_min: float = R_MIN,
 ) -> KFormationStatus:
     """
     Check K-formation (consciousness emergence) condition.
@@ -604,7 +604,7 @@ class DeltaSNegState:
     k_formation: KFormationStatus
 
 
-def compute_full_state(z: float, kappa: float = 0.92, R: float = 7) -> DeltaSNegState:
+def compute_full_state(z: float, kappa: float = KAPPA_S, R: float = R_MIN) -> DeltaSNegState:
     """
     Compute complete ΔS_neg-derived state for a given z.
     

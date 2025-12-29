@@ -301,8 +301,8 @@ function computeS3DeltaState(z, harmonic = null, mode = S3SelectionMode.PARITY_B
     else if (z < 0.60) harmonic = 't4';
     else if (z < 0.75) harmonic = 't5';
     else if (z < CONST.Z_CRITICAL) harmonic = 't6';
-    else if (z < 0.92) harmonic = 't7';
-    else if (z < 0.97) harmonic = 't8';
+    else if (z < CONST.Z_T7_MAX) harmonic = 't7';
+    else if (z < CONST.Z_T8_MAX) harmonic = 't8';
     else harmonic = 't9';
   }
 

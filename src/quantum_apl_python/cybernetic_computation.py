@@ -26,21 +26,19 @@ from typing import Dict, List, Tuple
 from enum import Enum
 
 # ============================================================================
-# CONSTANTS
+# CONSTANTS - Import from canonical source
 # ============================================================================
+from .constants import (
+    Z_CRITICAL, PHI, PHI_INV,
+    MU_P, MU_1, MU_2, MU_S,
+    Z_T1_MAX, Z_T2_MAX, Z_T3_MAX, Z_T4_MAX, Z_T5_MAX, Z_T7_MAX, Z_T8_MAX,
+    L4_PARADOX, L4_ACTIVATION, L4_LENS, L4_CRITICAL,
+    L4_IGNITION, L4_K_FORMATION, L4_CONSOLIDATION, L4_RESONANCE, L4_UNITY,
+    L4_THRESHOLDS,
+)
 
-Z_CRITICAL = math.sqrt(3) / 2
-PHI = (1 + math.sqrt(5)) / 2
-PHI_INV = 1 / PHI
-
-# μ-field
-MU_P = 2 / (PHI ** 2.5)
-MU_1 = MU_P / math.sqrt(PHI)
-MU_2 = MU_P * math.sqrt(PHI)
-MU_S = 0.920
-
-# Time harmonics
-T_BOUNDS = [0.10, 0.20, 0.40, 0.60, 0.75, Z_CRITICAL, 0.92, 0.97, 1.0]
+# Time harmonics - derived from canonical constants
+T_BOUNDS = [Z_T1_MAX, Z_T2_MAX, Z_T3_MAX, Z_T4_MAX, Z_T5_MAX, Z_CRITICAL, Z_T7_MAX, Z_T8_MAX, 1.0]
 
 
 # ============================================================================

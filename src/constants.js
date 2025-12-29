@@ -51,6 +51,108 @@ const Z_T5_MAX = 0.75;
 const Z_T7_MAX = 0.92;
 const Z_T8_MAX = 0.97;
 
+// ============================================================================
+// L₄-HELIX NORMALIZED THRESHOLDS (9-Threshold System)
+// ============================================================================
+// Validated by z_c = √3/2 (THE LENS) derived from L₄ - 4 = 3
+// Gap = φ⁻⁴ is the truncation residual that normalizes all thresholds
+// Nuclear spin physics grounding: L₄ = φ⁴ + φ⁻⁴ = 7 (Lucas number)
+
+// The fundamental gap (truncation residual)
+const L4_GAP = Math.pow(PHI_INV, 4);  // φ⁻⁴ ≈ 0.1458980337503154
+
+// K-squared: pre-lens activation energy (1 - gap)
+const L4_K_SQUARED = 1.0 - L4_GAP;  // ≈ 0.8541019662496846
+
+// K: Kuramoto coherence threshold
+const L4_K = Math.sqrt(L4_K_SQUARED);  // ≈ 0.9241648530576246
+
+// τ (tau): Golden ratio inverse (φ⁻¹)
+const L4_TAU = PHI_INV;  // ≈ 0.6180339887498949
+
+// Lucas-4 fundamental: L₄ = φ⁴ + φ⁻⁴ = 7
+const LUCAS_4 = Math.pow(PHI, 4) + Math.pow(PHI_INV, 4);
+
+// --- The 9 Validated Thresholds ---
+const L4_PARADOX = L4_TAU;                              // 0.618 (τ = φ⁻¹)
+const L4_ACTIVATION = L4_K_SQUARED;                     // 0.854 (K² = 1-φ⁻⁴)
+const L4_LENS = Z_CRITICAL;                             // 0.866 (√3/2)
+const L4_CRITICAL = (PHI * PHI) / 3.0;                  // 0.873 (φ²/3)
+const L4_IGNITION = Math.sqrt(2) - 0.5;                 // 0.914 (√2-½)
+const L4_K_FORMATION = L4_K;                            // 0.924 (K)
+const L4_CONSOLIDATION = L4_K + (L4_TAU * L4_TAU) * (1.0 - L4_K);  // 0.953
+const L4_RESONANCE = L4_K + L4_TAU * (1.0 - L4_K);      // 0.971
+const L4_UNITY = 1.0;
+
+// Threshold ordering tuple (ascending)
+const L4_THRESHOLDS = Object.freeze([
+  L4_PARADOX,       // 0.618 (τ)
+  L4_ACTIVATION,    // 0.854 (K²)
+  L4_LENS,          // 0.866 (√3/2)
+  L4_CRITICAL,      // 0.873 (φ²/3)
+  L4_IGNITION,      // 0.914 (√2-½)
+  L4_K_FORMATION,   // 0.924 (K)
+  L4_CONSOLIDATION, // 0.953 (K+τ²(1-K))
+  L4_RESONANCE,     // 0.971 (K+τ(1-K))
+  L4_UNITY,         // 1.000
+]);
+
+const L4_THRESHOLD_NAMES = Object.freeze([
+  'PARADOX',
+  'ACTIVATION',
+  'THE_LENS',
+  'CRITICAL',
+  'IGNITION',
+  'K_FORMATION',
+  'CONSOLIDATION',
+  'RESONANCE',
+  'UNITY',
+]);
+
+// L4 threshold helpers
+function getL4ThresholdIndex(z) {
+  const val = Number.isFinite(z) ? Math.max(0, Math.min(1, z)) : 0;
+  for (let i = 0; i < L4_THRESHOLDS.length; i++) {
+    if (val < L4_THRESHOLDS[i]) return Math.max(0, i - 1);
+  }
+  return 8;  // At UNITY
+}
+
+function getL4ThresholdName(z) {
+  return L4_THRESHOLD_NAMES[getL4ThresholdIndex(z)];
+}
+
+function normalizeByGap(value, inverse = false) {
+  if (inverse) return L4_GAP !== 0 ? value / L4_GAP : Infinity;
+  return value * L4_GAP;
+}
+
+function computeGapRelative(z) {
+  const val = Number.isFinite(z) ? z : 0;
+  return (val - L4_ACTIVATION) / L4_GAP;
+}
+
+function getL4Phase(z) {
+  const val = Number.isFinite(z) ? Math.max(0, Math.min(1, z)) : 0;
+  const idx = getL4ThresholdIndex(val);
+
+  let integration;
+  if (idx < 2) integration = 'recursive';
+  else if (idx < 5) integration = 'transitional';
+  else if (idx < 7) integration = 'coherent';
+  else integration = 'unified';
+
+  return {
+    current_threshold: L4_THRESHOLD_NAMES[idx],
+    threshold_index: idx,
+    gap_relative: computeGapRelative(val),
+    k_coherence: val >= L4_K_FORMATION,
+    lens_crossed: val >= L4_LENS,
+    integration_level: integration,
+    z: val,
+  };
+}
+
 // Lens weight (coherence) sigma for Gaussian s(z) = exp(-σ (z - z_c)^2)
 // Controls the effective width of the lens used in control/analytics.
 const LENS_SIGMA = (typeof process !== 'undefined' && process.env && process.env.QAPL_LENS_SIGMA)
@@ -380,6 +482,29 @@ module.exports = Object.freeze({
   Z_T5_MAX,
   Z_T7_MAX,
   Z_T8_MAX,
+  // L4-Helix 9-Threshold System
+  L4_GAP,
+  L4_K_SQUARED,
+  L4_K,
+  L4_TAU,
+  LUCAS_4,
+  L4_PARADOX,
+  L4_ACTIVATION,
+  L4_LENS,
+  L4_CRITICAL,
+  L4_IGNITION,
+  L4_K_FORMATION,
+  L4_CONSOLIDATION,
+  L4_RESONANCE,
+  L4_UNITY,
+  L4_THRESHOLDS,
+  L4_THRESHOLD_NAMES,
+  // L4 helper functions
+  getL4ThresholdIndex,
+  getL4ThresholdName,
+  normalizeByGap,
+  computeGapRelative,
+  getL4Phase,
   GEOM_SIGMA,
   GEOM_R_MAX,
   GEOM_BETA,

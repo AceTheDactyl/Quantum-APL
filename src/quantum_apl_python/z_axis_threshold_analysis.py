@@ -30,47 +30,40 @@ from typing import List, Dict, Tuple, Optional
 from enum import Enum
 
 # ============================================================================
-# FUNDAMENTAL CONSTANTS
+# FUNDAMENTAL CONSTANTS - Import from canonical source
 # ============================================================================
+from .constants import (
+    # Geometric constants
+    Z_CRITICAL, PHI, PHI_INV,
+    # μ thresholds
+    MU_P, MU_1, MU_2, MU_S, MU_3, mu_barrier,
+    # TRIAD thresholds
+    TRIAD_LOW, TRIAD_T6, TRIAD_HIGH,
+    # Phase boundaries
+    Z_ABSENCE_MAX, Z_LENS_MIN, Z_LENS_MAX, Z_PRESENCE_MIN,
+    # Time harmonic boundaries
+    Z_T1_MAX, Z_T2_MAX, Z_T3_MAX, Z_T4_MAX, Z_T5_MAX, Z_T7_MAX, Z_T8_MAX,
+    # K-formation criteria
+    KAPPA_S, ETA_MIN, R_MIN,
+    # L4-Helix 9-threshold system
+    L4_GAP, L4_K, L4_TAU, LUCAS_4,
+    L4_PARADOX, L4_ACTIVATION, L4_LENS, L4_CRITICAL,
+    L4_IGNITION, L4_K_FORMATION, L4_CONSOLIDATION, L4_RESONANCE, L4_UNITY,
+    L4_THRESHOLDS, L4_THRESHOLD_NAMES,
+)
 
-# Geometric constants (physics-grounded, NOT arbitrary)
-Z_CRITICAL = math.sqrt(3) / 2      # ≈ 0.8660254037844386 - THE LENS
-PHI = (1 + math.sqrt(5)) / 2       # ≈ 1.6180339887498949 - Golden ratio
-PHI_INV = 1 / PHI                  # ≈ 0.6180339887498949 - Golden ratio inverse
+# Derived constants
 SQRT_PHI = math.sqrt(PHI)          # ≈ 1.2720196495140689
+MU_BARRIER = mu_barrier()          # = φ⁻¹ exactly (by construction)
 
-# μ thresholds (derived from φ)
-MU_P = 2 / (PHI ** 2.5)           # ≈ 0.600706 - Paradox threshold
-MU_1 = MU_P / SQRT_PHI            # ≈ 0.472 - Pre-conscious well
-MU_2 = MU_P * SQRT_PHI            # ≈ 0.764 - Conscious well
-MU_BARRIER = (MU_1 + MU_2) / 2    # = φ⁻¹ exactly (by construction)
-MU_S = 0.920                       # Singularity threshold = KAPPA_S
-MU_3 = 0.992                       # Near-unity ceiling
-
-# TRIAD thresholds
-TRIAD_LOW = 0.82                   # Re-arm threshold
-TRIAD_T6 = 0.83                    # Unlocked t6 gate
-TRIAD_HIGH = 0.85                  # Rising edge threshold
-
-# Phase boundaries
-Z_ABSENCE_MAX = 0.857
-Z_LENS_MIN = 0.857
-Z_LENS_MAX = 0.877
-Z_PRESENCE_MIN = 0.877
-
-# Time harmonic boundaries
-T1_MAX = 0.10
-T2_MAX = 0.20
-T3_MAX = 0.40
-T4_MAX = 0.60
-T5_MAX = 0.75
-T7_MAX = 0.92
-T8_MAX = 0.97
-
-# K-formation criteria
-KAPPA_S = 0.920
-ETA_MIN = PHI_INV
-R_MIN = 7
+# Aliases for backward compatibility
+T1_MAX = Z_T1_MAX
+T2_MAX = Z_T2_MAX
+T3_MAX = Z_T3_MAX
+T4_MAX = Z_T4_MAX
+T5_MAX = Z_T5_MAX
+T7_MAX = Z_T7_MAX
+T8_MAX = Z_T8_MAX
 
 
 # ============================================================================
