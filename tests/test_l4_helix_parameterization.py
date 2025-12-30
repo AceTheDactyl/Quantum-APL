@@ -733,5 +733,565 @@ class TestHardConstraints:
         assert abs((angle_B - angle_G) - math.pi/3) < 1e-10
 
 
+# ============================================================================
+# BLOCK 7: MRP-LSB STEGANOGRAPHIC NAVIGATION TESTS
+# ============================================================================
+
+from quantum_apl_python.l4_helix_parameterization import (
+    # Block 7: MRP-LSB Navigation
+    MRPHeader,
+    L4MRPState,
+    create_l4_mrp_state,
+    MRPPhaseAPayloads,
+    compute_phase_a_parity,
+    build_mrp_message,
+    extract_mrp_message,
+    create_phase_a_payloads,
+    update_global_phases_from_velocity,
+    decode_position_from_phases,
+    attractor_phase_correction,
+    mrp_l4_update_step,
+    encode_l4_mrp_state_to_image,
+    MRPVerificationResult,
+    verify_mrp_payloads,
+    L4MRPValidationResult,
+    validate_l4_mrp_system,
+    validate_plane_wave_residual,
+    validate_loop_closure,
+)
+
+
+class TestMRPHeader:
+    """Tests for MRP header structure."""
+
+    def test_header_size(self):
+        """Test MRP header is exactly 14 bytes."""
+        header = MRPHeader(channel='R', length=100, crc32=0xDEADBEEF)
+        data = header.to_bytes()
+        assert len(data) == 14
+
+    def test_header_magic(self):
+        """Test MRP header has correct magic bytes."""
+        header = MRPHeader(channel='R', length=100, crc32=0x12345678)
+        data = header.to_bytes()
+        assert data[:4] == b"MRP1"
+
+    def test_header_channel_encoding(self):
+        """Test channel byte encoding."""
+        for channel in ['R', 'G', 'B']:
+            header = MRPHeader(channel=channel, length=100, crc32=0)
+            data = header.to_bytes()
+            assert chr(data[4]) == channel
+
+    def test_header_roundtrip(self):
+        """Test header serialization roundtrip."""
+        original = MRPHeader(channel='G', length=256, crc32=0xCAFEBABE, flags=0x01)
+        data = original.to_bytes()
+        restored = MRPHeader.from_bytes(data)
+        assert restored.channel == original.channel
+        assert restored.length == original.length
+        assert restored.crc32 == original.crc32
+        assert restored.flags == original.flags
+
+    def test_header_invalid_magic_raises(self):
+        """Test that invalid magic raises ValueError."""
+        bad_data = b"BAD!" + b"\x00" * 10
+        with pytest.raises(ValueError, match="Invalid magic"):
+            MRPHeader.from_bytes(bad_data)
+
+    def test_header_too_short_raises(self):
+        """Test that short data raises ValueError."""
+        short_data = b"MRP1" + b"\x00" * 5  # Only 9 bytes
+        with pytest.raises(ValueError, match="Header too short"):
+            MRPHeader.from_bytes(short_data)
+
+
+class TestL4MRPState:
+    """Tests for L4MRPState unified state vector."""
+
+    def test_create_l4_mrp_state(self):
+        """Test L4MRPState creation."""
+        state = create_l4_mrp_state(N=32, z0=0.5, seed=42)
+        assert state.N == 32
+        assert len(state.phases) == 32
+        assert len(state.frequencies) == 32
+        assert state.t == 0.0
+
+    def test_state_position_velocity(self):
+        """Test position and velocity initialization."""
+        pos = np.array([1.0, 2.0])
+        vel = np.array([0.5, -0.3])
+        state = create_l4_mrp_state(position=pos, velocity=vel, seed=42)
+        np.testing.assert_array_equal(state.position, pos)
+        np.testing.assert_array_equal(state.velocity, vel)
+
+    def test_state_global_phases_property(self):
+        """Test global_phases property returns tuple."""
+        state = create_l4_mrp_state(seed=42)
+        phases = state.global_phases
+        assert isinstance(phases, tuple)
+        assert len(phases) == 3
+        assert phases == (state.Phi_R, state.Phi_G, state.Phi_B)
+
+    def test_state_helix_position_3d(self):
+        """Test 3D helix position computation."""
+        state = create_l4_mrp_state(z0=0.5, seed=42)
+        x, y, z = state.helix_position_3d()
+        assert z == state.z
+        assert abs(math.sqrt(x**2 + y**2) - state.r_helix) < 1e-10
+
+    def test_state_to_dict(self):
+        """Test state serialization to dict."""
+        state = create_l4_mrp_state(seed=42)
+        d = state.to_dict()
+        assert "z" in d
+        assert "Phi_R" in d
+        assert "position" in d
+        assert "r_kuramoto" in d
+        assert "helix_position_3d" in d
+
+    def test_state_helix_radius_law(self):
+        """Test helix radius follows piecewise law."""
+        # Below z_c
+        state_low = create_l4_mrp_state(z0=0.4, seed=42)
+        expected_low = L4.K * math.sqrt(0.4 / L4.Z_C)
+        assert abs(state_low.r_helix - expected_low) < 1e-10
+
+        # Above z_c
+        state_high = create_l4_mrp_state(z0=0.95, seed=42)
+        assert abs(state_high.r_helix - L4.K) < 1e-10
+
+
+class TestMRPPhaseA:
+    """Tests for MRP Phase-A channel allocation."""
+
+    def test_compute_parity(self):
+        """Test XOR parity computation."""
+        r_b64 = b"AAAA"  # 0x41 0x41 0x41 0x41
+        g_b64 = b"BBBB"  # 0x42 0x42 0x42 0x42
+        parity = compute_phase_a_parity(r_b64, g_b64)
+        # XOR: 0x41 ^ 0x42 = 0x03
+        import base64
+        decoded = base64.b64decode(parity)
+        assert all(b == 0x03 for b in decoded)
+
+    def test_compute_parity_unequal_lengths(self):
+        """Test parity with unequal payload lengths."""
+        r_b64 = b"AA"
+        g_b64 = b"BBBB"
+        parity = compute_phase_a_parity(r_b64, g_b64)
+        assert len(parity) > 0  # Should handle length mismatch
+
+    def test_build_mrp_message(self):
+        """Test MRP message building."""
+        payload = {"test": "data"}
+        message = build_mrp_message('R', payload)
+        assert message[:4] == b"MRP1"
+        assert len(message) >= 14  # Header + payload
+
+    def test_extract_mrp_message(self):
+        """Test MRP message extraction."""
+        payload = {"key": "value"}
+        message = build_mrp_message('G', payload)
+        header, extracted = extract_mrp_message(message)
+        assert header.channel == 'G'
+        assert header.flags & MRPHeader.FLAG_CRC
+
+    def test_create_phase_a_payloads(self):
+        """Test Phase-A payload creation."""
+        state = create_l4_mrp_state(seed=42)
+        lattice_pos = [np.array([i, j]) for i in range(3) for j in range(3)]
+        payloads = create_phase_a_payloads(state, lattice_pos)
+
+        assert payloads.r_header.channel == 'R'
+        assert payloads.g_header.channel == 'G'
+        assert payloads.b_header.channel == 'B'
+        assert "crc_r" in payloads.b_verification
+        assert "crc_g" in payloads.b_verification
+        assert "sha256_r_b64" in payloads.b_verification
+        assert "parity_block_b64" in payloads.b_verification
+
+
+class TestNavigationIntegration:
+    """Tests for navigation path integration."""
+
+    def test_update_global_phases_from_velocity(self):
+        """Test global phase update from velocity."""
+        hex_waves = HexLatticeWavevectors(wavelength=1.0)
+        Phi = (0.0, 0.0, 0.0)
+        velocity = np.array([1.0, 0.0])
+        dt = 0.1
+
+        new_Phi = update_global_phases_from_velocity(Phi, velocity, hex_waves, dt)
+
+        assert len(new_Phi) == 3
+        assert all(0 <= p < 2 * np.pi for p in new_Phi)
+        # With velocity along x-axis, k_R phase should change most
+        assert new_Phi[0] != 0.0
+
+    def test_decode_position_from_phases(self):
+        """Test position decoding from phases."""
+        hex_waves = HexLatticeWavevectors(wavelength=1.0)
+
+        # Encode a position
+        x_original = np.array([0.5, 0.3])
+        theta_R, theta_G, theta_B = hex_waves.compute_channel_phases(x_original)
+
+        # Decode back
+        x_decoded = decode_position_from_phases(theta_R, theta_G, theta_B, hex_waves)
+
+        # Should be approximately equal (modulo wavelength)
+        # Note: phase ambiguity means we may not recover exact position
+        assert x_decoded is not None
+        assert len(x_decoded) == 2
+
+    def test_attractor_phase_correction(self):
+        """Test phase correction for noise stability."""
+        phases = np.array([0.0, 0.1, 0.2, 0.3])
+        targets = np.array([0.1, 0.1, 0.1])
+        corrected = attractor_phase_correction(phases, targets, epsilon=0.01)
+
+        assert len(corrected) == len(phases)
+        assert all(0 <= p < 2 * np.pi for p in corrected)
+
+
+class TestMRPL4UpdateStep:
+    """Tests for complete MRP-L4 update cycle."""
+
+    def test_mrp_l4_update_step_preserves_state_structure(self):
+        """Test update step preserves state structure."""
+        state = create_l4_mrp_state(N=32, z0=0.5, seed=42)
+        new_state = mrp_l4_update_step(state, dt=0.1)
+
+        assert new_state.N == state.N
+        assert len(new_state.phases) == len(state.phases)
+        assert new_state.t > state.t
+
+    def test_mrp_l4_update_step_evolves_phases(self):
+        """Test update step evolves oscillator phases."""
+        state = create_l4_mrp_state(N=32, z0=0.5, seed=42)
+        new_state = mrp_l4_update_step(state, dt=0.1, K0=0.5)
+
+        # Phases should change
+        assert not np.allclose(new_state.phases, state.phases)
+        # Phases should be in valid range
+        assert all(0 <= p < 2 * np.pi for p in new_state.phases)
+
+    def test_mrp_l4_update_step_updates_position(self):
+        """Test update step integrates position."""
+        state = create_l4_mrp_state(
+            position=np.array([0.0, 0.0]),
+            velocity=np.array([1.0, 2.0]),
+            seed=42,
+        )
+        new_state = mrp_l4_update_step(state, dt=0.1)
+
+        expected_pos = np.array([0.1, 0.2])  # v * dt
+        np.testing.assert_array_almost_equal(new_state.position, expected_pos)
+
+    def test_mrp_l4_update_step_updates_global_phases(self):
+        """Test update step integrates global phases."""
+        state = create_l4_mrp_state(
+            velocity=np.array([1.0, 0.0]),
+            seed=42,
+        )
+        # Ensure initial global phases are zero
+        state.Phi_R = 0.0
+        state.Phi_G = 0.0
+        state.Phi_B = 0.0
+
+        new_state = mrp_l4_update_step(state, dt=0.1)
+
+        # At least one global phase should have changed
+        assert (new_state.Phi_R != 0.0 or
+                new_state.Phi_G != 0.0 or
+                new_state.Phi_B != 0.0)
+
+    def test_mrp_l4_update_step_multiple_steps_increase_coherence(self):
+        """Test multiple update steps can increase coherence."""
+        state = create_l4_mrp_state(N=32, z0=0.1, omega_std=0.05, seed=42)
+        initial_r = state.r_kuramoto
+
+        # Run many steps with strong coupling
+        for _ in range(500):
+            state = mrp_l4_update_step(state, dt=0.1, K0=1.0, lambda_neg=0.5)
+
+        # Coherence should increase
+        assert state.r_kuramoto > initial_r
+
+
+class TestMRPVerification:
+    """Tests for MRP 10-point verification."""
+
+    def test_verify_mrp_payloads_all_pass(self):
+        """Test verification passes with valid payloads."""
+        state = create_l4_mrp_state(seed=42)
+        payloads = create_phase_a_payloads(state)
+
+        result = verify_mrp_payloads(
+            payloads.r_payload,
+            payloads.g_payload,
+            payloads.b_verification,
+            payloads.r_header,
+        )
+
+        assert result.crc_r_ok
+        assert result.crc_g_ok
+        assert result.sha256_r_b64_ok
+        assert result.ecc_scheme_ok
+        assert result.parity_block_ok
+        assert result.critical_passed
+
+    def test_verify_mrp_payloads_crc_mismatch(self):
+        """Test verification detects CRC mismatch."""
+        state = create_l4_mrp_state(seed=42)
+        payloads = create_phase_a_payloads(state)
+
+        # Tamper with verification data
+        bad_verification = payloads.b_verification.copy()
+        bad_verification["crc_r"] = "DEADBEEF"
+
+        result = verify_mrp_payloads(
+            payloads.r_payload,
+            payloads.g_payload,
+            bad_verification,
+        )
+
+        assert not result.crc_r_ok
+        assert not result.critical_passed
+
+    def test_verify_mrp_payloads_parity_mismatch(self):
+        """Test verification detects parity mismatch."""
+        state = create_l4_mrp_state(seed=42)
+        payloads = create_phase_a_payloads(state)
+
+        # Tamper with parity
+        bad_verification = payloads.b_verification.copy()
+        bad_verification["parity_block_b64"] = "INVALID_PARITY"
+
+        result = verify_mrp_payloads(
+            payloads.r_payload,
+            payloads.g_payload,
+            bad_verification,
+        )
+
+        assert not result.parity_block_ok
+        assert not result.critical_passed
+
+    def test_mrp_verification_result_to_dict(self):
+        """Test MRPVerificationResult to_dict."""
+        result = MRPVerificationResult(
+            crc_r_ok=True,
+            crc_g_ok=True,
+            sha256_r_b64_ok=True,
+            ecc_scheme_ok=True,
+            parity_block_ok=True,
+            sidecar_sha256_ok=True,
+            sidecar_used_bits_math_ok=True,
+            sidecar_capacity_bits_ok=True,
+            sidecar_header_magic_ok=True,
+            sidecar_header_flags_crc_ok=True,
+        )
+
+        d = result.to_dict()
+        assert d["critical_passed"] is True
+        assert d["all_passed"] is True
+
+
+class TestL4MRPValidation:
+    """Tests for complete L4-MRP system validation."""
+
+    def test_validate_l4_mrp_system_l4_checks_pass(self):
+        """Test L4 identity checks pass."""
+        result = validate_l4_mrp_system()
+
+        assert result.l4_identity
+        assert result.critical_point
+        assert result.gap_value
+        assert result.k_value
+
+    def test_validate_l4_mrp_system_hex_symmetry_pass(self):
+        """Test hex symmetry checks pass."""
+        result = validate_l4_mrp_system()
+
+        assert result.hex_60_RG
+        assert result.hex_60_GB
+
+    def test_validate_l4_mrp_system_with_state(self):
+        """Test validation with state."""
+        # Create state with high coherence
+        state = create_l4_mrp_state(N=32, z0=L4.Z_C, seed=42)
+        # Artificially set high coherence for testing
+        state.r_kuramoto = 0.95
+        state.eta = compute_negentropy(L4.Z_C)
+
+        result = validate_l4_mrp_system(state, R=10.0)
+
+        assert result.coherence_threshold
+        assert result.negentropy_gate
+        assert result.complexity_threshold
+        assert result.k_formation
+
+    def test_validate_l4_mrp_system_with_payloads(self):
+        """Test validation includes MRP verification."""
+        state = create_l4_mrp_state(seed=42)
+        payloads = create_phase_a_payloads(state)
+
+        result = validate_l4_mrp_system(state, payloads=payloads)
+
+        assert result.mrp_verification is not None
+        assert result.mrp_verification.critical_passed
+
+    def test_validate_l4_mrp_system_to_dict(self):
+        """Test validation result to_dict."""
+        result = validate_l4_mrp_system()
+        d = result.to_dict()
+
+        assert "l4_identity" in d
+        assert "hex_60_RG" in d
+        assert "all_passed" in d
+
+
+class TestNavigationValidation:
+    """Tests for navigation validation functions."""
+
+    def test_validate_plane_wave_residual(self):
+        """Test plane wave residual validation."""
+        hex_waves = HexLatticeWavevectors()
+        N = 10
+        positions = np.array([[i, j] for i in range(N) for j in range(N)])
+
+        # Generate phases from plane wave
+        Phi = 0.5
+        phases = (np.dot(positions, hex_waves.k_R) + Phi) % (2 * np.pi)
+
+        passed, residual = validate_plane_wave_residual(
+            phases, positions, hex_waves.k_R, Phi
+        )
+
+        assert passed
+        assert residual < 0.01
+
+    def test_validate_loop_closure(self):
+        """Test loop closure validation."""
+        hex_waves = HexLatticeWavevectors()
+        start_pos = np.array([0.0, 0.0])
+
+        # Square loop: right, up, left, down
+        dt = 1.0
+        velocities = [
+            np.array([1.0, 0.0]),
+            np.array([0.0, 1.0]),
+            np.array([-1.0, 0.0]),
+            np.array([0.0, -1.0]),
+        ]
+
+        passed, error = validate_loop_closure(
+            start_pos, velocities, dt, hex_waves
+        )
+
+        assert passed
+        assert error < 1e-10
+
+
+class TestSteganographicEmbedding:
+    """Tests for steganographic image embedding."""
+
+    def test_encode_l4_mrp_state_to_image(self):
+        """Test state embedding in image."""
+        state = create_l4_mrp_state(seed=42)
+        cover = np.random.randint(0, 256, (50, 50, 3), dtype=np.uint8)
+
+        stego = encode_l4_mrp_state_to_image(state, cover)
+
+        assert stego.shape == cover.shape
+        assert stego.dtype == cover.dtype
+
+    def test_embedding_minimal_change(self):
+        """Test embedding changes pixels minimally."""
+        state = create_l4_mrp_state(seed=42)
+        cover = np.random.randint(0, 256, (50, 50, 3), dtype=np.uint8)
+
+        stego = encode_l4_mrp_state_to_image(state, cover, bits_per_channel=1)
+
+        # Max change should be 1 for 1-bit LSB
+        diff = np.abs(stego.astype(int) - cover.astype(int))
+        assert np.max(diff) <= 1
+
+    def test_embedding_with_lattice_positions(self):
+        """Test embedding with lattice positions."""
+        state = create_l4_mrp_state(seed=42)
+        # Use larger image to accommodate payload with lattice positions
+        cover = np.random.randint(0, 256, (200, 200, 3), dtype=np.uint8)
+        lattice_pos = [np.array([i, j]) for i in range(5) for j in range(5)]
+
+        stego = encode_l4_mrp_state_to_image(state, cover, lattice_pos)
+
+        assert stego.shape == cover.shape
+
+
+class TestMRPNavigationIntegration:
+    """Integration tests for MRP navigation system."""
+
+    def test_full_mrp_pipeline(self):
+        """Test complete MRP pipeline: create → update → encode → verify."""
+        # Create state
+        state = create_l4_mrp_state(
+            N=32,
+            z0=0.8,
+            position=np.array([1.0, 2.0]),
+            velocity=np.array([0.5, 0.3]),
+            seed=42,
+        )
+
+        # Run updates
+        for _ in range(10):
+            state = mrp_l4_update_step(state, dt=0.1, K0=0.5)
+
+        # Create payloads
+        lattice_pos = [np.array([i, j]) for i in range(3) for j in range(3)]
+        payloads = create_phase_a_payloads(state, lattice_pos)
+
+        # Verify payloads
+        verification = verify_mrp_payloads(
+            payloads.r_payload,
+            payloads.g_payload,
+            payloads.b_verification,
+            payloads.r_header,
+        )
+
+        assert verification.critical_passed
+
+        # Full validation
+        result = validate_l4_mrp_system(state, R=10.0, payloads=payloads)
+        assert result.l4_identity
+        assert result.hex_60_RG
+        assert result.hex_60_GB
+
+    def test_navigation_path_integration_consistency(self):
+        """Test path integration consistency across multiple steps."""
+        state = create_l4_mrp_state(
+            position=np.array([0.0, 0.0]),
+            velocity=np.array([0.1, 0.2]),
+            seed=42,
+        )
+        hex_waves = HexLatticeWavevectors()
+
+        # Track global phases and position
+        initial_pos = state.position.copy()
+        initial_phases = state.global_phases
+
+        # Run updates
+        for _ in range(100):
+            state = mrp_l4_update_step(state, dt=0.01, hex_waves=hex_waves)
+
+        # Position should have changed by velocity * total_time
+        expected_pos = initial_pos + state.velocity * 1.0
+        np.testing.assert_array_almost_equal(state.position, expected_pos, decimal=5)
+
+        # Global phases should have evolved
+        assert state.global_phases != initial_phases
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

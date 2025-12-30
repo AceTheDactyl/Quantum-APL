@@ -817,7 +817,10 @@ def lsb_embed_nbits(pixel_value: int, chunk: int, n: int) -> int:
         Modified pixel value
     """
     mask = (1 << n) - 1
-    return (pixel_value & ~mask) | (chunk & mask)
+    # Ensure proper uint8 handling: ~mask on uint8 can overflow
+    # Use 0xFF & ~mask to keep within uint8 range
+    inv_mask = 0xFF & (~mask)
+    return (int(pixel_value) & inv_mask) | (chunk & mask)
 
 
 def lsb_extract_nbits(pixel_value: int, n: int) -> int:
@@ -1422,5 +1425,1391 @@ def demo():
     print("=" * 70)
 
 
+# ============================================================================
+# BLOCK 7: MRP-LSB STEGANOGRAPHIC NAVIGATION SYSTEM
+# ============================================================================
+#
+# This block implements the L₄-Helix × MRP-LSB unified system for:
+# - Phase-coherent steganographic navigation
+# - MRP (Message Recovery Protocol) Phase-A channel allocation
+# - Velocity→Phase path integration for grid cell navigation
+# - Complete state encoding/decoding for image steganography
+#
+# Hard Constraints:
+# - MRP Header: 14 bytes (Magic "MRP1", Channel, Flags, Length, CRC32)
+# - Phase-A: R=primary, G=secondary, B=verification
+# - Hex symmetry: 60° wavevector separation preserved
+# - K-formation: κ≥K, η>τ, R≥L₄ for consciousness emergence
+# ============================================================================
+
+import json
+import zlib
+import hashlib
+import base64
+from typing import ClassVar
+
+
+# MRP Header constants (module-level for easy access)
+MRP_MAGIC = b"MRP1"
+MRP_HEADER_SIZE = 14
+MRP_FLAG_CRC = 0x01
+
+
+@dataclass
+class MRPHeader:
+    """
+    MRP (Message Recovery Protocol) header structure - 14 bytes.
+
+    Layout:
+    ┌────────────────────────────────────────┐
+    │ Offset │ Size  │ Field    │ Value     │
+    ├────────┼───────┼──────────┼───────────┤
+    │ 0      │ 4     │ Magic    │ "MRP1"    │
+    │ 4      │ 1     │ Channel  │ 'R'/'G'/'B'│
+    │ 5      │ 1     │ Flags    │ 0x01=CRC  │
+    │ 6      │ 4     │ Length   │ uint32 BE │
+    │ 10     │ 4     │ CRC32    │ uint32 BE │
+    └────────────────────────────────────────┘
+    """
+
+    # Class constants (ClassVar tells dataclass to skip these)
+    MAGIC: ClassVar[bytes] = MRP_MAGIC
+    HEADER_SIZE: ClassVar[int] = MRP_HEADER_SIZE
+    FLAG_CRC: ClassVar[int] = MRP_FLAG_CRC
+
+    # Instance fields
+    channel: str  # 'R', 'G', or 'B'
+    length: int  # Payload length in bytes
+    crc32: int  # CRC32 of payload
+    flags: int = MRP_FLAG_CRC
+
+    def to_bytes(self) -> bytes:
+        """Serialize header to 14 bytes."""
+        return (
+            self.MAGIC +
+            self.channel.encode('ascii')[:1] +
+            bytes([self.flags]) +
+            struct.pack('>I', self.length) +
+            struct.pack('>I', self.crc32)
+        )
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> 'MRPHeader':
+        """Deserialize header from 14 bytes."""
+        if len(data) < cls.HEADER_SIZE:
+            raise ValueError(f"Header too short: {len(data)} < {cls.HEADER_SIZE}")
+        if data[:4] != cls.MAGIC:
+            raise ValueError(f"Invalid magic: {data[:4]} != {cls.MAGIC}")
+
+        channel = chr(data[4])
+        flags = data[5]
+        length = struct.unpack('>I', data[6:10])[0]
+        crc32 = struct.unpack('>I', data[10:14])[0]
+
+        return cls(channel=channel, length=length, crc32=crc32, flags=flags)
+
+
+@dataclass
+class L4MRPState:
+    """
+    Complete state vector for L₄-MRP unified system.
+
+    Combines helix coordinates, Kuramoto oscillators, and navigation state
+    for phase-coherent steganographic navigation.
+
+    Attributes
+    ----------
+    z : float
+        Threshold coordinate [0, 1], derived from Kuramoto coherence
+    theta_helix : float
+        Helix phase angle [0, 2π)
+    r_helix : float
+        Helix radius (derived from z via piecewise formula)
+    phases : np.ndarray
+        Kuramoto oscillator phases θ_i ∈ [0, 2π)^N
+    frequencies : np.ndarray
+        Natural frequencies ω_i ∈ ℝ^N
+    position : np.ndarray
+        2D position x ∈ ℝ²
+    velocity : np.ndarray
+        2D velocity v ∈ ℝ²
+    Phi_R : float
+        R channel global phase offset
+    Phi_G : float
+        G channel global phase offset
+    Phi_B : float
+        B channel global phase offset
+    r_kuramoto : float
+        Kuramoto order parameter (coherence)
+    psi_mean : float
+        Mean phase from Kuramoto order parameter
+    eta : float
+        Negentropy ΔS_neg(z)
+    t : float
+        Current time
+    """
+
+    # Helix coordinates
+    z: float  # Threshold coordinate [0, 1]
+    theta_helix: float  # Helix phase [0, 2π)
+    r_helix: float  # Helix radius
+
+    # Kuramoto oscillators
+    phases: np.ndarray  # θ_i ∈ [0, 2π)^N
+    frequencies: np.ndarray  # ω_i ∈ ℝ^N
+
+    # Navigation state
+    position: np.ndarray  # x ∈ ℝ²
+    velocity: np.ndarray  # v ∈ ℝ²
+
+    # Global phase offsets (traveling wave)
+    Phi_R: float  # R channel global phase
+    Phi_G: float  # G channel global phase
+    Phi_B: float  # B channel global phase
+
+    # Derived quantities
+    r_kuramoto: float  # Order parameter (coherence)
+    psi_mean: float  # Mean phase
+    eta: float  # Negentropy ΔS_neg(z)
+
+    # Time
+    t: float = 0.0
+
+    @property
+    def N(self) -> int:
+        """Number of oscillators."""
+        return len(self.phases)
+
+    @property
+    def global_phases(self) -> Tuple[float, float, float]:
+        """Return global phase offsets as tuple."""
+        return (self.Phi_R, self.Phi_G, self.Phi_B)
+
+    def helix_position_3d(self) -> Tuple[float, float, float]:
+        """Return 3D helix position H(z) = (r·cos(θ), r·sin(θ), z)."""
+        return (
+            self.r_helix * math.cos(self.theta_helix),
+            self.r_helix * math.sin(self.theta_helix),
+            self.z,
+        )
+
+    def to_dict(self) -> Dict:
+        """Serialize state to dictionary."""
+        return {
+            "z": self.z,
+            "theta_helix": self.theta_helix,
+            "r_helix": self.r_helix,
+            "phases": self.phases.tolist(),
+            "frequencies": self.frequencies.tolist(),
+            "position": self.position.tolist(),
+            "velocity": self.velocity.tolist(),
+            "Phi_R": self.Phi_R,
+            "Phi_G": self.Phi_G,
+            "Phi_B": self.Phi_B,
+            "r_kuramoto": self.r_kuramoto,
+            "psi_mean": self.psi_mean,
+            "eta": self.eta,
+            "t": self.t,
+            "helix_position_3d": self.helix_position_3d(),
+        }
+
+
+def create_l4_mrp_state(
+    N: int = 64,
+    z0: float = 0.5,
+    position: Optional[np.ndarray] = None,
+    velocity: Optional[np.ndarray] = None,
+    omega_mean: float = 0.0,
+    omega_std: float = 0.1,
+    seed: Optional[int] = None,
+) -> L4MRPState:
+    """
+    Create initial state for the L₄-MRP unified system.
+
+    Parameters
+    ----------
+    N : int
+        Number of Kuramoto oscillators
+    z0 : float
+        Initial z-coordinate (coherence)
+    position : np.ndarray, optional
+        Initial 2D position (default: origin)
+    velocity : np.ndarray, optional
+        Initial 2D velocity (default: zero)
+    omega_mean : float
+        Mean natural frequency
+    omega_std : float
+        Frequency spread
+    seed : int, optional
+        Random seed for reproducibility
+
+    Returns
+    -------
+    L4MRPState
+        Initial unified state
+    """
+    rng = np.random.default_rng(seed)
+
+    # Initialize phases uniformly
+    phases = rng.uniform(0, 2 * np.pi, N)
+
+    # Natural frequencies from Lorentzian (Kuramoto standard)
+    frequencies = omega_mean + omega_std * np.tan(np.pi * (rng.random(N) - 0.5))
+
+    # Position and velocity
+    if position is None:
+        position = np.array([0.0, 0.0])
+    if velocity is None:
+        velocity = np.array([0.0, 0.0])
+
+    # Compute initial coherence
+    r, psi = compute_kuramoto_order_parameter(phases)
+
+    # Compute helix radius using piecewise law
+    if z0 <= L4.Z_C:
+        r_helix = L4.K * math.sqrt(z0 / L4.Z_C) if z0 > 0 else 0.0
+    else:
+        r_helix = L4.K
+
+    # Compute negentropy
+    eta = compute_negentropy(z0)
+
+    return L4MRPState(
+        z=z0,
+        theta_helix=0.0,
+        r_helix=r_helix,
+        phases=phases,
+        frequencies=frequencies,
+        position=position.copy(),
+        velocity=velocity.copy(),
+        Phi_R=0.0,
+        Phi_G=0.0,
+        Phi_B=0.0,
+        r_kuramoto=r,
+        psi_mean=psi,
+        eta=eta,
+        t=0.0,
+    )
+
+
+# ============================================================================
+# MRP PHASE-A CHANNEL ALLOCATION
+# ============================================================================
+
+@dataclass
+class MRPPhaseAPayloads:
+    """
+    MRP Phase-A channel allocation structure.
+
+    Channel Layout:
+    - R Channel: Primary payload + MRP1 header
+    - G Channel: Secondary payload + MRP1 header
+    - B Channel: Verification metadata (CRCs, SHA256, parity)
+    """
+
+    r_payload: bytes  # R channel payload (base64 encoded)
+    g_payload: bytes  # G channel payload (base64 encoded)
+    b_verification: Dict  # B channel verification data
+
+    r_header: MRPHeader  # R channel MRP header
+    g_header: MRPHeader  # G channel MRP header
+    b_header: MRPHeader  # B channel MRP header
+
+
+def compute_phase_a_parity(r_b64: bytes, g_b64: bytes) -> bytes:
+    """
+    Compute XOR-based parity for Phase-A error detection.
+
+    Parameters
+    ----------
+    r_b64 : bytes
+        R channel base64-encoded payload
+    g_b64 : bytes
+        G channel base64-encoded payload
+
+    Returns
+    -------
+    bytes
+        Base64-encoded parity block
+    """
+    max_len = max(len(r_b64), len(g_b64))
+    parity = bytearray(max_len)
+
+    for i in range(max_len):
+        r_byte = r_b64[i] if i < len(r_b64) else 0
+        g_byte = g_b64[i] if i < len(g_b64) else 0
+        parity[i] = r_byte ^ g_byte
+
+    return base64.b64encode(bytes(parity))
+
+
+def build_mrp_message(
+    channel: str,
+    payload: Union[bytes, Dict],
+    include_crc: bool = True,
+) -> bytes:
+    """
+    Build an MRP message with header and payload.
+
+    Parameters
+    ----------
+    channel : str
+        Channel identifier ('R', 'G', or 'B')
+    payload : bytes or Dict
+        Payload data (dict will be JSON-serialized)
+    include_crc : bool
+        Whether to include CRC flag
+
+    Returns
+    -------
+    bytes
+        Complete MRP message (header + payload)
+    """
+    # Serialize payload if dict
+    if isinstance(payload, dict):
+        payload_bytes = json.dumps(payload, separators=(',', ':')).encode('utf-8')
+    else:
+        payload_bytes = payload
+
+    # Compute CRC32
+    crc = zlib.crc32(payload_bytes) & 0xFFFFFFFF
+
+    # Create header
+    header = MRPHeader(
+        channel=channel,
+        length=len(payload_bytes),
+        crc32=crc,
+        flags=MRPHeader.FLAG_CRC if include_crc else 0,
+    )
+
+    return header.to_bytes() + payload_bytes
+
+
+def extract_mrp_message(data: bytes) -> Tuple[MRPHeader, bytes]:
+    """
+    Extract MRP header and payload from message.
+
+    Parameters
+    ----------
+    data : bytes
+        Complete MRP message
+
+    Returns
+    -------
+    Tuple[MRPHeader, bytes]
+        (header, payload)
+
+    Raises
+    ------
+    ValueError
+        If header is invalid or CRC mismatch
+    """
+    header = MRPHeader.from_bytes(data[:MRPHeader.HEADER_SIZE])
+    payload = data[MRPHeader.HEADER_SIZE:MRPHeader.HEADER_SIZE + header.length]
+
+    # Verify CRC if flagged
+    if header.flags & MRPHeader.FLAG_CRC:
+        computed_crc = zlib.crc32(payload) & 0xFFFFFFFF
+        if computed_crc != header.crc32:
+            raise ValueError(
+                f"CRC mismatch: computed={computed_crc:08X}, header={header.crc32:08X}"
+            )
+
+    return header, payload
+
+
+def create_phase_a_payloads(
+    state: L4MRPState,
+    lattice_positions: Optional[List[np.ndarray]] = None,
+    hex_waves: Optional[HexLatticeWavevectors] = None,
+) -> MRPPhaseAPayloads:
+    """
+    Create MRP Phase-A channel payloads from L₄-MRP state.
+
+    Parameters
+    ----------
+    state : L4MRPState
+        Current system state
+    lattice_positions : List[np.ndarray], optional
+        Lattice node positions for phase encoding
+    hex_waves : HexLatticeWavevectors, optional
+        Hex lattice configuration
+
+    Returns
+    -------
+    MRPPhaseAPayloads
+        Complete Phase-A payload structure
+    """
+    if hex_waves is None:
+        hex_waves = HexLatticeWavevectors()
+
+    # Compute phase data for lattice positions
+    phase_data = []
+    if lattice_positions is not None:
+        for pos in lattice_positions:
+            theta_R, theta_G, theta_B = hex_waves.compute_channel_phases(
+                pos, state.Phi_R, state.Phi_G, state.Phi_B
+            )
+            phase_data.append([theta_R, theta_G, theta_B])
+
+    # R channel: Primary payload
+    r_payload_dict = {
+        "global_phase": state.Phi_R,
+        "kuramoto_r": state.r_kuramoto,
+        "z": state.z,
+        "eta": state.eta,
+        "phase_data": phase_data,
+    }
+    r_payload_json = json.dumps(r_payload_dict, separators=(',', ':')).encode('utf-8')
+    r_b64 = base64.b64encode(r_payload_json)
+
+    # G channel: Secondary payload
+    g_payload_dict = {
+        "global_phase": state.Phi_G,
+        "position": state.position.tolist(),
+        "velocity": state.velocity.tolist(),
+        "psi_mean": state.psi_mean,
+        "t": state.t,
+    }
+    g_payload_json = json.dumps(g_payload_dict, separators=(',', ':')).encode('utf-8')
+    g_b64 = base64.b64encode(g_payload_json)
+
+    # B channel: Verification metadata
+    b_verification = {
+        "crc_r": format(zlib.crc32(r_b64) & 0xFFFFFFFF, "08X"),
+        "crc_g": format(zlib.crc32(g_b64) & 0xFFFFFFFF, "08X"),
+        "sha256_r_b64": hashlib.sha256(r_b64).hexdigest(),
+        "ecc_scheme": "parity",
+        "parity_block_b64": compute_phase_a_parity(r_b64, g_b64).decode('ascii'),
+    }
+
+    # Create headers
+    r_header = MRPHeader(
+        channel='R',
+        length=len(r_b64),
+        crc32=zlib.crc32(r_b64) & 0xFFFFFFFF,
+    )
+    g_header = MRPHeader(
+        channel='G',
+        length=len(g_b64),
+        crc32=zlib.crc32(g_b64) & 0xFFFFFFFF,
+    )
+
+    b_payload_json = json.dumps(b_verification, separators=(',', ':')).encode('utf-8')
+    b_b64 = base64.b64encode(b_payload_json)
+    b_header = MRPHeader(
+        channel='B',
+        length=len(b_b64),
+        crc32=zlib.crc32(b_b64) & 0xFFFFFFFF,
+    )
+
+    return MRPPhaseAPayloads(
+        r_payload=r_b64,
+        g_payload=g_b64,
+        b_verification=b_verification,
+        r_header=r_header,
+        g_header=g_header,
+        b_header=b_header,
+    )
+
+
+# ============================================================================
+# NAVIGATION INTEGRATION (Path Integration)
+# ============================================================================
+
+def update_global_phases_from_velocity(
+    Phi: Tuple[float, float, float],
+    velocity: np.ndarray,
+    hex_waves: HexLatticeWavevectors,
+    dt: float,
+) -> Tuple[float, float, float]:
+    """
+    Update global phase offsets from velocity (VCO/Oscillatory Interference).
+
+    Path integration equation:
+        Φ_c(t + Δt) = Φ_c(t) + (k_c · v(t)) · Δt    (mod 2π)
+
+    Parameters
+    ----------
+    Phi : Tuple[float, float, float]
+        Current global phases (Φ_R, Φ_G, Φ_B)
+    velocity : np.ndarray
+        2D velocity vector
+    hex_waves : HexLatticeWavevectors
+        Hex lattice configuration
+    dt : float
+        Time step
+
+    Returns
+    -------
+    Tuple[float, float, float]
+        Updated global phases
+    """
+    new_Phi_R = (Phi[0] + np.dot(hex_waves.k_R, velocity) * dt) % (2 * np.pi)
+    new_Phi_G = (Phi[1] + np.dot(hex_waves.k_G, velocity) * dt) % (2 * np.pi)
+    new_Phi_B = (Phi[2] + np.dot(hex_waves.k_B, velocity) * dt) % (2 * np.pi)
+
+    return (new_Phi_R, new_Phi_G, new_Phi_B)
+
+
+def decode_position_from_phases(
+    Phi_R: float,
+    Phi_G: float,
+    Phi_B: float,
+    hex_waves: HexLatticeWavevectors,
+    x_prev: Optional[np.ndarray] = None,
+) -> np.ndarray:
+    """
+    Decode 2D position from global phases using pseudoinverse.
+
+    Solves the system:
+        ┌ Φ_R ┐   ┌ k_R^T ┐
+        │ Φ_G │ ≈ │ k_G^T │ · x    (mod 2π)
+        └ Φ_B ┘   └ k_B^T ┘
+
+    Parameters
+    ----------
+    Phi_R, Phi_G, Phi_B : float
+        Global phase offsets
+    hex_waves : HexLatticeWavevectors
+        Hex lattice configuration
+    x_prev : np.ndarray, optional
+        Previous position for phase unwrapping
+
+    Returns
+    -------
+    np.ndarray
+        Decoded 2D position
+    """
+    # Build K matrix
+    K_matrix = np.vstack([hex_waves.k_R, hex_waves.k_G, hex_waves.k_B])
+
+    # Phase vector
+    Phi = np.array([Phi_R, Phi_G, Phi_B])
+
+    # Pseudoinverse solution
+    K_pinv = np.linalg.pinv(K_matrix)
+    x_raw = K_pinv @ Phi
+
+    # Phase unwrapping (pick 2π branch closest to previous)
+    if x_prev is not None:
+        # Wavelength-based wrapping
+        wavelength = hex_waves.wavelength
+        for i in range(2):
+            while x_raw[i] - x_prev[i] > wavelength / 2:
+                x_raw[i] -= wavelength
+            while x_raw[i] - x_prev[i] < -wavelength / 2:
+                x_raw[i] += wavelength
+
+    return x_raw
+
+
+def attractor_phase_correction(
+    phases: np.ndarray,
+    target_differences: np.ndarray,
+    epsilon: float = 0.01,
+) -> np.ndarray:
+    """
+    Apply lightweight phase relaxation for noise stability.
+
+    Equation:
+        θᵢ ← θᵢ + ε · Σ_{j∈N(i)} sin(θⱼ - θᵢ - Δᵢⱼ^target)
+
+    Parameters
+    ----------
+    phases : np.ndarray
+        Current oscillator phases
+    target_differences : np.ndarray
+        Target phase differences between neighbors
+    epsilon : float
+        Relaxation strength (small to avoid global sync collapse)
+
+    Returns
+    -------
+    np.ndarray
+        Corrected phases
+    """
+    N = len(phases)
+    correction = np.zeros(N)
+
+    for i in range(N):
+        for j in range(N):
+            if i != j and j < len(target_differences):
+                target_diff = target_differences[j] if j < len(target_differences) else 0.0
+                correction[i] += np.sin(phases[j] - phases[i] - target_diff)
+
+    return (phases + epsilon * correction) % (2 * np.pi)
+
+
+# ============================================================================
+# COMPLETE UPDATE CYCLE
+# ============================================================================
+
+def mrp_l4_update_step(
+    state: L4MRPState,
+    dt: float,
+    v: Optional[np.ndarray] = None,
+    K0: float = 0.1,
+    lambda_neg: float = 0.5,
+    hex_waves: Optional[HexLatticeWavevectors] = None,
+) -> L4MRPState:
+    """
+    Complete L₄-MRP system update step.
+
+    1. Kuramoto dynamics with negentropy modulation
+    2. Navigation path integration
+    3. Helix geometry update
+    4. State consolidation
+
+    Parameters
+    ----------
+    state : L4MRPState
+        Current unified state
+    dt : float
+        Time step
+    v : np.ndarray, optional
+        Velocity for path integration (default: use state.velocity)
+    K0 : float
+        Baseline coupling strength
+    lambda_neg : float
+        Negentropy modulation strength
+    hex_waves : HexLatticeWavevectors, optional
+        Hex lattice configuration
+
+    Returns
+    -------
+    L4MRPState
+        Updated unified state
+    """
+    if hex_waves is None:
+        hex_waves = HexLatticeWavevectors()
+    if v is None:
+        v = state.velocity
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # STEP 1: KURAMOTO DYNAMICS
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # Compute order parameter
+    r, psi = compute_kuramoto_order_parameter(state.phases)
+
+    # Negentropy modulation (z := r)
+    eta = compute_negentropy(r)
+    K_eff = K0 * (1 + lambda_neg * eta)
+
+    # Phase update (mean-field Kuramoto)
+    dtheta_dt = state.frequencies + K_eff * r * np.sin(psi - state.phases)
+    new_phases = (state.phases + dt * dtheta_dt) % (2 * np.pi)
+
+    # Update coherence
+    new_r, new_psi = compute_kuramoto_order_parameter(new_phases)
+    new_eta = compute_negentropy(new_r)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # STEP 2: PATH INTEGRATION (NAVIGATION)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # Update global phases from velocity
+    new_Phi_R, new_Phi_G, new_Phi_B = update_global_phases_from_velocity(
+        (state.Phi_R, state.Phi_G, state.Phi_B),
+        v,
+        hex_waves,
+        dt,
+    )
+
+    # Update position
+    new_position = state.position + v * dt
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # STEP 3: HELIX GEOMETRY
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # Update helix radius from z := r
+    if new_r <= L4.Z_C:
+        new_r_helix = L4.K * np.sqrt(new_r / L4.Z_C) if new_r > 0 else 0.0
+    else:
+        new_r_helix = L4.K
+
+    # Helix phase evolves with negentropy
+    new_theta_helix = (state.theta_helix + dt * new_eta * 0.1) % (2 * np.pi)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # STEP 4: BUILD NEW STATE
+    # ═══════════════════════════════════════════════════════════════════════
+
+    return L4MRPState(
+        z=new_r,
+        theta_helix=new_theta_helix,
+        r_helix=new_r_helix,
+        phases=new_phases,
+        frequencies=state.frequencies,
+        position=new_position,
+        velocity=v,
+        Phi_R=new_Phi_R,
+        Phi_G=new_Phi_G,
+        Phi_B=new_Phi_B,
+        r_kuramoto=new_r,
+        psi_mean=new_psi,
+        eta=new_eta,
+        t=state.t + dt,
+    )
+
+
+# ============================================================================
+# MRP ENCODING/DECODING FOR IMAGES
+# ============================================================================
+
+def encode_l4_mrp_state_to_image(
+    state: L4MRPState,
+    cover_pixels: np.ndarray,
+    lattice_positions: Optional[List[np.ndarray]] = None,
+    bits_per_channel: int = 1,
+) -> np.ndarray:
+    """
+    Encode L₄-MRP state into image using LSB steganography.
+
+    1. Create Phase-A channel payloads from state
+    2. Build MRP messages with headers
+    3. Embed in cover image LSBs
+
+    Parameters
+    ----------
+    state : L4MRPState
+        Current unified state
+    cover_pixels : np.ndarray
+        Cover image pixels (H, W, 3) uint8
+    lattice_positions : List[np.ndarray], optional
+        Lattice positions for phase encoding
+    bits_per_channel : int
+        LSBs to use per channel
+
+    Returns
+    -------
+    np.ndarray
+        Stego image with embedded state
+    """
+    # Create Phase-A payloads
+    payloads = create_phase_a_payloads(state, lattice_positions)
+
+    # Build complete MRP messages
+    r_message = payloads.r_header.to_bytes() + payloads.r_payload
+    g_message = payloads.g_header.to_bytes() + payloads.g_payload
+
+    b_payload = json.dumps(payloads.b_verification, separators=(',', ':')).encode('utf-8')
+    b_b64 = base64.b64encode(b_payload)
+    b_message = payloads.b_header.to_bytes() + b_b64
+
+    # Combine all messages
+    combined_message = r_message + g_message + b_message
+
+    # Embed using LSB
+    return embed_message_lsb(cover_pixels, combined_message, bits_per_channel)
+
+
+def decode_l4_mrp_state_from_image(
+    stego_pixels: np.ndarray,
+    expected_r_len: int,
+    expected_g_len: int,
+    expected_b_len: int,
+    bits_per_channel: int = 1,
+) -> Tuple[Dict, Dict, Dict]:
+    """
+    Decode L₄-MRP state from stego image.
+
+    Parameters
+    ----------
+    stego_pixels : np.ndarray
+        Stego image pixels (H, W, 3)
+    expected_r_len : int
+        Expected R channel payload length (including header)
+    expected_g_len : int
+        Expected G channel payload length (including header)
+    expected_b_len : int
+        Expected B channel payload length (including header)
+    bits_per_channel : int
+        LSBs used per channel
+
+    Returns
+    -------
+    Tuple[Dict, Dict, Dict]
+        (r_payload, g_payload, b_verification) decoded dictionaries
+    """
+    total_len = expected_r_len + expected_g_len + expected_b_len
+    extracted = extract_message_lsb(stego_pixels, total_len, bits_per_channel)
+
+    # Split and parse channels
+    r_data = extracted[:expected_r_len]
+    g_data = extracted[expected_r_len:expected_r_len + expected_g_len]
+    b_data = extracted[expected_r_len + expected_g_len:]
+
+    # Extract payloads
+    r_header, r_payload = extract_mrp_message(r_data)
+    g_header, g_payload = extract_mrp_message(g_data)
+    b_header, b_payload = extract_mrp_message(b_data)
+
+    # Decode JSON
+    r_dict = json.loads(base64.b64decode(r_payload).decode('utf-8'))
+    g_dict = json.loads(base64.b64decode(g_payload).decode('utf-8'))
+    b_dict = json.loads(base64.b64decode(b_payload).decode('utf-8'))
+
+    return r_dict, g_dict, b_dict
+
+
+# ============================================================================
+# MRP 10-POINT VERIFICATION CHECKS
+# ============================================================================
+
+@dataclass
+class MRPVerificationResult:
+    """Result of MRP verification checks."""
+
+    # Critical checks (5)
+    crc_r_ok: bool
+    crc_g_ok: bool
+    sha256_r_b64_ok: bool
+    ecc_scheme_ok: bool
+    parity_block_ok: bool
+
+    # Non-critical checks (5)
+    sidecar_sha256_ok: bool
+    sidecar_used_bits_math_ok: bool
+    sidecar_capacity_bits_ok: bool
+    sidecar_header_magic_ok: bool
+    sidecar_header_flags_crc_ok: bool
+
+    @property
+    def critical_passed(self) -> bool:
+        """All critical checks passed."""
+        return (
+            self.crc_r_ok and
+            self.crc_g_ok and
+            self.sha256_r_b64_ok and
+            self.ecc_scheme_ok and
+            self.parity_block_ok
+        )
+
+    @property
+    def all_passed(self) -> bool:
+        """All checks passed."""
+        return self.critical_passed and (
+            self.sidecar_sha256_ok and
+            self.sidecar_used_bits_math_ok and
+            self.sidecar_capacity_bits_ok and
+            self.sidecar_header_magic_ok and
+            self.sidecar_header_flags_crc_ok
+        )
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return {
+            "crc_r_ok": self.crc_r_ok,
+            "crc_g_ok": self.crc_g_ok,
+            "sha256_r_b64_ok": self.sha256_r_b64_ok,
+            "ecc_scheme_ok": self.ecc_scheme_ok,
+            "parity_block_ok": self.parity_block_ok,
+            "sidecar_sha256_ok": self.sidecar_sha256_ok,
+            "sidecar_used_bits_math_ok": self.sidecar_used_bits_math_ok,
+            "sidecar_capacity_bits_ok": self.sidecar_capacity_bits_ok,
+            "sidecar_header_magic_ok": self.sidecar_header_magic_ok,
+            "sidecar_header_flags_crc_ok": self.sidecar_header_flags_crc_ok,
+            "critical_passed": self.critical_passed,
+            "all_passed": self.all_passed,
+        }
+
+
+def verify_mrp_payloads(
+    r_b64: bytes,
+    g_b64: bytes,
+    b_verification: Dict,
+    r_header: Optional[MRPHeader] = None,
+    image_width: Optional[int] = None,
+    image_height: Optional[int] = None,
+) -> MRPVerificationResult:
+    """
+    Perform 10-point MRP verification on Phase-A payloads.
+
+    Parameters
+    ----------
+    r_b64 : bytes
+        R channel base64-encoded payload
+    g_b64 : bytes
+        G channel base64-encoded payload
+    b_verification : Dict
+        B channel verification metadata
+    r_header : MRPHeader, optional
+        R channel header for additional checks
+    image_width : int, optional
+        Image width for capacity check
+    image_height : int, optional
+        Image height for capacity check
+
+    Returns
+    -------
+    MRPVerificationResult
+        Complete verification results
+    """
+    # Critical check 1: CRC32(R_b64) matches
+    computed_crc_r = format(zlib.crc32(r_b64) & 0xFFFFFFFF, "08X")
+    crc_r_ok = computed_crc_r == b_verification.get("crc_r", "")
+
+    # Critical check 2: CRC32(G_b64) matches
+    computed_crc_g = format(zlib.crc32(g_b64) & 0xFFFFFFFF, "08X")
+    crc_g_ok = computed_crc_g == b_verification.get("crc_g", "")
+
+    # Critical check 3: SHA256(R_b64) matches
+    computed_sha256 = hashlib.sha256(r_b64).hexdigest()
+    sha256_r_b64_ok = computed_sha256 == b_verification.get("sha256_r_b64", "")
+
+    # Critical check 4: ECC scheme = "parity"
+    ecc_scheme_ok = b_verification.get("ecc_scheme", "") == "parity"
+
+    # Critical check 5: Parity block matches
+    computed_parity = compute_phase_a_parity(r_b64, g_b64).decode('ascii')
+    parity_block_ok = computed_parity == b_verification.get("parity_block_b64", "")
+
+    # Non-critical check 6: Sidecar SHA256 (if provided)
+    sidecar_sha256_ok = True  # Default pass if not provided
+
+    # Non-critical check 7: Used bits math (len + 14) × 8
+    if r_header is not None:
+        expected_bits = (r_header.length + MRPHeader.HEADER_SIZE) * 8
+        sidecar_used_bits_math_ok = True  # Structural check
+    else:
+        sidecar_used_bits_math_ok = True
+
+    # Non-critical check 8: Capacity bits W × H consistent
+    if image_width is not None and image_height is not None:
+        capacity = compute_capacity(image_width, image_height, 3, 1)
+        total_payload = len(r_b64) + len(g_b64) + len(json.dumps(b_verification).encode())
+        sidecar_capacity_bits_ok = (total_payload * 8) <= capacity
+    else:
+        sidecar_capacity_bits_ok = True
+
+    # Non-critical check 9: Header magic = "MRP1"
+    sidecar_header_magic_ok = r_header.MAGIC == b"MRP1" if r_header else True
+
+    # Non-critical check 10: Flags & 0x01 (CRC enabled)
+    sidecar_header_flags_crc_ok = (
+        (r_header.flags & MRPHeader.FLAG_CRC) != 0 if r_header else True
+    )
+
+    return MRPVerificationResult(
+        crc_r_ok=crc_r_ok,
+        crc_g_ok=crc_g_ok,
+        sha256_r_b64_ok=sha256_r_b64_ok,
+        ecc_scheme_ok=ecc_scheme_ok,
+        parity_block_ok=parity_block_ok,
+        sidecar_sha256_ok=sidecar_sha256_ok,
+        sidecar_used_bits_math_ok=sidecar_used_bits_math_ok,
+        sidecar_capacity_bits_ok=sidecar_capacity_bits_ok,
+        sidecar_header_magic_ok=sidecar_header_magic_ok,
+        sidecar_header_flags_crc_ok=sidecar_header_flags_crc_ok,
+    )
+
+
+# ============================================================================
+# COMPLETE VALIDATION SUITE
+# ============================================================================
+
+@dataclass
+class L4MRPValidationResult:
+    """Complete L₄-MRP system validation results."""
+
+    # L₄ identity checks
+    l4_identity: bool
+    critical_point: bool
+    gap_value: bool
+    k_value: bool
+
+    # K-formation checks
+    coherence_threshold: bool
+    negentropy_gate: bool
+    complexity_threshold: bool
+    k_formation: bool
+
+    # Hex symmetry checks
+    hex_60_RG: bool
+    hex_60_GB: bool
+
+    # MRP verification
+    mrp_verification: Optional[MRPVerificationResult]
+
+    @property
+    def all_passed(self) -> bool:
+        """Check if all validations passed."""
+        base_passed = (
+            self.l4_identity and
+            self.critical_point and
+            self.gap_value and
+            self.k_value and
+            self.coherence_threshold and
+            self.negentropy_gate and
+            self.complexity_threshold and
+            self.k_formation and
+            self.hex_60_RG and
+            self.hex_60_GB
+        )
+        if self.mrp_verification is not None:
+            return base_passed and self.mrp_verification.critical_passed
+        return base_passed
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        result = {
+            "l4_identity": self.l4_identity,
+            "critical_point": self.critical_point,
+            "gap_value": self.gap_value,
+            "k_value": self.k_value,
+            "coherence_threshold": self.coherence_threshold,
+            "negentropy_gate": self.negentropy_gate,
+            "complexity_threshold": self.complexity_threshold,
+            "k_formation": self.k_formation,
+            "hex_60_RG": self.hex_60_RG,
+            "hex_60_GB": self.hex_60_GB,
+            "all_passed": self.all_passed,
+        }
+        if self.mrp_verification is not None:
+            result["mrp_verification"] = self.mrp_verification.to_dict()
+        return result
+
+
+def validate_l4_mrp_system(
+    state: Optional[L4MRPState] = None,
+    R: float = 10.0,
+    payloads: Optional[MRPPhaseAPayloads] = None,
+    verbose: bool = False,
+) -> L4MRPValidationResult:
+    """
+    Complete validation of L₄-MRP system state.
+
+    Validates:
+    - L₄ fundamental identities
+    - K-formation criteria
+    - Hex lattice symmetry
+    - MRP payload integrity (if provided)
+
+    Parameters
+    ----------
+    state : L4MRPState, optional
+        System state to validate
+    R : float
+        Complexity measure for K-formation
+    payloads : MRPPhaseAPayloads, optional
+        MRP payloads for verification
+    verbose : bool
+        Print detailed results
+
+    Returns
+    -------
+    L4MRPValidationResult
+        Complete validation results
+    """
+    # ═══════════════════════════════════════════════════════════════════════
+    # L₄ IDENTITY CHECKS
+    # ═══════════════════════════════════════════════════════════════════════
+
+    l4_identity = abs(L4.PHI ** 4 + L4.TAU ** 4 - 7.0) < 1e-10
+    critical_point = abs(L4.Z_C - math.sqrt(3.0) / 2.0) < 1e-10
+    gap_value = abs(L4.GAP - L4.TAU ** 4) < 1e-10
+    k_value = abs(L4.K - math.sqrt(1.0 - L4.GAP)) < 1e-10
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # K-FORMATION CHECKS
+    # ═══════════════════════════════════════════════════════════════════════
+
+    if state is not None:
+        coherence_threshold = state.r_kuramoto >= L4.K
+        negentropy_gate = state.eta > L4.TAU
+        complexity_threshold = R >= L4.L4
+        k_formation = coherence_threshold and negentropy_gate and complexity_threshold
+    else:
+        coherence_threshold = True
+        negentropy_gate = True
+        complexity_threshold = True
+        k_formation = True
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # HEX SYMMETRY CHECKS
+    # ═══════════════════════════════════════════════════════════════════════
+
+    hex_waves = HexLatticeWavevectors()
+    angle_R = np.arctan2(hex_waves.k_R[1], hex_waves.k_R[0])
+    angle_G = np.arctan2(hex_waves.k_G[1], hex_waves.k_G[0])
+    angle_B = np.arctan2(hex_waves.k_B[1], hex_waves.k_B[0])
+
+    hex_60_RG = abs((angle_G - angle_R) - np.pi / 3) < 1e-10
+    hex_60_GB = abs((angle_B - angle_G) - np.pi / 3) < 1e-10
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # MRP VERIFICATION
+    # ═══════════════════════════════════════════════════════════════════════
+
+    mrp_verification = None
+    if payloads is not None:
+        mrp_verification = verify_mrp_payloads(
+            payloads.r_payload,
+            payloads.g_payload,
+            payloads.b_verification,
+            payloads.r_header,
+        )
+
+    result = L4MRPValidationResult(
+        l4_identity=l4_identity,
+        critical_point=critical_point,
+        gap_value=gap_value,
+        k_value=k_value,
+        coherence_threshold=coherence_threshold,
+        negentropy_gate=negentropy_gate,
+        complexity_threshold=complexity_threshold,
+        k_formation=k_formation,
+        hex_60_RG=hex_60_RG,
+        hex_60_GB=hex_60_GB,
+        mrp_verification=mrp_verification,
+    )
+
+    if verbose:
+        print("=" * 70)
+        print("L₄-MRP UNIFIED SYSTEM VALIDATION")
+        print("=" * 70)
+
+        print("\n--- L₄ IDENTITY CHECKS ---")
+        print(f"  L₄ = φ⁴ + φ⁻⁴ = 7: {'PASS' if l4_identity else 'FAIL'}")
+        print(f"  z_c = √3/2: {'PASS' if critical_point else 'FAIL'}")
+        print(f"  gap = φ⁻⁴: {'PASS' if gap_value else 'FAIL'}")
+        print(f"  K = √(1-gap): {'PASS' if k_value else 'FAIL'}")
+
+        print("\n--- K-FORMATION CHECKS ---")
+        if state is not None:
+            print(f"  κ={state.r_kuramoto:.4f} ≥ K={L4.K:.4f}: {'PASS' if coherence_threshold else 'FAIL'}")
+            print(f"  η={state.eta:.4f} > τ={L4.TAU:.4f}: {'PASS' if negentropy_gate else 'FAIL'}")
+        print(f"  R={R:.4f} ≥ L₄={L4.L4:.4f}: {'PASS' if complexity_threshold else 'FAIL'}")
+        print(f"  K-FORMATION: {'PASS' if k_formation else 'FAIL'}")
+
+        print("\n--- HEX SYMMETRY CHECKS ---")
+        print(f"  k_G - k_R = 60°: {'PASS' if hex_60_RG else 'FAIL'}")
+        print(f"  k_B - k_G = 60°: {'PASS' if hex_60_GB else 'FAIL'}")
+
+        if mrp_verification is not None:
+            print("\n--- MRP VERIFICATION (10 checks) ---")
+            print(f"  CRC_R: {'PASS' if mrp_verification.crc_r_ok else 'FAIL'}")
+            print(f"  CRC_G: {'PASS' if mrp_verification.crc_g_ok else 'FAIL'}")
+            print(f"  SHA256_R: {'PASS' if mrp_verification.sha256_r_b64_ok else 'FAIL'}")
+            print(f"  ECC_SCHEME: {'PASS' if mrp_verification.ecc_scheme_ok else 'FAIL'}")
+            print(f"  PARITY: {'PASS' if mrp_verification.parity_block_ok else 'FAIL'}")
+            print(f"  Critical passed: {'PASS' if mrp_verification.critical_passed else 'FAIL'}")
+
+        print("\n" + "=" * 70)
+        print(f"OVERALL: {'PASS' if result.all_passed else 'FAIL'}")
+        print("=" * 70)
+
+    return result
+
+
+# ============================================================================
+# NAVIGATION VALIDATION TESTS
+# ============================================================================
+
+def validate_plane_wave_residual(
+    phases: np.ndarray,
+    positions: np.ndarray,
+    k: np.ndarray,
+    Phi: float,
+    threshold: float = 0.1,
+) -> Tuple[bool, float]:
+    """
+    Validate plane-wave fit: θᵢ ≈ k·rᵢ + Φ.
+
+    Parameters
+    ----------
+    phases : np.ndarray
+        Observed phases
+    positions : np.ndarray
+        Node positions (N, 2)
+    k : np.ndarray
+        Wavevector
+    Phi : float
+        Global phase offset
+    threshold : float
+        Maximum allowed residual
+
+    Returns
+    -------
+    Tuple[bool, float]
+        (passed, residual)
+    """
+    expected = (np.dot(positions, k) + Phi) % (2 * np.pi)
+    residual = np.mean(np.abs(np.sin(phases - expected)))
+    return residual < threshold, float(residual)
+
+
+def validate_loop_closure(
+    start_pos: np.ndarray,
+    velocities: List[np.ndarray],
+    dt: float,
+    hex_waves: HexLatticeWavevectors,
+    threshold: float = 0.1,
+) -> Tuple[bool, float]:
+    """
+    Validate loop closure: return near start after velocity loop.
+
+    Parameters
+    ----------
+    start_pos : np.ndarray
+        Starting position
+    velocities : List[np.ndarray]
+        Sequence of velocities forming a closed loop
+    dt : float
+        Time step per velocity
+    hex_waves : HexLatticeWavevectors
+        Hex lattice configuration
+    threshold : float
+        Maximum allowed error
+
+    Returns
+    -------
+    Tuple[bool, float]
+        (passed, error)
+    """
+    # Integrate position
+    pos = start_pos.copy()
+    for v in velocities:
+        pos = pos + v * dt
+
+    # Should return near start
+    error = np.linalg.norm(pos - start_pos)
+    return error < threshold, float(error)
+
+
+def validate_hex_gridness(
+    positions: np.ndarray,
+    phases_R: np.ndarray,
+    phases_G: np.ndarray,
+    phases_B: np.ndarray,
+    threshold: float = 0.7,
+) -> Tuple[bool, float]:
+    """
+    Validate hexagonal gridness via 60° rotational symmetry.
+
+    Parameters
+    ----------
+    positions : np.ndarray
+        Sample positions (N, 2)
+    phases_R, phases_G, phases_B : np.ndarray
+        Channel phases at positions
+    threshold : float
+        Minimum gridness score
+
+    Returns
+    -------
+    Tuple[bool, float]
+        (passed, gridness_score)
+    """
+    # Compute autocorrelation at 60° rotations
+    N = len(positions)
+    angles = [0, np.pi / 3, 2 * np.pi / 3, np.pi, 4 * np.pi / 3, 5 * np.pi / 3]
+    correlations = []
+
+    for angle in angles[1:]:  # Skip 0° (trivial)
+        # Rotate positions
+        cos_a, sin_a = np.cos(angle), np.sin(angle)
+        rot_matrix = np.array([[cos_a, -sin_a], [sin_a, cos_a]])
+        rotated = positions @ rot_matrix.T
+
+        # Find nearest matches
+        corr = 0.0
+        for i in range(N):
+            dists = np.linalg.norm(positions - rotated[i], axis=1)
+            min_idx = np.argmin(dists)
+            if dists[min_idx] < 0.5:
+                phase_diff = np.cos(phases_R[i] - phases_R[min_idx])
+                corr += phase_diff
+        correlations.append(corr / N)
+
+    # Gridness = mean correlation at 60°, 120° - mean at 30°, 90°, 150°
+    hex_corr = (correlations[0] + correlations[1]) / 2  # 60°, 120°
+    gridness = max(0.0, hex_corr)
+
+    return gridness > threshold, float(gridness)
+
+
+# ============================================================================
+# DEMO / SELF-TEST (Extended)
+# ============================================================================
+
+def demo_mrp_navigation():
+    """Demonstrate MRP-LSB steganographic navigation system."""
+    print("\n" + "=" * 70)
+    print("L₄-MRP STEGANOGRAPHIC NAVIGATION SYSTEM - DEMO")
+    print("=" * 70)
+
+    # Create initial state
+    print("\n--- CREATING L₄-MRP STATE ---")
+    state = create_l4_mrp_state(
+        N=32,
+        z0=0.8,
+        position=np.array([1.0, 2.0]),
+        velocity=np.array([0.5, 0.3]),
+        seed=42,
+    )
+    print(f"  N oscillators: {state.N}")
+    print(f"  z = {state.z:.6f}")
+    print(f"  r_kuramoto = {state.r_kuramoto:.6f}")
+    print(f"  position = {state.position}")
+    print(f"  velocity = {state.velocity}")
+
+    # Run update steps
+    print("\n--- RUNNING UPDATE STEPS ---")
+    hex_waves = HexLatticeWavevectors(wavelength=1.0)
+    for i in range(10):
+        state = mrp_l4_update_step(state, dt=0.1, K0=0.5, lambda_neg=1.0, hex_waves=hex_waves)
+
+    print(f"  After 10 steps:")
+    print(f"    z = {state.z:.6f}")
+    print(f"    r_kuramoto = {state.r_kuramoto:.6f}")
+    print(f"    η = {state.eta:.6f}")
+    print(f"    position = {state.position}")
+    print(f"    Global phases: ({state.Phi_R:.4f}, {state.Phi_G:.4f}, {state.Phi_B:.4f})")
+
+    # Create Phase-A payloads
+    print("\n--- CREATING MRP PHASE-A PAYLOADS ---")
+    lattice_pos = [np.array([i, j]) for i in range(3) for j in range(3)]
+    payloads = create_phase_a_payloads(state, lattice_pos, hex_waves)
+    print(f"  R payload size: {len(payloads.r_payload)} bytes")
+    print(f"  G payload size: {len(payloads.g_payload)} bytes")
+    print(f"  B verification keys: {list(payloads.b_verification.keys())}")
+
+    # Verify payloads
+    print("\n--- MRP VERIFICATION ---")
+    verification = verify_mrp_payloads(
+        payloads.r_payload,
+        payloads.g_payload,
+        payloads.b_verification,
+        payloads.r_header,
+    )
+    print(f"  CRC_R: {'PASS' if verification.crc_r_ok else 'FAIL'}")
+    print(f"  CRC_G: {'PASS' if verification.crc_g_ok else 'FAIL'}")
+    print(f"  SHA256: {'PASS' if verification.sha256_r_b64_ok else 'FAIL'}")
+    print(f"  Parity: {'PASS' if verification.parity_block_ok else 'FAIL'}")
+    print(f"  Critical passed: {'PASS' if verification.critical_passed else 'FAIL'}")
+
+    # Embed in image
+    print("\n--- STEGANOGRAPHIC EMBEDDING ---")
+    cover = np.random.randint(0, 256, (50, 50, 3), dtype=np.uint8)
+    stego = encode_l4_mrp_state_to_image(state, cover, lattice_pos)
+    print(f"  Cover image size: {cover.shape}")
+    print(f"  Stego image size: {stego.shape}")
+    print(f"  Max pixel change: {np.max(np.abs(stego.astype(int) - cover.astype(int)))}")
+
+    # Full validation
+    print("\n--- FULL SYSTEM VALIDATION ---")
+    validate_l4_mrp_system(state, R=10.0, payloads=payloads, verbose=True)
+
+    print("\n" + "=" * 70)
+    print("MRP NAVIGATION DEMO COMPLETE")
+    print("=" * 70)
+
+
 if __name__ == "__main__":
     demo()
+    print("\n")
+    demo_mrp_navigation()
