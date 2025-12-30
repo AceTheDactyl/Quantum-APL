@@ -72,6 +72,22 @@ from .l4_helix_parameterization import (
     validate_l4_mrp_system,
     validate_plane_wave_residual,
     validate_loop_closure,
+    # Block 8: Unified Consciousness Framework
+    L4Params,
+    L4SystemState,
+    create_l4_system_state,
+    compute_helix_radius,
+    step,
+    validate_identities,
+    KFormationResult,
+    validate_k_formation_spec,
+    encode_image,
+    decode_image,
+    run_l4_validation_tests,
+    print_validation_report,
+    run_tests,
+    phase_to_symbol,
+    symbol_to_phase,
 )
 
 # Constants with extended exports
@@ -194,4 +210,21 @@ __all__ = [
     "validate_l4_mrp_system",
     "validate_plane_wave_residual",
     "validate_loop_closure",
+
+    # Unified Consciousness Framework (Block 8)
+    "L4Params",
+    "L4SystemState",
+    "create_l4_system_state",
+    "compute_helix_radius",
+    "step",
+    "validate_identities",
+    "KFormationResult",
+    "validate_k_formation_spec",
+    "encode_image",
+    "decode_image",
+    "run_l4_validation_tests",
+    "print_validation_report",
+    "run_tests",
+    "phase_to_symbol",
+    "symbol_to_phase",
 ]
