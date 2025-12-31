@@ -1040,6 +1040,111 @@ def compute_topological_charge(
     return winding_number
 
 
+def wrap_phase_diff(delta: float) -> float:
+    """
+    Wrap phase difference to [-π, π].
+
+    This is the proper unwrapping for topological charge calculations.
+    Using modular arithmetic: (d + π) mod 2π - π
+
+    Parameters
+    ----------
+    delta : float
+        Raw phase difference
+
+    Returns
+    -------
+    float
+        Wrapped phase difference in [-π, π]
+    """
+    return (delta + math.pi) % (2 * math.pi) - math.pi
+
+
+def topological_charge_field(
+    theta: np.ndarray,
+) -> np.ndarray:
+    """
+    Compute topological charge field over 2D phase array.
+
+    For each plaquette (2×2 cell), computes the winding number:
+        l = (1/2π) × (d1 + d2 + d3 + d4)
+
+    where d1, d2, d3, d4 are the wrapped phase differences around
+    the plaquette boundary (counterclockwise).
+
+    IMPORTANT: Phase differences must be wrapped to [-π, π] BEFORE
+    summing. This is critical for correct winding number calculation.
+    (A common bug is to loop over differences and reassign the loop
+    variable, which doesn't modify the original values.)
+
+    Parameters
+    ----------
+    theta : np.ndarray
+        2D phase field of shape (H, W)
+
+    Returns
+    -------
+    np.ndarray
+        Topological charge field of shape (H-1, W-1)
+        Each element is the winding number for that plaquette
+    """
+    if theta.ndim != 2:
+        raise ValueError(f"Expected 2D array, got shape {theta.shape}")
+
+    H, W = theta.shape
+
+    if H < 2 or W < 2:
+        return np.zeros((max(0, H - 1), max(0, W - 1)))
+
+    # Extract corners of each 2×2 plaquette
+    th00 = theta[:-1, :-1]  # Top-left
+    th10 = theta[1:, :-1]   # Bottom-left
+    th11 = theta[1:, 1:]    # Bottom-right
+    th01 = theta[:-1, 1:]   # Top-right
+
+    # Compute phase differences around plaquette (counterclockwise)
+    # Path: (0,0) → (1,0) → (1,1) → (0,1) → (0,0)
+    d1 = th10 - th00  # Down
+    d2 = th11 - th10  # Right
+    d3 = th01 - th11  # Up
+    d4 = th00 - th01  # Left (closes loop)
+
+    # CRITICAL: Wrap each difference to [-π, π] BEFORE summing
+    # This ensures proper handling of phase wrapping at 2π boundaries
+    d1_wrapped = np.mod(d1 + np.pi, 2 * np.pi) - np.pi
+    d2_wrapped = np.mod(d2 + np.pi, 2 * np.pi) - np.pi
+    d3_wrapped = np.mod(d3 + np.pi, 2 * np.pi) - np.pi
+    d4_wrapped = np.mod(d4 + np.pi, 2 * np.pi) - np.pi
+
+    # Total winding for each plaquette
+    total_winding = d1_wrapped + d2_wrapped + d3_wrapped + d4_wrapped
+
+    # Winding number is total winding / 2π (should be integer ±1, 0)
+    winding = np.round(total_winding / (2 * np.pi)).astype(int)
+
+    return winding
+
+
+def compute_total_topological_charge(theta: np.ndarray) -> int:
+    """
+    Compute total topological charge of a 2D phase field.
+
+    Sum of all plaquette winding numbers.
+
+    Parameters
+    ----------
+    theta : np.ndarray
+        2D phase field
+
+    Returns
+    -------
+    int
+        Total topological charge
+    """
+    field = topological_charge_field(theta)
+    return int(np.sum(field))
+
+
 def compute_vortex_density(lattice: HexagonalLattice) -> Tuple[float, List[Tuple[int, int]]]:
     """
     Compute vortex density and locate vortex cores.

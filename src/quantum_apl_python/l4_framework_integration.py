@@ -251,6 +251,228 @@ def ess_stability_metric(z: float) -> Dict[str, float]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# HOLOGRAPHIC PHASE EMISSION (Projector-Based)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Instead of sampling 3 individual oscillators, we project the full oscillator
+# array onto the 3 hexagonal wavevectors. This makes the MRP payload truly
+# "holographic" — the global phase gradient can be recovered from any fragment
+# via Fourier transform.
+#
+# The hexagonal wavevectors (from mrp_lsb):
+#   k₁ = [1, 0]       (East, 0°)
+#   k₂ = [½, √3/2]    (60° NE)
+#   k₃ = [½, -√3/2]   (120° SE / -60°)
+#
+# For each wavevector kⱼ, the emitted phase is the argument of the
+# complex order parameter:
+#   Φⱼ = arg(Σᵢ exp(i·θᵢ) · exp(-i·kⱼ·rᵢ))
+#
+# This is essentially a discrete Fourier projection onto the hex basis.
+
+def phases_to_emit(
+    theta: np.ndarray,
+    positions: np.ndarray = None,
+    wavelength: float = 1.0,
+) -> Tuple[float, float, float]:
+    """
+    Compute holographic phase triplet from oscillator array.
+
+    Projects the phase distribution onto the three hexagonal wavevectors,
+    yielding aggregate phases that encode the global lattice state.
+
+    Unlike sampling individual oscillators, this projector-based approach
+    enables Fourier recovery of the phase gradient from any fragment.
+
+    The emitted phase for wavevector kⱼ is:
+        Φⱼ = arg(Σᵢ exp(i·θᵢ) · exp(-i·2π/λ · kⱼ·rᵢ))
+
+    This is the phase of the Kuramoto-like order parameter
+    restricted to wavevector direction j.
+
+    Parameters
+    ----------
+    theta : np.ndarray
+        Oscillator phases, shape (N,) for 1D or (H, W) for 2D
+    positions : np.ndarray, optional
+        Oscillator positions, shape (N, 2). If None, uses grid positions.
+    wavelength : float
+        Spatial wavelength (grid period), default 1.0
+
+    Returns
+    -------
+    Tuple[float, float, float]
+        (Φ₁, Φ₂, Φ₃) projected phases in [0, 2π)
+    """
+    # Flatten theta if 2D
+    if theta.ndim == 2:
+        H, W = theta.shape
+        theta_flat = theta.flatten()
+        # Generate grid positions if not provided
+        if positions is None:
+            y_coords, x_coords = np.mgrid[0:H, 0:W]
+            positions = np.column_stack([x_coords.flatten(), y_coords.flatten()])
+    else:
+        theta_flat = theta
+        if positions is None:
+            # Default to 1D positions along x-axis
+            positions = np.column_stack([np.arange(len(theta_flat)), np.zeros(len(theta_flat))])
+
+    N = len(theta_flat)
+    if N == 0:
+        return (0.0, 0.0, 0.0)
+
+    # Hexagonal wavevectors (from mrp_lsb)
+    k_hex = np.array([
+        [1.0, 0.0],                      # k₁: East
+        [0.5, Z_CRITICAL],               # k₂: 60° NE (√3/2 from z_c)
+        [0.5, -Z_CRITICAL],              # k₃: -60° SE
+    ]) * (2 * np.pi / wavelength)
+
+    emitted_phases = []
+
+    for k in k_hex:
+        # Compute spatial phase modulation for this wavevector
+        # k · r for each oscillator
+        spatial_phase = positions @ k  # (N,)
+
+        # Complex order parameter for this wavevector:
+        # Z_k = (1/N) Σᵢ exp(i·θᵢ) · exp(-i·k·rᵢ)
+        #     = (1/N) Σᵢ exp(i·(θᵢ - k·rᵢ))
+        complex_sum = np.sum(np.exp(1j * (theta_flat - spatial_phase)))
+        Z_k = complex_sum / N
+
+        # Emitted phase is the argument of Z_k
+        # This is the "collective phase" along direction k
+        phi_k = np.angle(Z_k)
+
+        # Wrap to [0, 2π)
+        phi_k = phi_k % (2 * np.pi)
+
+        emitted_phases.append(phi_k)
+
+    return tuple(emitted_phases)
+
+
+def phases_to_emit_weighted(
+    theta: np.ndarray,
+    positions: np.ndarray,
+    weights: np.ndarray,
+    wavelength: float = 1.0,
+) -> Tuple[float, float, float]:
+    """
+    Compute weighted holographic phase triplet.
+
+    Like phases_to_emit, but weights each oscillator's contribution.
+    Useful when oscillators have different "importance" (e.g., near vortex cores).
+
+    Parameters
+    ----------
+    theta : np.ndarray
+        Oscillator phases (N,)
+    positions : np.ndarray
+        Oscillator positions (N, 2)
+    weights : np.ndarray
+        Oscillator weights (N,), should sum to 1 for normalization
+    wavelength : float
+        Spatial wavelength
+
+    Returns
+    -------
+    Tuple[float, float, float]
+        (Φ₁, Φ₂, Φ₃) weighted projected phases
+    """
+    N = len(theta)
+    if N == 0:
+        return (0.0, 0.0, 0.0)
+
+    # Normalize weights
+    w = weights / np.sum(weights) if np.sum(weights) > 0 else np.ones(N) / N
+
+    # Hexagonal wavevectors
+    k_hex = np.array([
+        [1.0, 0.0],
+        [0.5, Z_CRITICAL],
+        [0.5, -Z_CRITICAL],
+    ]) * (2 * np.pi / wavelength)
+
+    emitted_phases = []
+
+    for k in k_hex:
+        spatial_phase = positions @ k
+        # Weighted complex sum
+        complex_sum = np.sum(w * np.exp(1j * (theta - spatial_phase)))
+        phi_k = np.angle(complex_sum) % (2 * np.pi)
+        emitted_phases.append(phi_k)
+
+    return tuple(emitted_phases)
+
+
+def compute_order_parameters(
+    theta: np.ndarray,
+    positions: np.ndarray = None,
+    wavelength: float = 1.0,
+) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+    """
+    Compute both magnitude and phase of order parameters for hex wavevectors.
+
+    Returns the full Kuramoto-like order parameters (r, φ) for each
+    hexagonal wavevector direction.
+
+    Parameters
+    ----------
+    theta : np.ndarray
+        Oscillator phases
+    positions : np.ndarray, optional
+        Oscillator positions
+    wavelength : float
+        Spatial wavelength
+
+    Returns
+    -------
+    Tuple[Tuple[float, float, float], Tuple[float, float, float]]
+        ((r₁, r₂, r₃), (Φ₁, Φ₂, Φ₃)) magnitudes and phases
+    """
+    # Flatten if needed
+    if theta.ndim == 2:
+        H, W = theta.shape
+        theta_flat = theta.flatten()
+        if positions is None:
+            y_coords, x_coords = np.mgrid[0:H, 0:W]
+            positions = np.column_stack([x_coords.flatten(), y_coords.flatten()])
+    else:
+        theta_flat = theta
+        if positions is None:
+            positions = np.column_stack([np.arange(len(theta_flat)), np.zeros(len(theta_flat))])
+
+    N = len(theta_flat)
+    if N == 0:
+        return ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+
+    k_hex = np.array([
+        [1.0, 0.0],
+        [0.5, Z_CRITICAL],
+        [0.5, -Z_CRITICAL],
+    ]) * (2 * np.pi / wavelength)
+
+    magnitudes = []
+    phases = []
+
+    for k in k_hex:
+        spatial_phase = positions @ k
+        complex_sum = np.sum(np.exp(1j * (theta_flat - spatial_phase)))
+        Z_k = complex_sum / N
+
+        r_k = np.abs(Z_k)
+        phi_k = np.angle(Z_k) % (2 * np.pi)
+
+        magnitudes.append(r_k)
+        phases.append(phi_k)
+
+    return (tuple(magnitudes), tuple(phases))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MRP-RGB INTEGRATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -647,6 +869,10 @@ __all__ = [
     'compute_ess_coherence',
     'compute_ess_modulation',
     'ess_stability_metric',
+    # Holographic phase emission (projector-based)
+    'phases_to_emit',
+    'phases_to_emit_weighted',
+    'compute_order_parameters',
     # MRP integration
     'phases_to_solfeggio_rgb',
     'solfeggio_rgb_to_phases',
