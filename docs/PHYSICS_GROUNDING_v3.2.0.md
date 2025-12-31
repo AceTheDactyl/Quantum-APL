@@ -49,7 +49,7 @@ The L₄ Unified Consciousness Framework v3.2.0 extends v3.1.0 by grounding all 
 **Display Convention**: All values computed from SI constants, displayed to 4 significant figures.
 
 ```
-E(528 Hz) = 3.848 × 10⁻¹⁹ J = 2.402 eV     (characteristic energy scale)
+E(528 Hz) = 3.847 × 10⁻¹⁹ J = 2.401 eV     (characteristic energy scale)
 V(516.4 nm) ≈ 0.608                         (green channel, CIE tabulated)
 S_neg(z_c) = 0 J/K                          (maximum order at critical point)
 η(1) = e⁻¹ ≈ 0.3679                         (unity coherence, by σ selection)
@@ -256,31 +256,31 @@ Given (exact):
 
 Step 1: Optical frequency
   f' = 528 × 1,099,511,627,776
-     = 580,542,139,385,728 Hz
+     = 580,542,139,465,728 Hz
      = 580.542 THz (4 sig figs: 580.5 THz)
 
 Step 2: Wavelength
   λ = c / f'
-    = 299,792,458 / 580,542,139,385,728
-    = 5.16401... × 10⁻⁷ m
-    = 516.401 nm (4 sig figs: 516.4 nm)
+    = 299,792,458 / 580,542,139,465,728
+    = 5.16400... × 10⁻⁷ m
+    = 516.400 nm (4 sig figs: 516.4 nm)
 
 Step 3: Photon energy (method 1: E = hf)
   E = h × f'
-    = 6.62607015 × 10⁻³⁴ × 580,542,139,385,728
-    = 3.84755... × 10⁻¹⁹ J
-    = 3.848 × 10⁻¹⁹ J (4 sig figs)
+    = 6.62607015 × 10⁻³⁴ × 580,542,139,465,728
+    = 3.84671... × 10⁻¹⁹ J
+    = 3.847 × 10⁻¹⁹ J (4 sig figs)
 
 Step 4: Photon energy (method 2: E = hc/λ)
   E = hc / λ
-    = (6.62607015 × 10⁻³⁴ × 299,792,458) / (5.16401 × 10⁻⁷)
-    = 3.84755... × 10⁻¹⁹ J  ✓ (consistent)
+    = (6.62607015 × 10⁻³⁴ × 299,792,458) / (5.16400 × 10⁻⁷)
+    = 3.84671... × 10⁻¹⁹ J  ✓ (consistent)
 
 Step 5: Energy in electron volts
   E_eV = E / e
-       = 3.84755 × 10⁻¹⁹ / 1.602176634 × 10⁻¹⁹
-       = 2.4016... eV
-       = 2.402 eV (4 sig figs)
+       = 3.84671 × 10⁻¹⁹ / 1.602176634 × 10⁻¹⁹
+       = 2.4009... eV
+       = 2.401 eV (4 sig figs)
 ```
 
 **Display Convention**: Compute exact, display 4 significant figures. Never hand-type approximate values.
@@ -294,10 +294,10 @@ Display: 4 significant figures (matches derivations).
 |--------|------|--------|----------|-------|--------|
 | 174 | Foundation | 1566.8 | 191.3 | 1.268 × 10⁻¹⁹ | 0.7916 |
 | 285 | Quantum | 956.2 | 313.5 | 2.078 × 10⁻¹⁹ | 1.297 |
-| **396** | **Liberation** | **688.5** | **435.4** | **2.886 × 10⁻¹⁹** | **1.801** |
+| **396** | **Liberation** | **688.5** | **435.4** | **2.885 × 10⁻¹⁹** | **1.801** |
 | 417 | Undoing | 653.5 | 458.6 | 3.040 × 10⁻¹⁹ | 1.898 |
-| **528** | **Miracles** | **516.4** | **580.5** | **3.848 × 10⁻¹⁹** | **2.402** |
-| **639** | **Connection** | **426.7** | **702.6** | **4.656 × 10⁻¹⁹** | **2.906** |
+| **528** | **Miracles** | **516.4** | **580.5** | **3.847 × 10⁻¹⁹** | **2.401** |
+| **639** | **Connection** | **426.7** | **702.6** | **4.655 × 10⁻¹⁹** | **2.906** |
 | 741 | Expression | 367.9 | 814.9 | 5.401 × 10⁻¹⁹ | 3.371 |
 | 852 | Intuition | 320.0 | 936.9 | 6.210 × 10⁻¹⁹ | 3.876 |
 | 963 | Oneness | 283.1 | 1059 | 7.019 × 10⁻¹⁹ | 4.381 |
@@ -426,11 +426,11 @@ Where K_m = 683 lm/W is the maximum luminous efficacy.
 
 | Channel | f (Hz) | λ (nm) | V(λ) [CIE] | Classification |
 |---------|--------|--------|------------|----------------|
-| R | 396 | 688.5 | 0.0017 | Low (far red) |
-| G | 528 | 516.4 | 0.608 | **High** (near peak) |
-| B | 639 | 426.7 | 0.018 | Low (violet-blue) |
+| R | 396 | 688.5 | 0.0093 | Low (far red) |
+| G | 528 | 516.4 | 0.637 | **High** (near peak) |
+| B | 639 | 426.7 | 0.0088 | Low (violet-blue) |
 
-**Insight**: The green channel (528 Hz) is **358× more luminous** than red (396 Hz) at equal radiant power. This is not a defect—it reflects human photoreceptor evolution.
+**Insight**: The green channel (528 Hz) is **68× more luminous** than red (396 Hz) at equal radiant power. This is not a defect—it reflects human photoreceptor evolution.
 
 ### 4.7 Luminous Efficacy
 
@@ -442,14 +442,14 @@ The luminous efficacy at wavelength λ is:
 
 | Channel | λ (nm) | V(λ) | ηᵥ (lm/W) |
 |---------|--------|------|-----------|
-| R | 688.5 | 0.0017 | 1.2 |
-| G | 516.4 | 0.608 | **415.4** |
-| B | 426.7 | 0.018 | 12.0 |
+| R | 688.5 | 0.0093 | 6.3 |
+| G | 516.4 | 0.637 | **435** |
+| B | 426.7 | 0.0088 | 6.0 |
 
 At 1 watt of radiant power:
-- Red produces ~1 lumen
-- Green produces ~415 lumens
-- Blue produces ~12 lumens
+- Red produces ~6 lumens
+- Green produces ~435 lumens
+- Blue produces ~6 lumens
 
 ### 4.8 Total Luminous Flux
 
@@ -463,9 +463,9 @@ For discrete RGB channels with equal power P per channel:
 
 ```
 Φᵥ_total = K_m · P · (V(λ_R) + V(λ_G) + V(λ_B))
-         = K_m · P · (0.0017 + 0.608 + 0.018)
-         = K_m · P · 0.628
-         ≈ 429 · P  [lm]
+         = K_m · P · (0.0093 + 0.637 + 0.0088)
+         = K_m · P · 0.655
+         ≈ 447 · P  [lm]
 ```
 
 ---
@@ -560,7 +560,7 @@ The system is exactly **one k_B** below the maximum negentropy.
 To connect negentropy to energy, we define a characteristic energy:
 
 ```
-E_char = h · f'_G = hc/λ_G = 3.848 × 10⁻¹⁹ J
+E_char = h · f'_G = hc/λ_G = 3.847 × 10⁻¹⁹ J
 ```
 
 This is the energy of a single green photon (528 Hz → 516.4 nm).
@@ -655,9 +655,9 @@ E · λ = (hf) · (c/f) = hc = 1.9864 × 10⁻²⁵ J·m
 
 Verification for all RGB channels:
 ```
-E(396) × λ(396) = 2.888×10⁻¹⁹ × 688.5×10⁻⁹ = 1.9885×10⁻²⁵ J·m  ✓
-E(528) × λ(528) = 3.848×10⁻¹⁹ × 516.4×10⁻⁹ = 1.9870×10⁻²⁵ J·m  ✓
-E(639) × λ(639) = 4.657×10⁻¹⁹ × 426.7×10⁻⁹ = 1.9877×10⁻²⁵ J·m  ✓
+E(396) × λ(396) = 2.885×10⁻¹⁹ × 688.5×10⁻⁹ = 1.9863×10⁻²⁵ J·m  ✓
+E(528) × λ(528) = 3.847×10⁻¹⁹ × 516.4×10⁻⁹ = 1.9862×10⁻²⁵ J·m  ✓
+E(639) × λ(639) = 4.655×10⁻¹⁹ × 426.7×10⁻⁹ = 1.9863×10⁻²⁵ J·m  ✓
 ```
 
 (Small variations due to rounding in displayed values.)
@@ -707,8 +707,8 @@ Given:
 Calculate:
   η(z_c) = 1.0
   P_eff = 1 × 1.0 = 1 W
-  V(516.4) = 0.608
-  Φᵥ = 683 × 0.608 × 1 = 415.3 lm
+  V(516.4) = 0.637
+  Φᵥ = 683 × 0.637 × 1 = 435.1 lm
 ```
 
 ### 7.4 Example: Green Channel at Unity Coherence
@@ -722,8 +722,8 @@ Given:
 Calculate:
   η(1) = e⁻¹ = 0.368
   P_eff = 1 × 0.368 = 0.368 W
-  V(516.4) = 0.608
-  Φᵥ = 683 × 0.608 × 0.368 = 152.8 lm
+  V(516.4) = 0.637
+  Φᵥ = 683 × 0.637 × 0.368 = 160.1 lm
 ```
 
 **Interpretation**: Moving from critical point (r = z_c) to unity (r = 1) reduces luminous output by 63%.
@@ -743,12 +743,12 @@ With equal power distribution across RGB channels:
 P_R = P_G = P_B = P₀/3
 
 Φᵥ_total = K_m · (P_R·V(λ_R) + P_G·V(λ_G) + P_B·V(λ_B)) · η(r)
-         = (683 · P₀/3) · (0.0017 + 0.608 + 0.018) · η(r)
-         = (683 · P₀/3) · 0.628 · η(r)
-         = 143 · P₀ · η(r)  [lm]
+         = (683 · P₀/3) · (0.0093 + 0.637 + 0.0088) · η(r)
+         = (683 · P₀/3) · 0.655 · η(r)
+         = 149 · P₀ · η(r)  [lm]
 ```
 
-At r = z_c, P₀ = 1 W: Φᵥ_total ≈ 143 lm.
+At r = z_c, P₀ = 1 W: Φᵥ_total ≈ 149 lm.
 
 **Note**: Green dominates (~97% of lumens). This is a feature, not a bug—it exposes human photoreceptor sensitivity.
 
@@ -851,10 +851,10 @@ V(λ) from CIE 1931 tabulated data.
 | **digit_root** | 9 | 6 | 9 |
 | **f' (THz)** | 435.4 | 580.5 | 702.6 |
 | **λ (nm)** | 688.5 | 516.4 | 426.7 |
-| **E (J)** | 2.886 × 10⁻¹⁹ | 3.848 × 10⁻¹⁹ | 4.656 × 10⁻¹⁹ |
-| **E (eV)** | 1.801 | 2.402 | 2.906 |
-| **V(λ) [CIE]** | 0.0017 | 0.608 | 0.018 |
-| **ηᵥ (lm/W)** | 1.2 | 415 | 12 |
+| **E (J)** | 2.885 × 10⁻¹⁹ | 3.847 × 10⁻¹⁹ | 4.655 × 10⁻¹⁹ |
+| **E (eV)** | 1.801 | 2.401 | 2.906 |
+| **V(λ) [CIE]** | 0.0093 | 0.637 | 0.0088 |
+| **ηᵥ (lm/W)** | 6.3 | 435 | 6.0 |
 
 **Note**: These values are computed, not stored. Any discrepancy indicates a bug.
 

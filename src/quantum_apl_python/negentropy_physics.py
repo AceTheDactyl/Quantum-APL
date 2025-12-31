@@ -149,6 +149,8 @@ def negentropy_physical(r: float, sigma: float = SIGMA_CANONICAL) -> float:
 
     S_neg = k_B × ln(η) = -k_B × σ(r - z_c)²
 
+    Uses direct formula for numerical stability (avoids exp→log roundtrip).
+
     Properties:
         - S_neg(z_c) = 0 (maximum order, zero entropy)
         - S_neg < 0 away from z_c (entropy deficit = order)
@@ -161,10 +163,9 @@ def negentropy_physical(r: float, sigma: float = SIGMA_CANONICAL) -> float:
     Returns:
         S_neg in J/K (always ≤ 0, maximum 0 at r = z_c)
     """
-    eta = negentropy_dimensionless(r, sigma)
-    if eta <= 0:
-        return float('-inf')
-    return K_BOLTZMANN * math.log(eta)
+    # Direct formula: S_neg = -k_B × σ(r - z_c)²
+    # Equivalent to k_B × ln(exp(-σ(r-z_c)²)) but numerically stable
+    return -K_BOLTZMANN * sigma * (r - Z_C) ** 2
 
 
 def negentropy_physical_direct(r: float, sigma: float = SIGMA_CANONICAL) -> float:
