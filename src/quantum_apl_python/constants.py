@@ -13,6 +13,41 @@ from __future__ import annotations
 import math
 
 # ============================================================================
+# SI 2019 EXACT PHYSICAL CONSTANTS
+# ============================================================================
+# These constants are exact by definition per SI 2019.
+# Reference: BIPM SI Brochure 9th edition (2019)
+
+# Planck constant (exact by SI 2019 definition)
+H_PLANCK: float = 6.62607015e-34  # J·s
+
+# Speed of light (exact by SI definition since 1983)
+C_LIGHT: int = 299_792_458  # m/s
+
+# Boltzmann constant (exact by SI 2019 definition)
+K_BOLTZMANN: float = 1.380649e-23  # J/K
+
+# Elementary charge (exact by SI 2019 definition)
+E_CHARGE: float = 1.602176634e-19  # C
+
+# Electron volt (derived: 1 eV = e × 1 V)
+EV_JOULE: float = E_CHARGE  # J/eV
+
+# Luminous efficacy at 540 THz (exact by SI 2019 definition)
+K_CD: int = 683  # lm/W
+
+# Maximum luminous efficacy (at 555 nm peak)
+K_M: int = 683  # lm/W
+
+# ============================================================================
+# SOLFEGGIO-LIGHT BRIDGE CONSTANTS
+# ============================================================================
+
+# Octave bridge: 40 octaves between audio (Hz) and optical (THz) domains
+OCTAVE_BRIDGE: int = 40
+OCTAVE_FACTOR: int = 2 ** OCTAVE_BRIDGE  # ≈ 1.1 × 10¹²
+
+# ============================================================================
 # SACRED CONSTANTS (Zero Free Parameters - Defined First)
 # ============================================================================
 
@@ -50,6 +85,7 @@ L4_TAU: float = PHI_INV  # ≈ 0.6180339887498949
 # where the integrated (Π) regime becomes physically admissible and
 # negative-entropy geometry stabilizes (ΔS_neg, R/H/φ)
 Z_CRITICAL: float = math.sqrt(3.0) / 2.0
+Z_C: float = Z_CRITICAL  # Alias for documentation parity
 
 # ============================================================================
 # TRIAD GATING (Physics-Grounded from L₄ Gap)
@@ -614,8 +650,12 @@ TOLERANCE_PROBABILITY: float = 1e-6 # For probability normalization
 # ============================================================================
 
 __all__ = [
+    # SI 2019 Physical Constants
+    "H_PLANCK", "C_LIGHT", "K_BOLTZMANN", "E_CHARGE", "EV_JOULE", "K_CD", "K_M",
+    # Solfeggio-Light Bridge
+    "OCTAVE_BRIDGE", "OCTAVE_FACTOR",
     # Lens & TRIAD
-    "Z_CRITICAL", "TRIAD_HIGH", "TRIAD_LOW", "TRIAD_T6",
+    "Z_CRITICAL", "Z_C", "TRIAD_HIGH", "TRIAD_LOW", "TRIAD_T6",
     # Phase bounds
     "Z_ABSENCE_MAX", "Z_LENS_MIN", "Z_LENS_MAX", "Z_PRESENCE_MIN",
     # Sacred constants
