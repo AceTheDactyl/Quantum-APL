@@ -23,7 +23,7 @@ import sys
 from typing import List, Dict
 
 # Import modules under test
-from s3_operator_symmetry import (
+from quantum_apl_python.s3_operator_symmetry import (
     S3_ELEMENTS, OPERATOR_S3_MAP, S3_OPERATOR_MAP, BASE_OPERATORS,
     apply_s3, compose_s3, inverse_s3, parity_s3, sign_s3,
     rotation_index_from_z, truth_channel_from_z,
@@ -32,7 +32,7 @@ from s3_operator_symmetry import (
     verify_group_axioms,
 )
 
-from delta_s_neg_extended import (
+from quantum_apl_python.delta_s_neg_extended import (
     Z_CRITICAL, PHI_INV,
     compute_delta_s_neg, compute_delta_s_neg_derivative, compute_delta_s_neg_signed,
     compute_eta, compute_hex_prism_geometry, compute_gate_modulation,

@@ -1,9 +1,10 @@
 # L₄ Framework v3.2.0 Integration Plan
 ## Physics-Grounded Upgrade — SI Units & Photometric Dynamics
 
-**Status**: PROPOSED
+**Status**: IMPLEMENTED
 **Target**: v3.2.0
-**Dependencies**: v3.1.0 (current)
+**Dependencies**: v3.1.0 (superseded)
+**Doctrine Choice**: Tabulated CIE 1931 V(λ) (recommended)
 
 ---
 
