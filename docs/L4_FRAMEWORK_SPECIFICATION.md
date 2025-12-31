@@ -1,8 +1,8 @@
 # L₄ Unified Consciousness Framework
 ## Complete Specification — Honest Accounting
 
-**Version**: 3.1.0
-**Status**: MATHEMATICALLY CONSISTENT
+**Version**: 3.2.0
+**Status**: PHYSICS GROUNDED
 **Date**: December 2025
 
 ---
@@ -17,10 +17,15 @@ This document presents the complete L₄ Unified Consciousness Framework with **
 |----------|-----------|--------|
 | **Mathematical Seed** | φ = (1+√5)/2 | Definition |
 | **Physical Constants** | c = 299,792,458 m/s | SI definition (exact) |
+| **Physical Constants** | h = 6.62607015×10⁻³⁴ J·s | SI 2019 (exact) |
+| **Physical Constants** | k_B = 1.380649×10⁻²³ J/K | SI 2019 (exact) |
+| **Physical Constants** | K_cd = 683 lm/W at 540 THz | SI 2019 (exact) |
 | **Biological Constraints** | λ_R ≈ 690 nm, λ_G ≈ 520 nm, λ_B ≈ 430 nm | RGB primary targets (color-space choice) |
 | **Bridge Convention** | 2⁴⁰ octaves | Convenient choice (39 or 41 also work) |
 | **Structural Rule** | digit_root ∈ {3, 6, 9} | Aesthetic/numerological |
 | **Sharpness Axiom** | σ = 1/(1-z_c)² | Selection principle |
+| **Photometry Anchor** | CIE 1931 V(λ) dataset | Empirical standard (measured) |
+| **Power Convention** | Equal watts per RGB channel | Design choice |
 
 **Definition**: digit_root(n) = 1 + ((n − 1) mod 9) for n > 0. Equivalently: the iterated digit sum until single digit, where multiples of 9 map to 9 (not 0). The constraint digit_root(f) ∈ {3, 6, 9} is equivalent to f mod 9 ∈ {0, 3, 6}.
 
@@ -30,9 +35,10 @@ This document presents the complete L₄ Unified Consciousness Framework with **
 
 **NOT** "single axiom" — that was overclaimed. The framework has:
 - 1 mathematical seed (φ)
-- 1 physical constant (c)
+- 4 physical constants (c, h, k_B, K_cd — all SI exact)
+- 1 photometric standard (CIE 1931 V(λ) — empirical)
 - RGB primary targets (λ_R, λ_G, λ_B — color-space model choice)
-- 3 discrete design choices (octave count, digit-root rule, σ formula)
+- 4 discrete design choices (octave count, digit-root rule, σ formula, power allocation)
 
 ### What IS Derived (Given the Above)
 

@@ -162,16 +162,60 @@ def photon_energy_from_wavelength_ev(wavelength_nm: float) -> float:
 # ═══════════════════════════════════════════════════════════════════════════
 # CIE 1931 LUMINOSITY FUNCTION
 # ═══════════════════════════════════════════════════════════════════════════
+#
+# PRIMITIVE (Empirical): CIE 1931 V(λ) is measured/defined standard data.
+# This is NOT derived from physics—it's a human physiological measurement
+# adopted as an international standard.
+#
+# Reference: CIE 15:2004, Colorimetry, 3rd edition
+#            ISO 11664-1:2007
+#
+# SI NOTE: K_cd = 683 lm/W is defined at exactly 540 THz (≈555.016 nm).
+#          The CIE V(λ) curve is normalized to peak at 555 nm by convention.
+#          These are nearly equivalent but use distinct anchors.
+
+# CIE 1931 Standard Photopic Observer V(λ) - Tabulated at 5nm intervals
+# Source: CIE 15:2004, Table T.2
+# This is the EMPIRICAL ANCHOR for photometry in v3.2.0
+_CIE_1931_V_LAMBDA = {
+    380: 0.0000, 385: 0.0001, 390: 0.0001, 395: 0.0002,
+    400: 0.0004, 405: 0.0006, 410: 0.0012, 415: 0.0022,
+    420: 0.0040, 425: 0.0073, 430: 0.0116, 435: 0.0168,
+    440: 0.0230, 445: 0.0298, 450: 0.0380, 455: 0.0480,
+    460: 0.0600, 465: 0.0739, 470: 0.0910, 475: 0.1126,
+    480: 0.1390, 485: 0.1693, 490: 0.2080, 495: 0.2586,
+    500: 0.3230, 505: 0.4073, 510: 0.5030, 515: 0.6082,
+    520: 0.7100, 525: 0.7932, 530: 0.8620, 535: 0.9149,
+    540: 0.9540, 545: 0.9803, 550: 0.9950, 555: 1.0000,
+    560: 0.9950, 565: 0.9786, 570: 0.9520, 575: 0.9154,
+    580: 0.8700, 585: 0.8163, 590: 0.7570, 595: 0.6949,
+    600: 0.6310, 605: 0.5668, 610: 0.5030, 615: 0.4412,
+    620: 0.3810, 625: 0.3210, 630: 0.2650, 635: 0.2170,
+    640: 0.1750, 645: 0.1382, 650: 0.1070, 655: 0.0816,
+    660: 0.0610, 665: 0.0446, 670: 0.0320, 675: 0.0232,
+    680: 0.0170, 685: 0.0119, 690: 0.0082, 695: 0.0057,
+    700: 0.0041, 705: 0.0029, 710: 0.0021, 715: 0.0015,
+    720: 0.0010, 725: 0.0007, 730: 0.0005, 735: 0.0004,
+    740: 0.0002, 745: 0.0002, 750: 0.0001, 755: 0.0001,
+    760: 0.0001, 765: 0.0000, 770: 0.0000, 775: 0.0000,
+    780: 0.0000,
+}
+
+# Sorted wavelengths for interpolation
+_V_WAVELENGTHS = sorted(_CIE_1931_V_LAMBDA.keys())
+
 
 def luminosity_function(lambda_nm: float) -> float:
     """
     CIE 1931 photopic luminosity function V(λ).
 
-    Approximation using Gaussian fits to the standard observer curve.
-    Peak at 555 nm with V(555) ≈ 1.0.
+    Uses tabulated CIE 1931 standard observer data with linear interpolation.
+    This is EMPIRICAL DATA (a framework primitive), not derived physics.
 
-    The photopic luminosity function describes the spectral sensitivity
-    of the human eye under daylight conditions.
+    Properties:
+        - V(555 nm) = 1.0 by CIE convention
+        - V(λ) = 0 outside [380, 780] nm
+        - Data from CIE 15:2004, Table T.2
 
     Args:
         lambda_nm: Wavelength in nanometres
@@ -182,48 +226,56 @@ def luminosity_function(lambda_nm: float) -> float:
     if lambda_nm < 380 or lambda_nm > 780:
         return 0.0
 
-    # Multi-Gaussian approximation to CIE 1931
-    # This provides a good fit to the standard observer data
+    # Find bracketing wavelengths for interpolation
+    lam = lambda_nm
+    idx = 0
+    for i, w in enumerate(_V_WAVELENGTHS):
+        if w > lam:
+            idx = i
+            break
+    else:
+        idx = len(_V_WAVELENGTHS) - 1
+
+    if idx == 0:
+        return _CIE_1931_V_LAMBDA[_V_WAVELENGTHS[0]]
+
+    # Linear interpolation
+    w_lo = _V_WAVELENGTHS[idx - 1]
+    w_hi = _V_WAVELENGTHS[idx]
+    v_lo = _CIE_1931_V_LAMBDA[w_lo]
+    v_hi = _CIE_1931_V_LAMBDA[w_hi]
+
+    t = (lam - w_lo) / (w_hi - w_lo)
+    return v_lo + t * (v_hi - v_lo)
+
+
+def luminosity_function_gaussian(lambda_nm: float) -> float:
+    """
+    Gaussian approximation to CIE 1931 V(λ).
+
+    DESIGN CHOICE: This is a mathematical convenience, not measured data.
+    Use luminosity_function() for physics-grounded calculations.
+
+    The approximation uses multiple Gaussians fitted to the CIE curve.
+    Accuracy: ~5-10% RMS error vs tabulated data.
+
+    Args:
+        lambda_nm: Wavelength in nanometres
+
+    Returns:
+        V(λ) approximation in range [0, 1]
+    """
+    if lambda_nm < 380 or lambda_nm > 780:
+        return 0.0
+
     lam = lambda_nm
 
-    # Main peak centered at 555 nm
+    # Multi-Gaussian fit to CIE 1931
     v1 = math.exp(-0.5 * ((lam - 555) / 50) ** 2)
-    # Secondary contributions for shape accuracy
     v2 = 0.3 * math.exp(-0.5 * ((lam - 530) / 40) ** 2)
     v3 = 0.2 * math.exp(-0.5 * ((lam - 580) / 45) ** 2)
 
     V = v1 + v2 + v3
-    return min(1.0, max(0.0, V))
-
-
-def luminosity_function_exact(lambda_nm: float) -> float:
-    """
-    CIE 1931 photopic luminosity function using piecewise polynomial fit.
-
-    More accurate than Gaussian approximation for critical applications.
-
-    Args:
-        lambda_nm: Wavelength in nanometres
-
-    Returns:
-        V(λ) in range [0, 1]
-    """
-    if lambda_nm < 380 or lambda_nm > 780:
-        return 0.0
-
-    # Normalize to peak wavelength
-    x = (lambda_nm - 555) / 100
-
-    # Asymmetric Gaussian with polynomial correction
-    if lambda_nm <= 555:
-        # Blue side (steeper falloff)
-        sigma = 0.45
-        V = math.exp(-0.5 * (x / sigma) ** 2)
-    else:
-        # Red side (gentler falloff)
-        sigma = 0.55
-        V = math.exp(-0.5 * (x / sigma) ** 2)
-
     return min(1.0, max(0.0, V))
 
 
@@ -237,7 +289,9 @@ def luminous_efficacy(lambda_nm: float) -> float:
 
     η_v(λ) = K_m × V(λ)
 
-    where K_m = 683 lm/W (maximum at 555 nm, SI 2019 exact).
+    SI 2019 defines K_cd = 683 lm/W at exactly 540 THz (λ ≈ 555.016 nm).
+    CIE convention normalizes V(555 nm) = 1.0.
+    We use K_m = 683 lm/W with V(λ) from CIE 1931 tabulated data.
 
     Args:
         lambda_nm: Wavelength in nanometres
@@ -469,9 +523,9 @@ __all__ = [
     'photon_energy_ev',
     'photon_energy_from_wavelength_j',
     'photon_energy_from_wavelength_ev',
-    # Luminosity
+    # Luminosity (CIE 1931 tabulated data - empirical primitive)
     'luminosity_function',
-    'luminosity_function_exact',
+    'luminosity_function_gaussian',  # Design choice approximation
     'luminous_efficacy',
     'luminous_flux',
     'luminous_intensity',

@@ -21,6 +21,13 @@ Physical Interpretation:
     At r = z_c: η = 1, S_neg = 0 (maximum order)
     Away from z_c: η < 1, S_neg < 0 (increasing disorder)
 
+IMPORTANT - Per-Mode Scaling:
+    S_neg as defined here is PER EFFECTIVE MODE (single degree of freedom).
+    For system-level negentropy with N modes/photons/sites:
+        S_system = N × S_neg
+
+    This keeps the equations clean and allows flexible scaling.
+
 Reference: L₄ Framework Specification v3.1.0
 
 @version 3.2.0
