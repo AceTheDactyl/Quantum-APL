@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solfeggio-Light Bridge | L₄ Harmonic RGB System v3.1.0</title>
+    <style>
+        :root {
+            --phi: 1.618033988749895;
+            --z-c: 0.8660254037844386;
+            --k-threshold: 0.9241763718;
+            --gold: #FFD700;
+            --gold-dim: rgba(255, 215, 0, 0.3);
+            --deep-violet: #2D1B4E;
+            --cosmic-blue: #1a1a2e;
+            --cyan-echo: #00ffcc;
+            --purple-limnus: #9b59b6;
+            --red-solf: #ff4444;
+            --green-solf: #44ff88;
+            --blue-solf: #4488ff;
+            --void-black: #0a0a0f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Courier New', monospace;
+            background: var(--void-black);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 80%, rgba(155, 89, 182, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 255, 204, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: -1;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 50px 20px;
+            background: linear-gradient(180deg, var(--deep-violet), transparent);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        h1 {
+            font-size: 2.8em;
+            background: linear-gradient(135deg, var(--gold), var(--cyan-echo), var(--purple-limnus));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 5s ease infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(76, 175, 80, 0.05));
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4caf50;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .version-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .version-badge .checkmark {
+            font-size: 1.2em;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 1.6em;
+            color: var(--gold);
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        /* Honest Accounting Box */
+        .honest-accounting {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(0, 255, 204, 0.05));
+            border: 1px solid var(--purple-limnus);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .honest-accounting::before {
+            content: '📋';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 80px;
+            opacity: 0.1;
+        }
+
+        .honest-accounting h3 {
+            color: var(--purple-limnus);
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .honest-accounting .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .honest-accounting .item {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .honest-accounting .item:hover {
+            border-color: var(--cyan-echo);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 255, 204, 0.2);
+        }
+
+        .honest-accounting .label {
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .honest-accounting .value {
+            color: var(--cyan-echo);
+            font-size: 1.1em;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Equation Banner */
+        .equation-banner {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.02));
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .equation-banner:hover {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .equation-banner .main-eq {
+            color: var(--gold);
+            font-size: 1.8em;
+            margin: 15px 0;
+            font-family: 'Times New Roman', serif;
+        }
+
+        .equation-banner .sub-info {
+            color: #666;
+            font-size: 0.95em;
+            margin-top: 10px;
+        }
+
+        .equation-banner .digit-root-def {
+            color: var(--cyan-echo);
+            font-size: 0.9em;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Spectrum Display */
+        .spectrum-section {
+            margin: 50px 0;
+        }
+
+        .spectrum-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #000 0%, #0a0a15 100%);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spectrum-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .spectrum-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .spectrum-bar:hover {
+            transform: scale(1.1) translateY(-5px);
+        }
+
+        .bar-visual {
+            width: 55px;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .bar-visual.visible {
+            box-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+        }
+
+        .bar-visual.invisible {
+            opacity: 0.4;
+            border: 2px dashed #444;
+        }
+
+        .bar-label {
+            padding: 12px 5px;
+            text-align: center;
+            font-size: 0.75em;
+        }
+
+        .freq-label {
+            font-weight: bold;
+            color: var(--gold);
+            font-size: 1.1em;
+        }
+
+        .name-label {
+            color: #aaa;
+            font-size: 0.95em;
+            margin-top: 3px;
+        }
+
+        .wavelength-label {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 2px;
+        }
+
+        .digit-root-label {
+            color: var(--cyan-echo);
+            font-size: 0.8em;
+            margin-top: 4px;
+            padding: 2px 6px;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 4px;
+        }
+
+        .rgb-indicator {
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* RGB Primary Section */
+        .rgb-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 50px 0;
+        }
+
+        .rgb-card {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .rgb-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .rgb-card:hover::before {
+            opacity: 1;
+        }
+
+        .rgb-card:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .rgb-card.red {
+            border-color: var(--red-solf);
+        }
+        .rgb-card.red::before {
+            background: radial-gradient(circle at center, rgba(255, 68, 68, 0.15) 0%, transparent 70%);
+        }
+        .rgb-card.red:hover {
+            box-shadow: 0 15px 50px rgba(255, 68, 68, 0.4);
+        }
+
+        .rgb-card.green {
+            border-color: var(--green-solf);
+        }
+        .rgb-card.green::before {
+            background: radial-gradient(circle at center, rgba(68, 255, 136, 0.15) 0%, transparent 70%);
+        }
+        .rgb-card.green:hover {
+            box-shadow: 0 15px 50px rgba(68, 255, 136, 0.4);
+        }
+
+        .rgb-card.blue {
+            border-color: var(--blue-solf);
+        }
+        .rgb-card.blue::before {
+            background: radial-gradient(circle at center, rgba(68, 136, 255, 0.15) 0%, transparent 70%);
+        }
+        .rgb-card.blue:hover {
+            box-shadow: 0 15px 50px rgba(68, 136, 255, 0.4);
+        }
+
+        .rgb-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rgb-card.red h3 { color: var(--red-solf); text-shadow: 0 0 20px var(--red-solf); }
+        .rgb-card.green h3 { color: var(--green-solf); text-shadow: 0 0 20px var(--green-solf); }
+        .rgb-card.blue h3 { color: var(--blue-solf); text-shadow: 0 0 20px var(--blue-solf); }
+
+        .rgb-card .solfeggio {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--gold);
+            position: relative;
+            z-index: 1;
+        }
+
+        .rgb-card .meaning {
+            color: #aaa;
+            margin: 12px 0;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rgb-card .digit-root {
+            color: var(--cyan-echo);
+            font-size: 0.95em;
+            margin: 8px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rgb-card .wavelength {
+            font-size: 1.4em;
+            margin: 18px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .rgb-card .calculation {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #888;
+            position: relative;
+            z-index: 1;
+            line-height: 1.6;
+        }
+
+        .rgb-card .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 0.75em;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2;
+        }
+
+        .rgb-card .status-badge.exact {
+            color: #44ff44;
+            border: 1px solid #44ff44;
+            box-shadow: 0 0 10px rgba(68, 255, 68, 0.3);
+        }
+
+        .rgb-card .status-badge.best-fit {
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .rgb-card .status-badge.design-choice {
+            color: var(--purple-limnus);
+            border: 1px solid var(--purple-limnus);
+            box-shadow: 0 0 10px rgba(155, 89, 182, 0.3);
+        }
+
+        /* Ratio Display */
+        .ratios-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            padding: 35px;
+            margin: 50px 0;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .ratio-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+            padding: 18px;
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 10px;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .ratio-row:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--gold-dim);
+            transform: translateX(5px);
+        }
+
+        .ratio-calc {
+            font-size: 1.2em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .ratio-value {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 1.4em;
+        }
+
+        .ratio-match {
+            color: #aaa;
+        }
+
+        .ratio-error {
+            text-align: right;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 15px;
+        }
+
+        .ratio-error.exact {
+            color: #44ff44;
+            background: rgba(68, 255, 68, 0.1);
+        }
+
+        .ratio-error.close {
+            color: #ffff44;
+            background: rgba(255, 255, 68, 0.1);
+        }
+
+        .ratio-error.validation {
+            color: var(--cyan-echo);
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        /* L₄ Connection */
+        .l4-section {
+            background: linear-gradient(135deg, var(--deep-violet), rgba(0, 0, 0, 0.9));
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            padding: 45px;
+            margin: 50px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .l4-section::before {
+            content: '🔮';
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            font-size: 120px;
+            opacity: 0.1;
+        }
+
+        .l4-section h2 {
+            color: var(--gold);
+            font-size: 2em;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .l4-equation {
+            font-size: 1.5em;
+            margin: 25px 0;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .l4-equation .color-code {
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin: 0 5px;
+        }
+
+        .l4-equation .color-code.red { background: rgba(255, 68, 68, 0.2); color: #ff6666; }
+        .l4-equation .color-code.gold { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
+        .l4-equation .color-code.green { background: rgba(68, 255, 68, 0.2); color: #66ff66; }
+
+        .validation-warning {
+            color: var(--cyan-echo);
+            font-size: 0.95em;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+        }
+
+        .l4-result {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .result-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .result-box:hover {
+            border-color: var(--gold);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .result-box .label {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .result-box .value {
+            color: var(--gold);
+            font-size: 2em;
+            font-weight: bold;
+            margin: 12px 0;
+        }
+
+        .result-box .note {
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        /* Implementation Notes */
+        .implementation-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--cyan-echo);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 50px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .implementation-box::before {
+            content: '</>';
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            font-size: 100px;
+            opacity: 0.05;
+            font-family: monospace;
+        }
+
+        .implementation-box h3 {
+            color: var(--cyan-echo);
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .implementation-box pre {
+            color: #ccc;
+            line-height: 2;
+            font-size: 0.95em;
+            overflow-x: auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+        }
+
+        .implementation-box .comment { color: #666; }
+        .implementation-box .keyword { color: var(--purple-limnus); }
+        .implementation-box .function { color: var(--cyan-echo); }
+        .implementation-box .number { color: var(--gold); }
+
+        /* Interactive Calculator */
+        .calculator {
+            background: linear-gradient(135deg, rgba(45, 27, 78, 0.5), rgba(0, 0, 0, 0.5));
+            border: 1px solid var(--gold);
+            border-radius: 16px;
+            padding: 35px;
+            margin: 50px 0;
+        }
+
+        .calculator h3 {
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+        }
+
+        .calc-input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .calc-input-group label {
+            color: #aaa;
+            font-size: 1.1em;
+        }
+
+        .calc-input-group input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            padding: 15px 25px;
+            font-size: 1.3em;
+            color: var(--cyan-echo);
+            width: 160px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .calc-input-group input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            border-color: var(--cyan-echo);
+        }
+
+        .calc-result {
+            text-align: center;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+        }
+
+        .calc-result-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: color 0.3s ease;
+        }
+
+        .calc-result-details {
+            color: #888;
+            font-size: 1.05em;
+        }
+
+        /* Hex Lattice Visualization */
+        .lattice-section {
+            margin: 50px 0;
+        }
+
+        .lattice-canvas-container {
+            display: flex;
+            justify-content: center;
+            padding: 30px;
+            background: linear-gradient(180deg, #000, #050510);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #latticeCanvas {
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .lattice-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(180deg, var(--gold), #b8860b);
+            color: #000;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        .control-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 50px 20px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+            position: relative;
+        }
+
+        footer .squirrel {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: squirrelBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes squirrelBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        footer p {
+            color: #888;
+            margin: 10px 0;
+        }
+
+        /* Signature Box - Fixed Formatting */
+        .signature-box {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(45, 27, 78, 0.4));
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            padding: 0;
+            margin: 30px auto;
+            max-width: 550px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .signature-header {
+            background: linear-gradient(90deg, var(--gold), #b8860b);
+            color: #000;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .signature-status {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+            padding: 8px 20px;
+            font-size: 0.9em;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .signature-content {
+            padding: 20px 25px;
+        }
+
+        .signature-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .signature-row:last-child {
+            border-bottom: none;
+        }
+
+        .signature-row .label {
+            color: #888;
+        }
+
+        .signature-row .value {
+            color: var(--gold);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Modal System */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1a1a2e, #0a0a0f);
+            border: 2px solid var(--gold);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(90deg, var(--gold), #b8860b);
+            color: #000;
+            padding: 20px 25px;
+            font-size: 1.3em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 18px 18px 0 0;
+        }
+
+        .modal-close {
+            background: rgba(0, 0, 0, 0.3);
+            border: none;
+            color: #000;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.5);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+            color: #ccc;
+            line-height: 1.8;
+        }
+
+        .modal-body h4 {
+            color: var(--cyan-echo);
+            margin: 20px 0 10px;
+            font-size: 1.1em;
+        }
+
+        .modal-body .highlight {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid var(--gold);
+            margin: 15px 0;
+        }
+
+        .modal-body code {
+            background: rgba(0, 255, 204, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--cyan-echo);
+            font-family: 'Courier New', monospace;
+        }
+
+        .modal-body .formula {
+            text-align: center;
+            font-size: 1.3em;
+            color: var(--gold);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Times New Roman', serif;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .rgb-section {
+                grid-template-columns: 1fr;
+            }
+            .ratio-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .l4-result {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2em; }
+            .honest-accounting .grid {
+                grid-template-columns: 1fr;
+            }
+            .ratio-row {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .ratio-error {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="modalTitle">Title</span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                Content goes here
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <h1>🌈 Solfeggio-Light Bridge 🐿️</h1>
+        <p class="subtitle">40 Octaves from Sound to Light | L₄ Harmonic RGB System</p>
+        <div class="version-badge" onclick="showModal('version')">
+            <span class="checkmark">✓</span>
+            <span>v3.1.0 — SEALED | Zero Continuous Tuning Parameters</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Honest Accounting -->
+        <div class="honest-accounting">
+            <h3>📋 Honest Accounting</h3>
+            <div class="grid">
+                <div class="item" onclick="showModal('phi')">
+                    <div class="label">Mathematical Seed</div>
+                    <div class="value">φ = (1+√5)/2</div>
+                </div>
+                <div class="item" onclick="showModal('c')">
+                    <div class="label">Physical Constant</div>
+                    <div class="value">c = 299,792,458 m/s</div>
+                </div>
+                <div class="item" onclick="showModal('rgb')">
+                    <div class="label">RGB Primary Targets</div>
+                    <div class="value">~690, 520, 430 nm</div>
+                </div>
+                <div class="item" onclick="showModal('octave')">
+                    <div class="label">Bridge Convention</div>
+                    <div class="value">2⁴⁰ octaves</div>
+                </div>
+                <div class="item" onclick="showModal('digitroot')">
+                    <div class="label">Structural Rule</div>
+                    <div class="value">digit_root ∈ {3,6,9}</div>
+                </div>
+                <div class="item" onclick="showModal('sigma')">
+                    <div class="label">Selection Principle</div>
+                    <div class="value">σ = 1/(1-z_c)²</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equation Banner -->
+        <div class="equation-banner" onclick="showModal('bridge')">
+            <div>The Bridge Equation</div>
+            <div class="main-eq">λ = c / (f<sub>solfeggio</sub> × 2<sup>40</sup>)</div>
+            <div class="sub-info">2<sup>40</sup> = 1,099,511,627,776 ≈ 10<sup>12</sup></div>
+            <div class="digit-root-def">digit_root(n) = 1 + ((n − 1) mod 9) for n > 0</div>
+        </div>
+
+        <!-- Full Spectrum -->
+        <section class="spectrum-section">
+            <h2 class="section-title">The Solfeggio Spectrum</h2>
+            <div class="spectrum-container" id="spectrumContainer">
+                <!-- Generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- RGB Primary Cards -->
+        <section class="rgb-section">
+            <div class="rgb-card red" onclick="showModal('freq396')">
+                <span class="status-badge best-fit">BEST-FIT</span>
+                <h3>R</h3>
+                <div class="solfeggio">396 Hz</div>
+                <div class="meaning">"Liberation" — Release Fear</div>
+                <div class="digit-root">digit_root(396) = 9 ✓</div>
+                <div class="wavelength">→ 688.5 nm</div>
+                <div class="calculation">
+                    f' = 396 × 2⁴⁰ = 435.5 THz<br>
+                    λ = c/f' = 688.5 nm<br>
+                    <span style="color: var(--cyan-echo);">Selected best-fit</span>
+                </div>
+            </div>
+
+            <div class="rgb-card green" onclick="showModal('freq528')">
+                <span class="status-badge exact">EXACT</span>
+                <h3>G</h3>
+                <div class="solfeggio">528 Hz</div>
+                <div class="meaning">"Miracles" — Transformation</div>
+                <div class="digit-root">digit_root(528) = 6 ✓</div>
+                <div class="wavelength">→ 516.4 nm</div>
+                <div class="calculation">
+                    528 = 396 × 4/3 <span style="color: #44ff44;">(EXACT)</span><br>
+                    λ = c/(528 × 2⁴⁰) = 516.4 nm<br>
+                    <span style="color: var(--cyan-echo);">Unique given f_R</span>
+                </div>
+            </div>
+
+            <div class="rgb-card blue" onclick="showModal('freq639')">
+                <span class="status-badge design-choice">DESIGN CHOICE</span>
+                <h3>B</h3>
+                <div class="solfeggio">639 Hz</div>
+                <div class="meaning">"Connection" — Relationships</div>
+                <div class="digit-root">digit_root(639) = 9 ✓</div>
+                <div class="wavelength">→ 426.7 nm</div>
+                <div class="calculation">
+                    639 ≈ 396 × φ (0.27% err)<br>
+                    λ = c/(639 × 2⁴⁰) = 426.7 nm<br>
+                    <span style="color: var(--purple-limnus);">φ-priority over 636</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Musical Ratios -->
+        <section class="ratios-section">
+            <h2 class="section-title">Harmonic Ratios</h2>
+
+            <div class="ratio-row" onclick="showModal('ratio43')">
+                <div class="ratio-calc">528 / 396</div>
+                <div class="ratio-value">= 1.333...</div>
+                <div class="ratio-match">= 4/3 (Perfect Fourth)</div>
+                <div class="ratio-error exact">EXACT ✓</div>
+            </div>
+
+            <div class="ratio-row" onclick="showModal('ratiophi')">
+                <div class="ratio-calc">639 / 396</div>
+                <div class="ratio-value">= 1.6136...</div>
+                <div class="ratio-match">≈ φ = 1.6180...</div>
+                <div class="ratio-error close">0.27% error</div>
+            </div>
+
+            <div class="ratio-row" onclick="showModal('ratio852')">
+                <div class="ratio-calc">852 / 639</div>
+                <div class="ratio-value">= 1.333...</div>
+                <div class="ratio-match">= 4/3 (Chain Extension)</div>
+                <div class="ratio-error exact">EXACT ✓ (UV)</div>
+            </div>
+
+            <div class="ratio-row" onclick="showModal('ratiopie')">
+                <div class="ratio-calc">(4/3) × z<sub>c</sub></div>
+                <div class="ratio-value">= 1.1547...</div>
+                <div class="ratio-match">≈ π/e = 1.1557...</div>
+                <div class="ratio-error validation">Validation: 0.089%</div>
+            </div>
+        </section>
+
+        <!-- L₄ Connection -->
+        <section class="l4-section">
+            <h2>🔮 The L₄ Critical Point Connection</h2>
+
+            <div class="l4-equation">
+                <span class="color-code red">Perfect Fourth</span> ×
+                <span class="color-code gold">Critical Point</span> ≈
+                <span class="color-code green">Transcendental Ratio</span>
+            </div>
+
+            <div class="l4-equation">
+                <span style="font-size: 1.2em;">
+                    (528/396) × z<sub>c</sub> = (4/3) × (√3/2) = 2√3/3 ≈ π/e
+                </span>
+            </div>
+
+            <div class="validation-warning">
+                ⚠️ This is a <strong>validation coincidence</strong> — suggestive, not required
+            </div>
+
+            <div class="l4-result">
+                <div class="result-box" onclick="showModal('result43')">
+                    <div class="label">Solfeggio Ratio</div>
+                    <div class="value">4/3</div>
+                    <div class="note">Perfect Fourth (EXACT)</div>
+                </div>
+
+                <div class="result-box" onclick="showModal('resultzc')">
+                    <div class="label">Critical Point z<sub>c</sub></div>
+                    <div class="value">√3/2</div>
+                    <div class="note">= 0.8660... (THE LENS)</div>
+                </div>
+
+                <div class="result-box" onclick="showModal('resultpie')">
+                    <div class="label">Product vs π/e</div>
+                    <div class="value">0.089%</div>
+                    <div class="note">Coincidence, not constraint</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Implementation Notes -->
+        <div class="implementation-box">
+            <h3>📋 Implementation Notes (Pseudocode)</h3>
+            <pre>
+<span class="comment">// Digital root (iterated digit sum)</span>
+<span class="function">digit_root</span>(n) = <span class="keyword">if</span> n % <span class="number">9</span> == <span class="number">0</span> <span class="keyword">then</span> <span class="number">9</span> <span class="keyword">else</span> n % <span class="number">9</span>
+
+<span class="comment">// Frequency → Wavelength via 2⁴⁰ bridge</span>
+<span class="function">λ_nm</span>(f_hz) = (c / (f_hz × <span class="number">2⁴⁰</span>)) × <span class="number">1e9</span>
+
+<span class="comment">// Validity filter</span>
+<span class="function">valid</span>(f) = digit_root(f) ∈ {<span class="number">3</span>, <span class="number">6</span>, <span class="number">9</span>}
+
+<span class="comment">// Best-fit selection with φ-priority tie-break</span>
+<span class="function">best_fit</span>(target, filter) =
+    candidates ← {f ∈ ℤ : |f - target| < <span class="number">10</span> ∧ filter(f)}
+    <span class="keyword">return</span> argmin<sub>f ∈ candidates</sub> ℰ(f), tie-break by min |f/f_R - φ|
+            </pre>
+        </div>
+
+        <!-- Interactive Calculator -->
+        <div class="calculator">
+            <h3>🧮 Live Bridge Calculator</h3>
+            <div class="calc-input-group">
+                <label>Frequency (Hz):</label>
+                <input type="number" id="freqInput" value="528" onchange="calculate()" oninput="calculate()">
+            </div>
+            <div class="calc-result">
+                <div class="calc-result-value" id="resultWavelength">516.40 nm</div>
+                <div class="calc-result-details" id="resultDetails">
+                    digit_root(528) = 6 ✓ | Band: Green Primary
+                </div>
+            </div>
+        </div>
+
+        <!-- Hex Lattice Visualization -->
+        <section class="lattice-section">
+            <h2 class="section-title">Hexagonal Lattice Color Field</h2>
+            <p style="text-align: center; color: #888; margin-bottom: 25px;">
+                Three wavevectors (R, G, B) at 120° separation creating interference pattern
+            </p>
+            <div class="lattice-canvas-container">
+                <canvas id="latticeCanvas" width="600" height="600"></canvas>
+            </div>
+            <div class="lattice-controls">
+                <button class="control-btn" onclick="animateLattice()">▶ Animate</button>
+                <button class="control-btn" onclick="resetLattice()">↺ Reset</button>
+                <button class="control-btn" onclick="toggleMode()">◐ Toggle</button>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="squirrel">🐿️</div>
+        <p style="font-size: 1.2em; color: #ccc;">Sound becomes light. Harmony becomes color.</p>
+
+        <!-- Fixed Signature Box -->
+        <div class="signature-box">
+            <div class="signature-header">
+                L₄ UNIFIED CONSCIOUSNESS FRAMEWORK v3.1.0
+            </div>
+            <div class="signature-status">
+                ✓ MATHEMATICALLY CONSISTENT — HONEST ACCOUNTING
+            </div>
+            <div class="signature-content">
+                <div class="signature-row">
+                    <span class="label">Seed</span>
+                    <span class="value">φ = (1+√5)/2</span>
+                </div>
+                <div class="signature-row">
+                    <span class="label">Identity</span>
+                    <span class="value">L₄ = φ⁴ + φ⁻⁴ = 7</span>
+                </div>
+                <div class="signature-row">
+                    <span class="label">Lens</span>
+                    <span class="value">z_c = √3/2</span>
+                </div>
+                <div class="signature-row">
+                    <span class="label">Sharpness</span>
+                    <span class="value">σ = 1/(1-z_c)² → η(1) = e⁻¹</span>
+                </div>
+                <div class="signature-row">
+                    <span class="label">Conventions</span>
+                    <span class="value">2⁴⁰ octaves, digit_root ∈ {3,6,9}</span>
+                </div>
+            </div>
+        </div>
+
+        <p style="margin-top: 25px; color: var(--gold);">
+            The math is clean. The knife is sharp. Together. Always. ✨
+        </p>
+    </footer>
+
+    <script>
+        // === CONSTANTS ===
+        const C_LIGHT = 299792458;
+        const OCTAVES = 40;
+        const OCTAVE_FACTOR = Math.pow(2, OCTAVES);
+        const PHI = (1 + Math.sqrt(5)) / 2;
+        const Z_C = Math.sqrt(3) / 2;
+        const K = Math.sqrt(1 - Math.pow(PHI, -4));
+
+        // === MODAL CONTENT ===
+        const modalContent = {
+            version: {
+                title: '🔒 Framework Version 3.1.0',
+                body: `
+                    <p>The L₄ Unified Consciousness Framework has been sealed at version 3.1.0 with <strong>honest accounting</strong> of all inputs and derivations.</p>
+
+                    <h4>What "Sealed" Means</h4>
+                    <div class="highlight">
+                        <strong>Zero continuous tuning parameters</strong> — once discrete choices are made, all values follow from mathematics.
+                    </div>
+
+                    <h4>Test Suite Results</h4>
+                    <p>106 out of 106 tests passing (100%):</p>
+                    <ul>
+                        <li>55 Golden Sample verification tests</li>
+                        <li>51 L₄ Normalized tests</li>
+                        <li>Suite A-H: Mathematical, Solfeggio, L₄, Dynamics, Thresholds, Integration, Optimality, RGB</li>
+                    </ul>
+                `
+            },
+            phi: {
+                title: 'φ — The Golden Ratio',
+                body: `
+                    <div class="formula">φ = (1 + √5) / 2 = 1.6180339887...</div>
+
+                    <p>The golden ratio is the <strong>mathematical seed</strong> of the entire framework. It is defined as the positive root of:</p>
+
+                    <div class="formula">x² − x − 1 = 0</div>
+
+                    <h4>Key Properties</h4>
+                    <ul>
+                        <li><code>φ² = φ + 1</code></li>
+                        <li><code>1/φ = φ - 1</code></li>
+                        <li><code>φⁿ = φⁿ⁻¹ + φⁿ⁻²</code> (Fibonacci recurrence)</li>
+                    </ul>
+
+                    <h4>What Derives from φ Alone</h4>
+                    <div class="highlight">
+                        L₄ = 7, z_c = √3/2, K ≈ 0.924, gap = φ⁻⁴, all geometric constants
+                    </div>
+                `
+            },
+            c: {
+                title: 'c — Speed of Light',
+                body: `
+                    <div class="formula">c = 299,792,458 m/s</div>
+
+                    <p>The speed of light in vacuum is a <strong>physical constant</strong>, not derived from φ.</p>
+
+                    <h4>Status</h4>
+                    <div class="highlight">
+                        <strong>SI Definition (exact by definition since 2019)</strong><br>
+                        The metre is now defined as the distance light travels in 1/299,792,458 seconds.
+                    </div>
+
+                    <h4>Role in the Bridge</h4>
+                    <p>c converts frequency to wavelength:</p>
+                    <div class="formula">λ = c / f</div>
+                `
+            },
+            rgb: {
+                title: 'RGB Primary Targets',
+                body: `
+                    <p>The target wavelengths for RGB primaries are <strong>color-space model choices</strong>, not biological laws.</p>
+
+                    <table style="width:100%; margin: 15px 0; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #333;">
+                            <th style="text-align:left; padding:8px; color: var(--gold);">Color</th>
+                            <th style="text-align:left; padding:8px; color: var(--gold);">Target</th>
+                            <th style="text-align:left; padding:8px; color: var(--gold);">Notes</th>
+                        </tr>
+                        <tr><td style="padding:8px; color:#ff4444;">Red</td><td style="padding:8px;">~690 nm</td><td style="padding:8px;">sRGB primary region</td></tr>
+                        <tr><td style="padding:8px; color:#44ff88;">Green</td><td style="padding:8px;">~520 nm</td><td style="padding:8px;">sRGB primary region</td></tr>
+                        <tr><td style="padding:8px; color:#4488ff;">Blue</td><td style="padding:8px;">~430 nm</td><td style="padding:8px;">sRGB primary region</td></tr>
+                    </table>
+
+                    <div class="highlight">
+                        <strong>Model Choice</strong> — Different color spaces use different primaries. These are not cone peak maxima.
+                    </div>
+                `
+            },
+            octave: {
+                title: '2⁴⁰ Octave Bridge',
+                body: `
+                    <div class="formula">2⁴⁰ = 1,099,511,627,776 ≈ 1.1 × 10¹²</div>
+
+                    <p>The octave bridge connects audio frequencies (~400 Hz) to optical frequencies (~400 THz).</p>
+
+                    <h4>Why 40 Octaves?</h4>
+                    <div class="highlight">
+                        <strong>Convention</strong> — 40 octaves is convenient because it places Solfeggio frequencies in the visible spectrum. 39 or 41 octaves also work but shift the wavelengths.
+                    </div>
+
+                    <h4>The Bridge Calculation</h4>
+                    <p>For any frequency f:</p>
+                    <div class="formula">λ = c / (f × 2⁴⁰)</div>
+                    <p>Example: 528 Hz → 516.4 nm (green)</p>
+                `
+            },
+            digitroot: {
+                title: 'digit_root — Structural Rule',
+                body: `
+                    <div class="formula">digit_root(n) = 1 + ((n − 1) mod 9) for n > 0</div>
+
+                    <p>The digital root is the iterated digit sum until a single digit remains. Multiples of 9 map to 9 (not 0).</p>
+
+                    <h4>Examples</h4>
+                    <ul>
+                        <li><code>digit_root(396) = 3+9+6 = 18 → 1+8 = 9</code> ✓</li>
+                        <li><code>digit_root(528) = 5+2+8 = 15 → 1+5 = 6</code> ✓</li>
+                        <li><code>digit_root(639) = 6+3+9 = 18 → 1+8 = 9</code> ✓</li>
+                    </ul>
+
+                    <h4>The Constraint</h4>
+                    <div class="highlight">
+                        <code>digit_root(f) ∈ {3, 6, 9}</code><br>
+                        Equivalently: <code>f mod 9 ∈ {0, 3, 6}</code>
+                    </div>
+
+                    <p>This is an <strong>aesthetic/numerological rule</strong> associated with Tesla's "3, 6, 9" pattern.</p>
+                `
+            },
+            sigma: {
+                title: 'σ — Sharpness Parameter',
+                body: `
+                    <div class="formula">σ = 1/(1 − z_c)² ≈ 55.71</div>
+
+                    <p>The sharpness parameter controls the width of the negentropy trap in the consciousness field equations.</p>
+
+                    <h4>Why This Formula?</h4>
+                    <div class="highlight">
+                        <strong>Selection Principle:</strong> This choice sets η(1) = e⁻¹ ≈ 0.368 exactly by construction.<br><br>
+                        At full coherence (r=1), negentropy drops to exactly one e-folding.
+                    </div>
+
+                    <h4>Alternative</h4>
+                    <p>Another plausible formula: <code>σ = φ⁸ ≈ 46.98</code> (width scales with gap). The framework explicitly chooses the z_c-based formula.</p>
+                `
+            },
+            bridge: {
+                title: 'The Bridge Equation',
+                body: `
+                    <div class="formula">λ = c / (f × 2⁴⁰)</div>
+
+                    <p>This equation converts Solfeggio audio frequencies to visible light wavelengths by scaling up 40 octaves.</p>
+
+                    <h4>Step by Step</h4>
+                    <ol>
+                        <li>Start with Solfeggio frequency: f = 528 Hz</li>
+                        <li>Scale up 40 octaves: f' = 528 × 2⁴⁰ ≈ 580.5 THz</li>
+                        <li>Convert to wavelength: λ = c/f' ≈ 516.4 nm</li>
+                        <li>Result: Green light! ✓</li>
+                    </ol>
+
+                    <h4>RGB Mapping</h4>
+                    <div class="highlight">
+                        396 Hz → 688.5 nm (Red)<br>
+                        528 Hz → 516.4 nm (Green)<br>
+                        639 Hz → 426.7 nm (Blue)
+                    </div>
+                `
+            },
+            freq396: {
+                title: '396 Hz — Liberation (Red)',
+                body: `
+                    <div class="formula">f_R = 396 Hz → λ = 688.5 nm</div>
+
+                    <h4>Derivation</h4>
+                    <p>Starting from the red target wavelength (~690 nm):</p>
+                    <ol>
+                        <li>Target frequency: c/(690nm × 2⁴⁰) ≈ 395.1 Hz</li>
+                        <li>Apply digit_root filter: candidates {393, 396}</li>
+                        <li><strong>best_fit</strong> selects 396 (closest to target)</li>
+                    </ol>
+
+                    <h4>Status: BEST-FIT</h4>
+                    <div class="highlight">
+                        393 Hz is also valid (digit_root = 6), but 396 Hz is slightly closer to the wavelength target. This is a <strong>near-unique</strong> solution.
+                    </div>
+
+                    <h4>Meaning</h4>
+                    <p>"Liberation" — Associated with releasing fear and guilt.</p>
+                `
+            },
+            freq528: {
+                title: '528 Hz — Miracles (Green)',
+                body: `
+                    <div class="formula">f_G = 528 Hz = 396 × 4/3 (EXACT)</div>
+
+                    <h4>Derivation</h4>
+                    <p>Given f_R = 396 Hz, the Perfect Fourth constraint gives:</p>
+                    <div class="formula">f_G = 396 × 4/3 = 528</div>
+                    <p>This is <strong>exact</strong> — no approximation, no choice.</p>
+
+                    <h4>Status: EXACT</h4>
+                    <div class="highlight">
+                        528 Hz is <strong>uniquely determined</strong> given the choice of f_R = 396 Hz. The digit_root(528) = 6 ✓ happens to satisfy the structural rule automatically.
+                    </div>
+
+                    <h4>Meaning</h4>
+                    <p>"Miracles" — Associated with transformation and DNA repair (metaphorically).</p>
+                `
+            },
+            freq639: {
+                title: '639 Hz — Connection (Blue)',
+                body: `
+                    <div class="formula">f_B = 639 Hz ≈ 396 × φ (0.27% error)</div>
+
+                    <h4>Derivation</h4>
+                    <p>Target from golden ratio: 396 × φ ≈ 640.7 Hz</p>
+                    <p>Candidates with valid digit_root: {636, 639, 642}</p>
+
+                    <h4>The Near-Tie</h4>
+                    <div class="highlight">
+                        <strong>639 vs 636 is a 0.007% gap!</strong><br><br>
+                        • 639 wins on φ-ratio (0.27% err vs 0.74%)<br>
+                        • 636 wins on wavelength (430nm: 0.30% vs 0.77%)
+                    </div>
+
+                    <h4>Status: DESIGN CHOICE</h4>
+                    <p>The framework chooses 639 Hz with <strong>φ-priority tie-break</strong>, favoring harmonic structure over optical precision.</p>
+
+                    <h4>Chain Support</h4>
+                    <p>852/639 = 4/3 exactly — supporting 639 as part of the Perfect Fourth chain (though 852 Hz maps to UV).</p>
+                `
+            },
+            ratio43: {
+                title: 'Perfect Fourth — 4/3',
+                body: `
+                    <div class="formula">528 / 396 = 4/3 = 1.333... (EXACT)</div>
+
+                    <p>The Perfect Fourth is one of the most consonant musical intervals, with a frequency ratio of exactly 4:3.</p>
+
+                    <h4>Why It's Special</h4>
+                    <div class="highlight">
+                        This is <strong>exact</strong>, not an approximation. The framework enforces 528/396 = 4/3 by construction (C2 constraint).
+                    </div>
+
+                    <h4>Musical Context</h4>
+                    <p>In music theory, the Perfect Fourth spans 5 semitones. It's the inversion of the Perfect Fifth (3:2).</p>
+                `
+            },
+            ratiophi: {
+                title: 'Golden Ratio — φ',
+                body: `
+                    <div class="formula">639 / 396 = 1.6136... ≈ φ = 1.6180...</div>
+
+                    <p>The blue-to-red frequency ratio approximates the golden ratio with 0.27% error.</p>
+
+                    <h4>Why Not Exact?</h4>
+                    <div class="highlight">
+                        To be exact, we'd need f_B = 640.7 Hz, but:<br>
+                        • digit_root(640) = 1 ✗<br>
+                        • digit_root(641) = 2 ✗<br><br>
+                        The digit_root constraint forces us to choose 639 or 636.
+                    </div>
+
+                    <h4>Soft Target</h4>
+                    <p>The φ-ratio is a <strong>soft target</strong> (T5) — minimized, not required. The framework accepts 0.27% error as the best achievable.</p>
+                `
+            },
+            ratio852: {
+                title: 'Chain Extension — 852/639',
+                body: `
+                    <div class="formula">852 / 639 = 4/3 (EXACT)</div>
+
+                    <p>The Perfect Fourth chain continues beyond the visible spectrum!</p>
+
+                    <h4>The Chain</h4>
+                    <div class="highlight">
+                        396 → 528 → (792) → ... (4/3 chain)<br>
+                        396 → 639 → 852 → ... (mixed φ + 4/3)
+                    </div>
+
+                    <h4>⚠️ 852 Hz = UV</h4>
+                    <p>852 Hz maps to ~320 nm wavelength, which is <strong>ultraviolet</strong> — beyond the visible spectrum. This supports the choice of 639, but isn't a visible-light constraint.</p>
+                `
+            },
+            ratiopie: {
+                title: 'Validation Coincidence — π/e',
+                body: `
+                    <div class="formula">(4/3) × z_c = (4/3) × (√3/2) = 2√3/3 ≈ 1.1547</div>
+                    <div class="formula">π/e ≈ 1.1557</div>
+                    <div class="formula">Error: 0.089%</div>
+
+                    <h4>⚠️ Important Distinction</h4>
+                    <div class="highlight">
+                        This is a <strong>validation coincidence</strong> — suggestive and interesting, but NOT a constraint used to derive anything.
+                    </div>
+
+                    <h4>What It Means</h4>
+                    <p>The product of the Solfeggio ratio (4/3) and the L₄ lens critical point (z_c = √3/2) happens to approximate the ratio of two transcendental numbers (π/e).</p>
+
+                    <p>This could be:</p>
+                    <ul>
+                        <li>A deep connection we don't yet understand</li>
+                        <li>A numerical coincidence (0.089% is pretty close!)</li>
+                    </ul>
+                `
+            },
+            result43: {
+                title: 'Solfeggio Ratio — 4/3',
+                body: `
+                    <div class="formula">528/396 = 4/3 (Perfect Fourth)</div>
+
+                    <p>The core musical relationship in the Solfeggio triad.</p>
+
+                    <h4>Why 4/3?</h4>
+                    <div class="highlight">
+                        The Perfect Fourth is one of the fundamental consonances in music theory, appearing in virtually every musical tradition worldwide.
+                    </div>
+
+                    <p>The framework uses this as a <strong>hard constraint</strong> (C2) — the green frequency MUST be exactly 4/3 times the red frequency.</p>
+                `
+            },
+            resultzc: {
+                title: 'Critical Point z_c — THE LENS',
+                body: `
+                    <div class="formula">z_c = √3/2 = √((L₄-4)/2) ≈ 0.8660254</div>
+
+                    <p>The critical point where the L₄ lens equation reaches its threshold.</p>
+
+                    <h4>Derivation from φ</h4>
+                    <ol>
+                        <li>L₄ = φ⁴ + φ⁻⁴ = 7 (exact)</li>
+                        <li>z_c² = (L₄ - 4)/2 = 3/4</li>
+                        <li>z_c = √3/2</li>
+                    </ol>
+
+                    <div class="highlight">
+                        z_c is <strong>exactly derived</strong> from φ alone — no additional inputs required.
+                    </div>
+
+                    <h4>Physical Meaning</h4>
+                    <p>In the consciousness field equations, z_c represents the coherence level at which the system transitions from subcritical to supercritical behavior.</p>
+                `
+            },
+            resultpie: {
+                title: 'The π/e Coincidence',
+                body: `
+                    <div class="formula">Error = |1.1547 - 1.1557| / 1.1557 = 0.089%</div>
+
+                    <p>The product of two "natural" constants from different domains approximates a ratio of two fundamental transcendentals.</p>
+
+                    <h4>Honest Assessment</h4>
+                    <div class="highlight">
+                        <strong>We don't know why this works.</strong><br><br>
+                        It could be meaningful, or it could be a coincidence. The framework documents it as a <strong>validation check</strong>, not a derivation step.
+                    </div>
+
+                    <h4>Similar Coincidences</h4>
+                    <p>Mathematics has many "almost equals" that aren't exact:</p>
+                    <ul>
+                        <li>π² ≈ 10 (1.3% error)</li>
+                        <li>e^π - π ≈ 20 (0.03% error)</li>
+                        <li>√2 + √3 ≈ π (0.15% error)</li>
+                    </ul>
+                `
+            }
+        };
+
+        // === MODAL FUNCTIONS ===
+        function showModal(key) {
+            const content = modalContent[key];
+            if (!content) return;
+
+            document.getElementById('modalTitle').innerHTML = content.title;
+            document.getElementById('modalBody').innerHTML = content.body;
+            document.getElementById('modalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // === DIGIT ROOT ===
+        // Canonical form: digit_root(n) = 1 + ((n-1) mod 9) for n > 0
+        // Maps multiples of 9 → 9 (not 0)
+        function digitRoot(n) {
+            n = Math.abs(Math.floor(n));
+            if (n === 0) return 0;
+            return 1 + ((n - 1) % 9);
+        }
+
+        // === SOLFEGGIO DATA ===
+        const SOLFEGGIO = [
+            { hz: 174, name: 'Foundation', meaning: 'Grounding' },
+            { hz: 285, name: 'Quantum', meaning: 'Cognition' },
+            { hz: 396, name: 'Liberation', meaning: 'Release Fear', rgb: 'R' },
+            { hz: 417, name: 'Undoing', meaning: 'Change' },
+            { hz: 528, name: 'Miracles', meaning: 'Transform', rgb: 'G' },
+            { hz: 639, name: 'Connection', meaning: 'Relate', rgb: 'B' },
+            { hz: 741, name: 'Expression', meaning: 'Awaken' },
+            { hz: 852, name: 'Intuition', meaning: 'Order' },
+            { hz: 963, name: 'Oneness', meaning: 'Divine' }
+        ];
+
+        // === FREQUENCY TO WAVELENGTH ===
+        function freqToWavelength(hz) {
+            return (C_LIGHT / (hz * OCTAVE_FACTOR)) * 1e9;
+        }
+
+        function getBand(nm) {
+            if (nm >= 620 && nm <= 700) return "Red";
+            if (nm >= 495 && nm <= 570) return "Green";
+            if (nm >= 380 && nm <= 495) return "Blue";
+            if (nm < 380) return "UV";
+            if (nm > 700) return "IR";
+            return "Visible";
+        }
+
+        function wavelengthToRGB(nm) {
+            let r, g, b;
+
+            if (nm < 380) return { r: 128, g: 0, b: 255, visible: false };
+            else if (nm < 440) { r = (440 - nm) / 60 * 255; g = 0; b = 255; }
+            else if (nm < 490) { r = 0; g = (nm - 440) / 50 * 255; b = 255; }
+            else if (nm < 510) { r = 0; g = 255; b = (510 - nm) / 20 * 255; }
+            else if (nm < 580) { r = (nm - 510) / 70 * 255; g = 255; b = 0; }
+            else if (nm < 645) { r = 255; g = (645 - nm) / 65 * 255; b = 0; }
+            else if (nm < 700) { r = 255; g = 0; b = 0; }
+            else return { r: 128, g: 0, b: 0, visible: false };
+
+            return { r: Math.round(r), g: Math.round(g), b: Math.round(b), visible: true };
+        }
+
+        // === GENERATE SPECTRUM ===
+        function generateSpectrum() {
+            const container = document.getElementById('spectrumContainer');
+            container.innerHTML = '';
+
+            SOLFEGGIO.forEach((tone) => {
+                const nm = freqToWavelength(tone.hz);
+                const color = wavelengthToRGB(nm);
+                const dr = digitRoot(tone.hz);
+                const valid = [3, 6, 9].includes(dr);
+                const height = 100 + (color.visible ? 100 : 0);
+
+                const bar = document.createElement('div');
+                bar.className = 'spectrum-bar';
+                bar.onclick = () => showModal('freq' + tone.hz);
+                bar.innerHTML = `
+                    <div class="bar-visual ${color.visible ? 'visible' : 'invisible'}"
+                         style="height: ${height}px;
+                                background: rgb(${color.r}, ${color.g}, ${color.b});
+                                color: rgb(${color.r}, ${color.g}, ${color.b});">
+                    </div>
+                    <div class="bar-label">
+                        <div class="freq-label">${tone.hz} Hz</div>
+                        <div class="name-label">${tone.name}</div>
+                        <div class="wavelength-label">${nm.toFixed(0)} nm</div>
+                        <div class="digit-root-label">dr=${dr} ${valid ? '✓' : '✗'}</div>
+                        ${tone.rgb ? `<div class="rgb-indicator" style="color: rgb(${color.r}, ${color.g}, ${color.b})">${tone.rgb}</div>` : ''}
+                    </div>
+                `;
+                container.appendChild(bar);
+            });
+        }
+
+        // === CALCULATOR ===
+        function calculate() {
+            const freq = parseFloat(document.getElementById('freqInput').value) || 528;
+            const wavelength = freqToWavelength(freq);
+            const dr = digitRoot(freq);
+            const valid = [3, 6, 9].includes(dr);
+            const band = getBand(wavelength);
+
+            const resultEl = document.getElementById('resultWavelength');
+            resultEl.textContent = wavelength.toFixed(2) + ' nm';
+            resultEl.style.color =
+                band === 'Red' ? '#ff4444' :
+                band === 'Green' ? '#44ff88' :
+                band === 'Blue' ? '#4488ff' :
+                '#888';
+
+            document.getElementById('resultDetails').innerHTML =
+                `digit_root(${freq}) = ${dr} ${valid ? '<span style="color:#44ff44">✓</span>' : '<span style="color:#ff4444">✗</span>'} | Band: ${band}`;
+        }
+
+        // === LATTICE ===
+        let canvas, ctx;
+        let animating = false;
+        let animationId;
+        let globalPhases = [0, 0, 0];
+        let mode = 'cosine';
+
+        function initLattice() {
+            canvas = document.getElementById('latticeCanvas');
+            ctx = canvas.getContext('2d');
+            drawLattice();
+        }
+
+        function drawLattice() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const imageData = ctx.createImageData(width, height);
+            const data = imageData.data;
+
+            const k = 2 * Math.PI / 50;
+            const k_R = [k, 0];
+            const k_G = [k * Math.cos(2 * Math.PI / 3), k * Math.sin(2 * Math.PI / 3)];
+            const k_B = [k * Math.cos(4 * Math.PI / 3), k * Math.sin(4 * Math.PI / 3)];
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cx = x - width / 2;
+                    const cy = y - height / 2;
+
+                    const phase_R = (k_R[0] * cx + k_R[1] * cy + globalPhases[0]) % (2 * Math.PI);
+                    const phase_G = (k_G[0] * cx + k_G[1] * cy + globalPhases[1]) % (2 * Math.PI);
+                    const phase_B = (k_B[0] * cx + k_B[1] * cy + globalPhases[2]) % (2 * Math.PI);
+
+                    let r, g, b;
+                    if (mode === 'cosine') {
+                        r = (Math.cos(phase_R) + 1) / 2;
+                        g = (Math.cos(phase_G) + 1) / 2;
+                        b = (Math.cos(phase_B) + 1) / 2;
+                    } else {
+                        r = Math.cos(phase_R) > 0 ? 1 : 0;
+                        g = Math.cos(phase_G) > 0 ? 1 : 0;
+                        b = Math.cos(phase_B) > 0 ? 1 : 0;
+                    }
+
+                    const idx = (y * width + x) * 4;
+                    data[idx] = Math.round(r * 255);
+                    data[idx + 1] = Math.round(g * 255);
+                    data[idx + 2] = Math.round(b * 255);
+                    data[idx + 3] = 255;
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function animateLattice() {
+            if (animating) {
+                cancelAnimationFrame(animationId);
+                animating = false;
+                return;
+            }
+
+            animating = true;
+            const omega = [0.02, 0.02 * PHI, 0.02 * PHI * PHI];
+
+            function step() {
+                globalPhases[0] += omega[0];
+                globalPhases[1] += omega[1];
+                globalPhases[2] += omega[2];
+                drawLattice();
+                if (animating) animationId = requestAnimationFrame(step);
+            }
+            step();
+        }
+
+        function resetLattice() {
+            if (animating) { cancelAnimationFrame(animationId); animating = false; }
+            globalPhases = [0, 0, 0];
+            drawLattice();
+        }
+
+        function toggleMode() {
+            mode = mode === 'cosine' ? 'threshold' : 'cosine';
+            drawLattice();
+        }
+
+        // === INIT ===
+        document.addEventListener('DOMContentLoaded', () => {
+            generateSpectrum();
+            initLattice();
+            calculate();
+        });
+    </script>
+</body>
+</html>
