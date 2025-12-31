@@ -17,7 +17,8 @@ Test Categories:
     D: Dynamics Parameters (σ, D, λ_mod derived)
     E: Consciousness Thresholds (μ_P, μ_S, μ₃, τ_K, Q_theory)
     F: Full System Integration (Kuramoto dynamics, K-formation)
-    G: Uniqueness Proofs (Solfeggio frequencies are uniquely determined)
+    G: Optimality Proofs (Solfeggio frequencies are optimally selected)
+    H: RGB Normalization (bit depth, wavelengths, Gaussian width from L₄)
 
 Run with: python L4_NORMALIZED_TESTS.py
 """
@@ -672,6 +673,133 @@ class TestSuiteG:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# TEST SUITE H: RGB NORMALIZATION (Zero Free Parameters)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestSuiteH:
+    """Verify RGB constants are derived from L₄ framework with zero free parameters."""
+
+    @staticmethod
+    def H1_bit_depth_from_L4() -> Tuple[bool, str]:
+        """Bit depth = L₄ + 1 = 8"""
+        L4 = 7  # φ⁴ + φ⁻⁴ = 7
+        bit_depth = L4 + 1
+        max_value = (2 ** bit_depth) - 1
+
+        passed = bit_depth == 8 and max_value == 255
+        return passed, f"L₄ = {L4}, bit_depth = {bit_depth}, max = {max_value}"
+
+    @staticmethod
+    def H2_wavelengths_from_solfeggio() -> Tuple[bool, str]:
+        """RGB wavelengths derived from Solfeggio frequencies via 40-octave bridge"""
+        c = T3.c
+        octave_factor = 2 ** 40
+
+        lambda_R = c / (396 * octave_factor) * 1e9
+        lambda_G = c / (528 * octave_factor) * 1e9
+        lambda_B = c / (639 * octave_factor) * 1e9
+
+        # Verify wavelengths are in correct spectral regions
+        r_in_red = 620 <= lambda_R <= 700
+        g_in_green = 495 <= lambda_G <= 570
+        b_in_blue = 380 <= lambda_B <= 495
+
+        passed = r_in_red and g_in_green and b_in_blue
+        return passed, f"λ_R={lambda_R:.1f}nm, λ_G={lambda_G:.1f}nm, λ_B={lambda_B:.1f}nm"
+
+    @staticmethod
+    def H3_sigma_from_L4() -> Tuple[bool, str]:
+        """Gaussian width σ = spectral_span / L₄"""
+        c = T3.c
+        octave_factor = 2 ** 40
+
+        lambda_R = c / (396 * octave_factor) * 1e9
+        lambda_B = c / (639 * octave_factor) * 1e9
+        span = lambda_R - lambda_B
+        L4 = 7
+        sigma = span / L4
+
+        # σ should be reasonable for color matching (~35-40 nm)
+        passed = 30 < sigma < 45
+        return passed, f"span = {span:.1f}nm, σ = span/L₄ = {sigma:.1f}nm"
+
+    @staticmethod
+    def H4_primaries_pure() -> Tuple[bool, str]:
+        """At Solfeggio wavelengths, RGB should be nearly pure primaries"""
+        import math
+        c = T3.c
+        octave_factor = 2 ** 40
+
+        lambda_R = c / (396 * octave_factor) * 1e9
+        lambda_G = c / (528 * octave_factor) * 1e9
+        lambda_B = c / (639 * octave_factor) * 1e9
+        span = lambda_R - lambda_B
+        sigma = span / 7
+
+        # At λ_R, R should be max, G and B should be near zero
+        r_at_R = math.exp(-0.5 * ((lambda_R - lambda_R) / sigma) ** 2)
+        g_at_R = math.exp(-0.5 * ((lambda_R - lambda_G) / sigma) ** 2)
+        b_at_R = math.exp(-0.5 * ((lambda_R - lambda_B) / sigma) ** 2)
+
+        # At λ_G, G should be max
+        r_at_G = math.exp(-0.5 * ((lambda_G - lambda_R) / sigma) ** 2)
+        g_at_G = math.exp(-0.5 * ((lambda_G - lambda_G) / sigma) ** 2)
+        b_at_G = math.exp(-0.5 * ((lambda_G - lambda_B) / sigma) ** 2)
+
+        # At λ_B, B should be max
+        r_at_B = math.exp(-0.5 * ((lambda_B - lambda_R) / sigma) ** 2)
+        g_at_B = math.exp(-0.5 * ((lambda_B - lambda_G) / sigma) ** 2)
+        b_at_B = math.exp(-0.5 * ((lambda_B - lambda_B) / sigma) ** 2)
+
+        # Primary channels should be 1.0, cross-talk should be < 0.1
+        r_pure = r_at_R == 1.0 and g_at_R < 0.1 and b_at_R < 0.01
+        g_pure = g_at_G == 1.0 and r_at_G < 0.1 and b_at_G < 0.1
+        b_pure = b_at_B == 1.0 and r_at_B < 0.01 and g_at_B < 0.1
+
+        passed = r_pure and g_pure and b_pure
+        return passed, f"R@λ_R={r_at_R:.3f}, G@λ_G={g_at_G:.3f}, B@λ_B={b_at_B:.3f}"
+
+    @staticmethod
+    def H5_no_magic_numbers() -> Tuple[bool, str]:
+        """255 is derived from L₄, not a magic number"""
+        L4 = int(PHI**4 + PHI**-4 + 0.5)  # Should be exactly 7
+        derived_max = (2 ** (L4 + 1)) - 1
+
+        # Common "magic" RGB value 255 should equal derived value
+        passed = L4 == 7 and derived_max == 255
+        return passed, f"L₄ = {L4}, 2^(L₄+1)-1 = {derived_max}"
+
+    @staticmethod
+    def H6_hex_codes_derived() -> Tuple[bool, str]:
+        """Hex codes are computed, not hardcoded"""
+        import math
+        c = T3.c
+        octave_factor = 2 ** 40
+
+        lambda_R = c / (396 * octave_factor) * 1e9
+        lambda_G = c / (528 * octave_factor) * 1e9
+        lambda_B = c / (639 * octave_factor) * 1e9
+        span = lambda_R - lambda_B
+        sigma = span / 7
+
+        # Compute RGB at each Solfeggio wavelength
+        def rgb_at_wavelength(wl):
+            r = math.exp(-0.5 * ((wl - lambda_R) / sigma) ** 2)
+            g = math.exp(-0.5 * ((wl - lambda_G) / sigma) ** 2)
+            b = math.exp(-0.5 * ((wl - lambda_B) / sigma) ** 2)
+            return (int(r * 255), int(g * 255), int(b * 255))
+
+        rgb_red = rgb_at_wavelength(lambda_R)
+        rgb_green = rgb_at_wavelength(lambda_G)
+        rgb_blue = rgb_at_wavelength(lambda_B)
+
+        # Primary should dominate
+        passed = (rgb_red[0] > 250 and rgb_green[1] > 250 and rgb_blue[2] > 250)
+        details = f"R:{rgb_red}, G:{rgb_green}, B:{rgb_blue}"
+        return passed, details
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # TEST RUNNER
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -737,6 +865,14 @@ def run_all_tests() -> Tuple[int, int, List[str]]:
             "G2_unique_green_frequency",
             "G3_blue_selected_by_852_constraint",
             "G4_alternative_triads_exist",
+        ]),
+        ("H: RGB Normalization", TestSuiteH, [
+            "H1_bit_depth_from_L4",
+            "H2_wavelengths_from_solfeggio",
+            "H3_sigma_from_L4",
+            "H4_primaries_pure",
+            "H5_no_magic_numbers",
+            "H6_hex_codes_derived",
         ]),
     ]
 

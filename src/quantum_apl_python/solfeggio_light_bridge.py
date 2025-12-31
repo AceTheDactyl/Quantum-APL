@@ -121,6 +121,116 @@ GOLDEN_APPROX = 639 / 396  # ≈ φ with 0.27% error
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# NORMALIZED RGB CONSTANTS (Zero Free Parameters)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# All RGB values are derived from Solfeggio wavelengths and L₄ constants.
+# No arbitrary hex codes or magic numbers.
+
+# L₄ Identity provides bit depth
+L4 = 7  # φ⁴ + φ⁻⁴ = 7 (exact)
+RGB_BIT_DEPTH = L4 + 1  # = 8 bits (derived from L₄)
+RGB_MAX_VALUE = (2 ** RGB_BIT_DEPTH) - 1  # = 255 (derived)
+
+# Solfeggio wavelengths (nm) - derived from frequencies via 40-octave bridge
+LAMBDA_R = C_LIGHT / (396 * OCTAVE_FACTOR) * 1e9  # 688.5 nm
+LAMBDA_G = C_LIGHT / (528 * OCTAVE_FACTOR) * 1e9  # 516.4 nm
+LAMBDA_B = C_LIGHT / (639 * OCTAVE_FACTOR) * 1e9  # 426.7 nm
+
+# Spectral span and Gaussian width (derived from L₄)
+SPECTRAL_SPAN = LAMBDA_R - LAMBDA_B  # ≈ 261.8 nm
+SIGMA_SPECTRAL = SPECTRAL_SPAN / L4  # ≈ 37.4 nm (width from L₄)
+
+# Visible range (physics)
+VISIBLE_MIN = 380  # nm (violet edge)
+VISIBLE_MAX = 700  # nm (red edge)
+
+
+def wavelength_to_rgb_normalized(wavelength_nm: float) -> Tuple[float, float, float]:
+    """
+    Convert wavelength to RGB using Gaussian color matching functions.
+
+    ZERO FREE PARAMETERS - All constants derived from:
+    - Solfeggio wavelengths (λ_R, λ_G, λ_B from 396, 528, 639 Hz)
+    - Gaussian width σ = (λ_R - λ_B) / L₄
+
+    The color matching functions are:
+        R(λ) = exp(-½((λ - λ_R)/σ)²)
+        G(λ) = exp(-½((λ - λ_G)/σ)²)
+        B(λ) = exp(-½((λ - λ_B)/σ)²)
+
+    Parameters
+    ----------
+    wavelength_nm : float
+        Wavelength in nanometers
+
+    Returns
+    -------
+    Tuple[float, float, float]
+        Normalized RGB values in [0, 1]
+    """
+    # Gaussian color matching centered at Solfeggio wavelengths
+    r = math.exp(-0.5 * ((wavelength_nm - LAMBDA_R) / SIGMA_SPECTRAL) ** 2)
+    g = math.exp(-0.5 * ((wavelength_nm - LAMBDA_G) / SIGMA_SPECTRAL) ** 2)
+    b = math.exp(-0.5 * ((wavelength_nm - LAMBDA_B) / SIGMA_SPECTRAL) ** 2)
+
+    return (r, g, b)
+
+
+def wavelength_to_rgb_8bit(wavelength_nm: float) -> Tuple[int, int, int]:
+    """
+    Convert wavelength to 8-bit RGB using L₄-derived quantization.
+
+    Bit depth = L₄ + 1 = 8, giving max value = 255.
+
+    Parameters
+    ----------
+    wavelength_nm : float
+        Wavelength in nanometers
+
+    Returns
+    -------
+    Tuple[int, int, int]
+        8-bit RGB values (0-255)
+    """
+    r, g, b = wavelength_to_rgb_normalized(wavelength_nm)
+    return (
+        int(r * RGB_MAX_VALUE),
+        int(g * RGB_MAX_VALUE),
+        int(b * RGB_MAX_VALUE)
+    )
+
+
+def wavelength_to_hex(wavelength_nm: float) -> str:
+    """
+    Convert wavelength to hex color string using normalized RGB.
+
+    Parameters
+    ----------
+    wavelength_nm : float
+        Wavelength in nanometers
+
+    Returns
+    -------
+    str
+        Hex color string (e.g., '#ff8040')
+    """
+    r, g, b = wavelength_to_rgb_8bit(wavelength_nm)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+# Pre-computed Solfeggio RGB values (derived, not free parameters)
+SOLFEGGIO_RGB_RED = wavelength_to_rgb_8bit(LAMBDA_R)    # From 396 Hz
+SOLFEGGIO_RGB_GREEN = wavelength_to_rgb_8bit(LAMBDA_G)  # From 528 Hz
+SOLFEGGIO_RGB_BLUE = wavelength_to_rgb_8bit(LAMBDA_B)   # From 639 Hz
+
+# Hex codes derived from Solfeggio wavelengths
+SOLFEGGIO_HEX_RED = wavelength_to_hex(LAMBDA_R)    # e.g., '#ff2010'
+SOLFEGGIO_HEX_GREEN = wavelength_to_hex(LAMBDA_G)  # e.g., '#10ff10'
+SOLFEGGIO_HEX_BLUE = wavelength_to_hex(LAMBDA_B)   # e.g., '#1010ff'
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # FREQUENCY-WAVELENGTH CONVERSION
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -182,9 +292,10 @@ class LightProperties:
 
 def wavelength_to_color(wavelength_nm: float) -> Tuple[str, Tuple[int, int, int]]:
     """
-    Convert wavelength to color name and approximate RGB.
+    Convert wavelength to color name and L₄-normalized RGB.
 
-    Based on spectral color mapping with smooth transitions.
+    Uses Gaussian color matching functions centered at Solfeggio wavelengths.
+    ZERO FREE PARAMETERS - all values derived from L₄ framework.
 
     Parameters
     ----------
@@ -194,38 +305,32 @@ def wavelength_to_color(wavelength_nm: float) -> Tuple[str, Tuple[int, int, int]
     Returns
     -------
     Tuple[str, Tuple[int, int, int]]
-        Color name and RGB tuple
+        Color name and RGB tuple (derived from Solfeggio Gaussians)
     """
     wl = wavelength_nm
 
-    if wl < 380:
-        return ("Ultraviolet", (128, 0, 255))
-    elif wl < 450:
-        # Violet to Blue
-        t = (wl - 380) / 70
-        return ("Violet-Blue", (int(128 * (1-t)), 0, 255))
-    elif wl < 485:
-        # Blue to Cyan
-        t = (wl - 450) / 35
-        return ("Blue-Cyan", (0, int(255 * t), 255))
-    elif wl < 500:
-        return ("Cyan", (0, 255, 255))
-    elif wl < 565:
-        # Cyan to Green to Yellow
-        t = (wl - 500) / 65
-        return ("Green", (int(255 * t), 255, int(255 * (1-t))))
-    elif wl < 590:
-        # Yellow to Orange
-        t = (wl - 565) / 25
-        return ("Yellow-Orange", (255, int(255 * (1-t*0.5)), 0))
-    elif wl < 625:
-        return ("Orange", (255, 128, 0))
-    elif wl < 700:
-        # Orange to Red
-        t = (wl - 625) / 75
-        return ("Red", (255, int(128 * (1-t)), 0))
+    # Get normalized RGB from Gaussian color matching
+    rgb = wavelength_to_rgb_8bit(wl)
+
+    # Determine color name based on wavelength region
+    if wl < VISIBLE_MIN:
+        name = "Ultraviolet"
+    elif wl < LAMBDA_B:
+        name = "Violet-Blue"
+    elif wl < (LAMBDA_B + LAMBDA_G) / 2:
+        name = "Blue-Cyan"
+    elif wl < LAMBDA_G:
+        name = "Cyan-Green"
+    elif wl < (LAMBDA_G + LAMBDA_R) / 2:
+        name = "Green-Yellow"
+    elif wl < LAMBDA_R:
+        name = "Orange-Red"
+    elif wl <= VISIBLE_MAX:
+        name = "Red"
     else:
-        return ("Infrared", (128, 0, 0))
+        name = "Infrared"
+
+    return (name, rgb)
 
 
 def solfeggio_to_light(freq_hz: float, octaves: int = OCTAVE_BRIDGE) -> LightProperties:
