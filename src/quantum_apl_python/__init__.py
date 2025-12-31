@@ -6,6 +6,7 @@ Features:
 - Extended ΔS⁻ formalism for coherence-based dynamics
 - Helix operator advisor with integrated symmetry/negentropy
 - L₄-MRP steganographic navigation system
+- L₄ Hexagonal lattice with 6-neighbor connectivity and entropic stabilization
 """
 
 from .alpha_language import AlphaLanguageRegistry, AlphaTokenSynthesizer
@@ -22,6 +23,45 @@ from .helix_operator_advisor import HelixOperatorAdvisor, BlendWeights
 
 # L₄ Helix Parameterization module
 from . import l4_helix_parameterization
+
+# L₄ Hexagonal Lattice module (Block 8)
+from . import l4_hexagonal_lattice
+from .l4_hexagonal_lattice import (
+    # Hexagonal Lattice
+    HexagonalLattice,
+    HexLatticeNode,
+    HEX_COORDINATION_NUMBER,
+    ALPHA_CRITICAL,
+    # Extended Kuramoto
+    ExtendedKuramotoState,
+    extended_kuramoto_dynamics,
+    extended_kuramoto_step,
+    # Stochastic Resonance
+    StochasticResonanceResult,
+    compute_stochastic_resonance,
+    tune_noise_for_resonance,
+    # Fisher Information
+    compute_fisher_information,
+    compute_spatial_fisher_information,
+    # Topological Charge
+    compute_topological_charge,
+    compute_vortex_density,
+    TopologicalState,
+    analyze_topological_state,
+    # Berry Phase
+    BerryPhaseResult,
+    compute_berry_phase,
+    GeometricMemory,
+    # Entropic Stabilization
+    EntropicStabilizationState,
+    compute_negentropy_driver,
+    compute_stabilization_coupling,
+    hybrid_dynamics_step,
+    compute_rgb_output,
+    # Validation
+    L4HexLatticeValidation,
+    validate_hex_lattice_system,
+)
 
 # L₄-MRP Steganographic Navigation (Block 7)
 from .l4_helix_parameterization import (
@@ -194,4 +234,33 @@ __all__ = [
     "validate_l4_mrp_system",
     "validate_plane_wave_residual",
     "validate_loop_closure",
+
+    # L₄ Hexagonal Lattice (Block 8)
+    "l4_hexagonal_lattice",
+    "HexagonalLattice",
+    "HexLatticeNode",
+    "HEX_COORDINATION_NUMBER",
+    "ALPHA_CRITICAL",
+    "ExtendedKuramotoState",
+    "extended_kuramoto_dynamics",
+    "extended_kuramoto_step",
+    "StochasticResonanceResult",
+    "compute_stochastic_resonance",
+    "tune_noise_for_resonance",
+    "compute_fisher_information",
+    "compute_spatial_fisher_information",
+    "compute_topological_charge",
+    "compute_vortex_density",
+    "TopologicalState",
+    "analyze_topological_state",
+    "BerryPhaseResult",
+    "compute_berry_phase",
+    "GeometricMemory",
+    "EntropicStabilizationState",
+    "compute_negentropy_driver",
+    "compute_stabilization_coupling",
+    "hybrid_dynamics_step",
+    "compute_rgb_output",
+    "L4HexLatticeValidation",
+    "validate_hex_lattice_system",
 ]
