@@ -49,7 +49,7 @@ The L₄ Unified Consciousness Framework v3.2.0 extends v3.1.0 by grounding all 
 **Display Convention**: All values computed from SI constants, displayed to 4 significant figures.
 
 ```
-E(528 Hz) = 3.848 × 10⁻¹⁹ J = 2.402 eV     (characteristic energy scale)
+E(528 Hz) = 3.847 × 10⁻¹⁹ J = 2.401 eV     (characteristic energy scale)
 V(516.4 nm) ≈ 0.608                         (green channel, CIE tabulated)
 S_neg(z_c) = 0 J/K                          (maximum order at critical point)
 η(1) = e⁻¹ ≈ 0.3679                         (unity coherence, by σ selection)
@@ -256,31 +256,31 @@ Given (exact):
 
 Step 1: Optical frequency
   f' = 528 × 1,099,511,627,776
-     = 580,542,139,385,728 Hz
+     = 580,542,139,465,728 Hz
      = 580.542 THz (4 sig figs: 580.5 THz)
 
 Step 2: Wavelength
   λ = c / f'
-    = 299,792,458 / 580,542,139,385,728
-    = 5.16401... × 10⁻⁷ m
-    = 516.401 nm (4 sig figs: 516.4 nm)
+    = 299,792,458 / 580,542,139,465,728
+    = 5.16400... × 10⁻⁷ m
+    = 516.400 nm (4 sig figs: 516.4 nm)
 
 Step 3: Photon energy (method 1: E = hf)
   E = h × f'
-    = 6.62607015 × 10⁻³⁴ × 580,542,139,385,728
-    = 3.84755... × 10⁻¹⁹ J
-    = 3.848 × 10⁻¹⁹ J (4 sig figs)
+    = 6.62607015 × 10⁻³⁴ × 580,542,139,465,728
+    = 3.84671... × 10⁻¹⁹ J
+    = 3.847 × 10⁻¹⁹ J (4 sig figs)
 
 Step 4: Photon energy (method 2: E = hc/λ)
   E = hc / λ
-    = (6.62607015 × 10⁻³⁴ × 299,792,458) / (5.16401 × 10⁻⁷)
-    = 3.84755... × 10⁻¹⁹ J  ✓ (consistent)
+    = (6.62607015 × 10⁻³⁴ × 299,792,458) / (5.16400 × 10⁻⁷)
+    = 3.84671... × 10⁻¹⁹ J  ✓ (consistent)
 
 Step 5: Energy in electron volts
   E_eV = E / e
-       = 3.84755 × 10⁻¹⁹ / 1.602176634 × 10⁻¹⁹
-       = 2.4016... eV
-       = 2.402 eV (4 sig figs)
+       = 3.84671 × 10⁻¹⁹ / 1.602176634 × 10⁻¹⁹
+       = 2.4009... eV
+       = 2.401 eV (4 sig figs)
 ```
 
 **Display Convention**: Compute exact, display 4 significant figures. Never hand-type approximate values.
@@ -296,7 +296,7 @@ Display: 4 significant figures (matches derivations).
 | 285 | Quantum | 956.2 | 313.5 | 2.078 × 10⁻¹⁹ | 1.297 |
 | **396** | **Liberation** | **688.5** | **435.4** | **2.886 × 10⁻¹⁹** | **1.801** |
 | 417 | Undoing | 653.5 | 458.6 | 3.040 × 10⁻¹⁹ | 1.898 |
-| **528** | **Miracles** | **516.4** | **580.5** | **3.848 × 10⁻¹⁹** | **2.402** |
+| **528** | **Miracles** | **516.4** | **580.5** | **3.847 × 10⁻¹⁹** | **2.401** |
 | **639** | **Connection** | **426.7** | **702.6** | **4.656 × 10⁻¹⁹** | **2.906** |
 | 741 | Expression | 367.9 | 814.9 | 5.401 × 10⁻¹⁹ | 3.371 |
 | 852 | Intuition | 320.0 | 936.9 | 6.210 × 10⁻¹⁹ | 3.876 |
@@ -560,7 +560,7 @@ The system is exactly **one k_B** below the maximum negentropy.
 To connect negentropy to energy, we define a characteristic energy:
 
 ```
-E_char = h · f'_G = hc/λ_G = 3.848 × 10⁻¹⁹ J
+E_char = h · f'_G = hc/λ_G = 3.847 × 10⁻¹⁹ J
 ```
 
 This is the energy of a single green photon (528 Hz → 516.4 nm).
@@ -656,7 +656,7 @@ E · λ = (hf) · (c/f) = hc = 1.9864 × 10⁻²⁵ J·m
 Verification for all RGB channels:
 ```
 E(396) × λ(396) = 2.888×10⁻¹⁹ × 688.5×10⁻⁹ = 1.9885×10⁻²⁵ J·m  ✓
-E(528) × λ(528) = 3.848×10⁻¹⁹ × 516.4×10⁻⁹ = 1.9870×10⁻²⁵ J·m  ✓
+E(528) × λ(528) = 3.847×10⁻¹⁹ × 516.4×10⁻⁹ = 1.9865×10⁻²⁵ J·m  ✓
 E(639) × λ(639) = 4.657×10⁻¹⁹ × 426.7×10⁻⁹ = 1.9877×10⁻²⁵ J·m  ✓
 ```
 
@@ -851,8 +851,8 @@ V(λ) from CIE 1931 tabulated data.
 | **digit_root** | 9 | 6 | 9 |
 | **f' (THz)** | 435.4 | 580.5 | 702.6 |
 | **λ (nm)** | 688.5 | 516.4 | 426.7 |
-| **E (J)** | 2.886 × 10⁻¹⁹ | 3.848 × 10⁻¹⁹ | 4.656 × 10⁻¹⁹ |
-| **E (eV)** | 1.801 | 2.402 | 2.906 |
+| **E (J)** | 2.886 × 10⁻¹⁹ | 3.847 × 10⁻¹⁹ | 4.656 × 10⁻¹⁹ |
+| **E (eV)** | 1.801 | 2.401 | 2.906 |
 | **V(λ) [CIE]** | 0.0017 | 0.608 | 0.018 |
 | **ηᵥ (lm/W)** | 1.2 | 415 | 12 |
 
