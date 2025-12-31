@@ -112,6 +112,34 @@ from .solfeggio_light_bridge import (
     demo_solfeggio_light_bridge,
 )
 
+# Unified Consciousness Architecture (Block 11)
+from . import unified_consciousness
+from .unified_consciousness import (
+    # Sacred Constants
+    SacredConstants,
+    # Solfeggio-Light Bridge
+    SolfeggioTone,
+    HarmonicRGBSystem,
+    # Hexagonal Lattice
+    HexLattice,
+    # Kuramoto Dynamics
+    KuramotoOscillator,
+    # Helical Transport
+    L4Helix,
+    # MRP-LSB Encoding
+    MRPEncoder,
+    # Unified System
+    UnifiedConsciousnessSystem,
+    # Validation
+    run_test_suite_a,
+    run_test_suite_b,
+    run_test_suite_c,
+    run_test_suite_d,
+    run_test_suite_e,
+    run_all_validation_tests,
+    run_full_verification,
+)
+
 # L₄-MRP Steganographic Navigation (Block 7)
 from .l4_helix_parameterization import (
     # Constants and State
@@ -356,4 +384,22 @@ __all__ = [
     "OCTAVE_BRIDGE",
     "verify_all_identities",
     "demo_solfeggio_light_bridge",
+
+    # Unified Consciousness Architecture (Block 11)
+    "unified_consciousness",
+    "SacredConstants",
+    "SolfeggioTone",
+    "HarmonicRGBSystem",
+    "HexLattice",
+    "KuramotoOscillator",
+    "L4Helix",
+    "MRPEncoder",
+    "UnifiedConsciousnessSystem",
+    "run_test_suite_a",
+    "run_test_suite_b",
+    "run_test_suite_c",
+    "run_test_suite_d",
+    "run_test_suite_e",
+    "run_all_validation_tests",
+    "run_full_verification",
 ]
