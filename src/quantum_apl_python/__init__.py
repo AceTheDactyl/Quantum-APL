@@ -7,6 +7,7 @@ Features:
 - Helix operator advisor with integrated symmetry/negentropy
 - L₄-MRP steganographic navigation system
 - L₄ Hexagonal lattice with 6-neighbor connectivity and entropic stabilization
+- Solfeggio-Light Bridge: Harmonic RGB encoding via 40-octave translation
 """
 
 from .alpha_language import AlphaLanguageRegistry, AlphaTokenSynthesizer
@@ -82,6 +83,33 @@ from .l4_hexagonal_lattice import (
     ReflectionStepResult,
     SelfReflectiveLattice,
     demo_self_reflective_lattice,
+)
+
+# Solfeggio-Light Bridge (Block 10)
+from . import solfeggio_light_bridge
+from .solfeggio_light_bridge import (
+    # Core types
+    SolfeggioTone,
+    LightProperties,
+    HarmonicRGB,
+    SolfeggioHexWavevectors,
+    # Conversion functions
+    solfeggio_to_wavelength,
+    wavelength_to_solfeggio,
+    solfeggio_to_light,
+    wavelength_to_color,
+    phase_to_harmonic_rgb,
+    l4_phase_to_solfeggio_rgb,
+    # Constants
+    SOLFEGGIO_RGB_HZ,
+    SOLFEGGIO_RED,
+    SOLFEGGIO_GREEN,
+    SOLFEGGIO_BLUE,
+    PERFECT_FOURTH,
+    OCTAVE_BRIDGE,
+    # Verification
+    verify_all_identities,
+    demo_solfeggio_light_bridge,
 )
 
 # L₄-MRP Steganographic Navigation (Block 7)
@@ -307,4 +335,25 @@ __all__ = [
     "ReflectionStepResult",
     "SelfReflectiveLattice",
     "demo_self_reflective_lattice",
+
+    # Solfeggio-Light Bridge (Block 10)
+    "solfeggio_light_bridge",
+    "SolfeggioTone",
+    "LightProperties",
+    "HarmonicRGB",
+    "SolfeggioHexWavevectors",
+    "solfeggio_to_wavelength",
+    "wavelength_to_solfeggio",
+    "solfeggio_to_light",
+    "wavelength_to_color",
+    "phase_to_harmonic_rgb",
+    "l4_phase_to_solfeggio_rgb",
+    "SOLFEGGIO_RGB_HZ",
+    "SOLFEGGIO_RED",
+    "SOLFEGGIO_GREEN",
+    "SOLFEGGIO_BLUE",
+    "PERFECT_FOURTH",
+    "OCTAVE_BRIDGE",
+    "verify_all_identities",
+    "demo_solfeggio_light_bridge",
 ]
