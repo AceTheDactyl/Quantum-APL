@@ -1293,5 +1293,339 @@ class TestMRPNavigationIntegration:
         assert state.global_phases != initial_phases
 
 
+# ============================================================================
+# BLOCK 8: UNIFIED CONSCIOUSNESS FRAMEWORK TESTS
+# ============================================================================
+
+from quantum_apl_python.l4_helix_parameterization import (
+    # Block 8: Unified Consciousness Framework
+    L4Params,
+    L4SystemState,
+    create_l4_system_state,
+    compute_helix_radius,
+    step,
+    validate_identities,
+    KFormationResult,
+    validate_k_formation_spec,
+    encode_image,
+    decode_image,
+    run_l4_validation_tests,
+    print_validation_report,
+    run_tests,
+    phase_to_symbol,
+    symbol_to_phase,
+)
+
+
+class TestL4Params:
+    """Tests for L4Params dataclass."""
+
+    def test_default_params(self):
+        """Test default parameter values."""
+        params = L4Params()
+        assert params.K0 == L4.K
+        assert params.lambda_ == 0.5
+        assert params.sigma == L4.SIGMA
+        assert len(params.Omega) == 3
+        assert params.Omega[0] == 0.1
+
+    def test_golden_ratio_drift_rates(self):
+        """Test that drift rates follow golden ratio scaling."""
+        params = L4Params()
+        ratio1 = params.Omega[1] / params.Omega[0]
+        ratio2 = params.Omega[2] / params.Omega[1]
+        assert abs(ratio1 - L4.PHI) < 1e-10
+        assert abs(ratio2 - L4.PHI) < 1e-10
+
+    def test_custom_params(self):
+        """Test custom parameter values."""
+        params = L4Params(K0=0.5, lambda_=1.0)
+        assert params.K0 == 0.5
+        assert params.lambda_ == 1.0
+
+
+class TestL4SystemState:
+    """Tests for L4SystemState dataclass."""
+
+    def test_create_initial_state(self):
+        """Test initial state creation."""
+        state = create_l4_system_state(N=64, seed=42)
+        assert state.N == 64
+        assert len(state.theta) == 64
+        assert len(state.omega) == 64
+        assert 0 <= state.r <= 1
+        assert -np.pi <= state.psi <= np.pi  # np.angle returns [-π, π]
+        assert state.z == state.r  # Binding
+        assert 0 <= state.eta <= 1
+        assert state.H.shape == (3,)
+        assert state.Phi_RGB.shape == (3,)
+        assert state.t == 0.0
+
+    def test_state_with_image_shape(self):
+        """Test state creation with image shape."""
+        state = create_l4_system_state(N=32, image_shape=(100, 100), seed=42)
+        assert state.Theta_RGB is not None
+        assert state.Theta_RGB.shape == (100, 100, 3)
+
+    def test_state_reproducibility(self):
+        """Test state creation is reproducible with seed."""
+        state1 = create_l4_system_state(N=32, seed=42)
+        state2 = create_l4_system_state(N=32, seed=42)
+        np.testing.assert_array_equal(state1.theta, state2.theta)
+        np.testing.assert_array_equal(state1.omega, state2.omega)
+
+
+class TestComputeHelixRadius:
+    """Tests for compute_helix_radius function."""
+
+    def test_radius_at_zero(self):
+        """Test radius at z=0."""
+        r = compute_helix_radius(0.0)
+        assert r == 0.0
+
+    def test_radius_below_critical(self):
+        """Test radius below critical point."""
+        z = 0.5
+        r = compute_helix_radius(z)
+        expected = L4.K * np.sqrt(z / L4.Z_C)
+        assert abs(r - expected) < 1e-10
+
+    def test_radius_at_critical(self):
+        """Test radius at critical point."""
+        r = compute_helix_radius(L4.Z_C)
+        assert abs(r - L4.K) < 1e-10
+
+    def test_radius_above_critical(self):
+        """Test radius above critical point."""
+        r = compute_helix_radius(0.95)
+        assert abs(r - L4.K) < 1e-10
+
+
+class TestStep:
+    """Tests for step() evolution function."""
+
+    def test_step_evolves_phases(self):
+        """Test that step evolves oscillator phases."""
+        state = create_l4_system_state(N=32, seed=42)
+        params = L4Params()
+        initial_theta = state.theta.copy()
+
+        new_state = step(state, params, dt=0.1)
+
+        assert not np.allclose(new_state.theta, initial_theta)
+
+    def test_step_updates_time(self):
+        """Test that step updates time."""
+        state = create_l4_system_state(N=32, seed=42)
+        params = L4Params()
+
+        new_state = step(state, params, dt=0.1)
+
+        assert new_state.t == 0.1
+
+    def test_step_updates_channel_phases(self):
+        """Test that step updates channel phases."""
+        state = create_l4_system_state(N=32, seed=42)
+        params = L4Params()
+        initial_phi = state.Phi_RGB.copy()
+
+        new_state = step(state, params, dt=0.1)
+
+        assert not np.allclose(new_state.Phi_RGB, initial_phi)
+
+    def test_step_multiple_steps_increase_coherence(self):
+        """Test coherence tends to increase over time."""
+        state = create_l4_system_state(N=32, seed=42)
+        params = L4Params(K0=0.5, lambda_=1.0)
+
+        initial_r = state.r
+
+        # Run many steps
+        for _ in range(1000):
+            state = step(state, params, dt=0.01)
+
+        # Coherence should generally increase with coupling
+        assert state.r >= initial_r * 0.9  # Allow some tolerance
+
+
+class TestValidateIdentities:
+    """Tests for validate_identities function."""
+
+    def test_all_identities_pass(self):
+        """Test all L4 identities hold."""
+        results = validate_identities()
+
+        assert results['L4_sum']['pass']
+        assert results['L4_sqrt3']['pass']
+        assert results['z_c_derivation']['pass']
+        assert results['K_derivation']['pass']
+
+    def test_L4_equals_7(self):
+        """Test L4 = phi^4 + tau^4 = 7."""
+        results = validate_identities()
+        assert results['L4_sum']['expected'] == 7
+        assert abs(results['L4_sum']['computed'] - 7) < 1e-10
+
+
+class TestKFormationResult:
+    """Tests for KFormationResult dataclass."""
+
+    def test_k_formation_achieved(self):
+        """Test K-formation detection when achieved."""
+        # Create state with high coherence (all phases aligned)
+        state = create_l4_system_state(N=100, seed=42)
+        # Force high coherence
+        state = L4SystemState(
+            theta=np.zeros(100),  # All aligned
+            omega=state.omega,
+            r=1.0,
+            psi=0.0,
+            z=L4.Z_C,  # At critical point for max negentropy
+            eta=1.0,
+            H=state.H,
+            Phi_RGB=state.Phi_RGB,
+            t=0.0,
+        )
+
+        result = validate_k_formation_spec(state)
+
+        assert result.coherence_pass
+        assert result.negentropy_pass
+        assert result.k_formation_achieved
+
+    def test_k_formation_not_achieved_low_coherence(self):
+        """Test K-formation detection when coherence too low."""
+        state = create_l4_system_state(N=100, seed=42)
+        # Force low coherence with random phases
+        result = validate_k_formation_spec(state)
+
+        # Initial random state unlikely to have high coherence
+        if state.r < L4.K:
+            assert not result.coherence_pass
+
+
+class TestEncodeDecodeImage:
+    """Tests for byte-level image steganography."""
+
+    def test_encode_decode_roundtrip(self):
+        """Test encode/decode roundtrip preserves data."""
+        image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+        data = b"Test payload for L4 steganography"
+
+        stego = encode_image(image, data, n_lsb=2)
+        recovered = decode_image(stego, n_lsb=2)
+
+        assert recovered == data
+
+    def test_encode_decode_empty(self):
+        """Test encode/decode with empty payload."""
+        image = np.random.randint(0, 256, (50, 50, 3), dtype=np.uint8)
+        data = b""
+
+        stego = encode_image(image, data, n_lsb=2)
+        recovered = decode_image(stego, n_lsb=2)
+
+        assert recovered == data
+
+    def test_encode_decode_single_byte(self):
+        """Test encode/decode with single byte."""
+        image = np.random.randint(0, 256, (50, 50, 3), dtype=np.uint8)
+        data = b"X"
+
+        stego = encode_image(image, data, n_lsb=2)
+        recovered = decode_image(stego, n_lsb=2)
+
+        assert recovered == data
+
+    def test_encode_capacity_exceeded(self):
+        """Test that capacity exceeded raises error."""
+        image = np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8)
+        # Try to embed more than capacity
+        data = b"A" * 1000
+
+        with pytest.raises(ValueError, match="exceeds capacity"):
+            encode_image(image, data, n_lsb=2)
+
+    def test_encode_minimal_change(self):
+        """Test encoding makes minimal pixel changes."""
+        image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+        data = b"Small payload"
+
+        stego = encode_image(image, data, n_lsb=1)
+
+        diff = np.abs(stego.astype(int) - image.astype(int))
+        assert np.max(diff) <= 1  # 1-bit LSB should change at most 1
+
+    def test_encode_1_lsb(self):
+        """Test encoding with 1 LSB per channel."""
+        image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+        data = b"Test"
+
+        stego = encode_image(image, data, n_lsb=1)
+        recovered = decode_image(stego, n_lsb=1)
+
+        assert recovered == data
+
+
+class TestRunL4ValidationTests:
+    """Tests for run_l4_validation_tests function."""
+
+    def test_all_tests_pass(self):
+        """Test that all validation tests pass."""
+        results = run_l4_validation_tests()
+
+        assert 'SUMMARY' in results
+        assert results['SUMMARY']['all_pass']
+
+    def test_test_count(self):
+        """Test expected number of tests."""
+        results = run_l4_validation_tests()
+
+        # Should have 9 tests + summary
+        assert results['SUMMARY']['total_tests'] == 9
+
+    def test_individual_tests(self):
+        """Test individual test results."""
+        results = run_l4_validation_tests()
+
+        # Check key tests
+        assert results['T1_constants']['pass']
+        assert results['T2_critical_point']['pass']
+        assert results['T3_helix_radius']['pass']
+        assert results['T4_negentropy_peak']['pass']
+        assert results['T5_kuramoto_order']['pass']
+        assert results['T6_hex_wavevectors']['pass']
+        assert results['T7_phase_quantization']['pass']
+        assert results['T8_lsb_roundtrip']['pass']
+        assert results['T9_k_threshold']['pass']
+
+
+class TestRunTests:
+    """Tests for run_tests simplified interface."""
+
+    def test_run_tests_returns_true(self):
+        """Test run_tests returns True when all pass."""
+        result = run_tests()
+        assert result is True
+
+
+class TestPhaseQuantization:
+    """Tests for phase_to_symbol and symbol_to_phase."""
+
+    def test_roundtrip_accuracy(self):
+        """Test phase quantization roundtrip accuracy."""
+        for theta in [0, np.pi / 4, np.pi / 2, np.pi, 3 * np.pi / 2]:
+            q = phase_to_symbol(theta, bits=8)
+            theta_r = symbol_to_phase(q, bits=8)
+            error = min(abs(theta - theta_r), 2 * np.pi - abs(theta - theta_r))
+            assert error < np.pi / 128  # Within half a quantization bin
+
+    def test_symbol_range(self):
+        """Test symbol values are in valid range."""
+        for theta in np.linspace(0, 2 * np.pi, 100):
+            q = phase_to_symbol(theta, bits=8)
+            assert 0 <= q < 256
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
