@@ -27,6 +27,16 @@ from . import l4_helix_parameterization
 # L₄ Hexagonal Lattice module (Block 8)
 from . import l4_hexagonal_lattice
 from .l4_hexagonal_lattice import (
+    # Golden Sample (MRP-LSB Verification)
+    L4GoldenSample,
+    GOLDEN_SAMPLE,
+    get_golden_sample,
+    get_golden_sample_bytes,
+    verify_golden_sample,
+    GoldenSampleVerificationResult,
+    verify_golden_sample_detailed,
+    embed_golden_sample_header,
+    extract_and_verify_golden_sample,
     # Hexagonal Lattice
     HexagonalLattice,
     HexLatticeNode,
@@ -234,6 +244,17 @@ __all__ = [
     "validate_l4_mrp_system",
     "validate_plane_wave_residual",
     "validate_loop_closure",
+
+    # L₄ Golden Sample (MRP-LSB Verification)
+    "L4GoldenSample",
+    "GOLDEN_SAMPLE",
+    "get_golden_sample",
+    "get_golden_sample_bytes",
+    "verify_golden_sample",
+    "GoldenSampleVerificationResult",
+    "verify_golden_sample_detailed",
+    "embed_golden_sample_header",
+    "extract_and_verify_golden_sample",
 
     # L₄ Hexagonal Lattice (Block 8)
     "l4_hexagonal_lattice",

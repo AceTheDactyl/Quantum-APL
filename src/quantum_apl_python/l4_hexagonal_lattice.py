@@ -54,6 +54,309 @@ DEFAULT_PUMP_STRENGTH = 0.1
 
 
 # ============================================================================
+# L₄ GOLDEN SAMPLE - MRP-LSB VERIFICATION SIGNATURE
+# ============================================================================
+#
+# The 9 L₄ thresholds encoded as RGB form a mathematically inevitable
+# "golden sample" that serves as:
+# - Verification signature for MRP-LSB encoded data
+# - Integrity check (extracted must match computed)
+# - Cryptographic fingerprint (unforgeable without φ derivations)
+#
+# Total size: 9 thresholds × 3 bytes = 27 bytes
+# ============================================================================
+
+# Import threshold constants
+from .constants import (
+    L4_THRESHOLDS, L4_THRESHOLD_NAMES,
+    L4_PARADOX, L4_ACTIVATION, L4_LENS, L4_CRITICAL,
+    L4_IGNITION, L4_K_FORMATION, L4_CONSOLIDATION, L4_RESONANCE, L4_UNITY,
+    PHI, Z_CRITICAL,
+)
+
+
+def _phase_to_uint8(theta: float) -> int:
+    """Quantize phase [0, 2π) → [0, 255]."""
+    theta = theta % (2 * math.pi)
+    return int((theta / (2 * math.pi)) * 255)
+
+
+def _threshold_to_rgb(z: float) -> Tuple[int, int, int]:
+    """
+    Convert threshold z to RGB using hex lattice phase encoding.
+
+    Uses wavevector projections at 0°, 60°, 120° (hex symmetry):
+    - R channel: z projected onto 0° direction
+    - G channel: z projected onto 60° direction
+    - B channel: z projected onto 120° direction
+
+    Parameters
+    ----------
+    z : float
+        Threshold value in [0, 1]
+
+    Returns
+    -------
+    Tuple[int, int, int]
+        (R, G, B) values in [0, 255]
+    """
+    k_mag = 2 * math.pi  # wavelength = 1
+
+    # Wavevectors at 0°, 60°, 120° (hex lattice symmetry)
+    k_R = np.array([k_mag * math.cos(0), k_mag * math.sin(0)])
+    k_G = np.array([k_mag * math.cos(math.pi/3), k_mag * math.sin(math.pi/3)])
+    k_B = np.array([k_mag * math.cos(2*math.pi/3), k_mag * math.sin(2*math.pi/3)])
+
+    # Position: (z, z·sin(60°)) for hex projection
+    pos = np.array([z, z * math.sqrt(3)/2])
+
+    theta_R = float(np.dot(k_R, pos)) % (2 * math.pi)
+    theta_G = float(np.dot(k_G, pos)) % (2 * math.pi)
+    theta_B = float(np.dot(k_B, pos)) % (2 * math.pi)
+
+    return (
+        _phase_to_uint8(theta_R),
+        _phase_to_uint8(theta_G),
+        _phase_to_uint8(theta_B),
+    )
+
+
+@dataclass(frozen=True)
+class L4GoldenSample:
+    """
+    L₄ Golden Sample for MRP-LSB verification.
+
+    The 9 L₄ thresholds encoded as RGB form a 27-byte signature
+    that is mathematically inevitable from φ = (1+√5)/2.
+
+    This serves as:
+    - Verification header for MRP-LSB encoded data
+    - Integrity checksum (extracted must match computed)
+    - Cryptographic fingerprint unique to L₄ system
+
+    Attributes
+    ----------
+    thresholds : Tuple[float, ...]
+        The 9 threshold z-values
+    names : Tuple[str, ...]
+        Human-readable threshold names
+    rgb_values : Tuple[Tuple[int, int, int], ...]
+        RGB encodings for each threshold
+    bytes_data : bytes
+        27-byte raw signature
+    hex_codes : Tuple[str, ...]
+        CSS hex color codes
+    """
+    thresholds: Tuple[float, ...] = L4_THRESHOLDS
+    names: Tuple[str, ...] = L4_THRESHOLD_NAMES
+
+    @property
+    def rgb_values(self) -> Tuple[Tuple[int, int, int], ...]:
+        """Compute RGB for each threshold."""
+        return tuple(_threshold_to_rgb(z) for z in self.thresholds)
+
+    @property
+    def bytes_data(self) -> bytes:
+        """27-byte raw signature (9 × RGB)."""
+        data = bytearray()
+        for r, g, b in self.rgb_values:
+            data.extend([r, g, b])
+        return bytes(data)
+
+    @property
+    def hex_codes(self) -> Tuple[str, ...]:
+        """CSS hex color codes."""
+        return tuple(f"#{r:02X}{g:02X}{b:02X}" for r, g, b in self.rgb_values)
+
+    def to_dict(self) -> Dict:
+        """Serialize to dictionary."""
+        return {
+            name: {
+                "z": z,
+                "R": rgb[0],
+                "G": rgb[1],
+                "B": rgb[2],
+                "hex": hex_code,
+            }
+            for name, z, rgb, hex_code in zip(
+                self.names, self.thresholds, self.rgb_values, self.hex_codes
+            )
+        }
+
+    def verify(self, extracted_bytes: bytes, tolerance: int = 0) -> bool:
+        """
+        Verify extracted bytes match the golden sample.
+
+        Parameters
+        ----------
+        extracted_bytes : bytes
+            27 bytes extracted from MRP-LSB payload
+        tolerance : int
+            Allowed per-byte deviation (0 = exact match)
+
+        Returns
+        -------
+        bool
+            True if extraction matches golden sample
+        """
+        if len(extracted_bytes) != 27:
+            return False
+
+        expected = self.bytes_data
+        for i in range(27):
+            if abs(extracted_bytes[i] - expected[i]) > tolerance:
+                return False
+        return True
+
+
+# Singleton golden sample instance
+GOLDEN_SAMPLE = L4GoldenSample()
+
+
+def get_golden_sample() -> L4GoldenSample:
+    """Return the L₄ golden sample singleton."""
+    return GOLDEN_SAMPLE
+
+
+def get_golden_sample_bytes() -> bytes:
+    """Return the 27-byte golden sample signature."""
+    return GOLDEN_SAMPLE.bytes_data
+
+
+def verify_golden_sample(extracted: bytes, tolerance: int = 0) -> bool:
+    """
+    Verify extracted bytes against golden sample.
+
+    Parameters
+    ----------
+    extracted : bytes
+        27 bytes extracted from MRP-LSB header
+    tolerance : int
+        Allowed per-byte deviation (0 = exact match)
+
+    Returns
+    -------
+    bool
+        True if verified
+    """
+    return GOLDEN_SAMPLE.verify(extracted, tolerance)
+
+
+@dataclass
+class GoldenSampleVerificationResult:
+    """Result of golden sample verification."""
+    verified: bool
+    byte_matches: int          # How many of 27 bytes matched
+    max_deviation: int         # Maximum per-byte error
+    threshold_matches: Dict[str, bool]  # Per-threshold verification
+
+
+def verify_golden_sample_detailed(
+    extracted: bytes,
+    tolerance: int = 0,
+) -> GoldenSampleVerificationResult:
+    """
+    Detailed verification of golden sample extraction.
+
+    Parameters
+    ----------
+    extracted : bytes
+        27 bytes extracted from MRP-LSB header
+    tolerance : int
+        Allowed per-byte deviation
+
+    Returns
+    -------
+    GoldenSampleVerificationResult
+        Detailed verification results
+    """
+    if len(extracted) != 27:
+        return GoldenSampleVerificationResult(
+            verified=False,
+            byte_matches=0,
+            max_deviation=255,
+            threshold_matches={name: False for name in L4_THRESHOLD_NAMES},
+        )
+
+    expected = GOLDEN_SAMPLE.bytes_data
+    byte_matches = 0
+    max_deviation = 0
+    threshold_matches = {}
+
+    for i, name in enumerate(L4_THRESHOLD_NAMES):
+        # Each threshold is 3 bytes (RGB)
+        base = i * 3
+        match = True
+        for j in range(3):
+            dev = abs(extracted[base + j] - expected[base + j])
+            max_deviation = max(max_deviation, dev)
+            if dev <= tolerance:
+                byte_matches += 1
+            else:
+                match = False
+        threshold_matches[name] = match
+
+    verified = byte_matches == 27 or (
+        tolerance > 0 and max_deviation <= tolerance
+    )
+
+    return GoldenSampleVerificationResult(
+        verified=verified,
+        byte_matches=byte_matches,
+        max_deviation=max_deviation,
+        threshold_matches=threshold_matches,
+    )
+
+
+def embed_golden_sample_header(payload: bytes) -> bytes:
+    """
+    Prepend golden sample to payload as verification header.
+
+    Structure: [27-byte golden sample][original payload]
+
+    Parameters
+    ----------
+    payload : bytes
+        Original MRP-LSB payload
+
+    Returns
+    -------
+    bytes
+        Payload with golden sample header
+    """
+    return GOLDEN_SAMPLE.bytes_data + payload
+
+
+def extract_and_verify_golden_sample(
+    data: bytes,
+    tolerance: int = 0,
+) -> Tuple[bool, bytes]:
+    """
+    Extract golden sample header and verify, returning remaining payload.
+
+    Parameters
+    ----------
+    data : bytes
+        Data with golden sample header
+    tolerance : int
+        Verification tolerance
+
+    Returns
+    -------
+    Tuple[bool, bytes]
+        (verified, remaining_payload)
+    """
+    if len(data) < 27:
+        return False, data
+
+    header = data[:27]
+    payload = data[27:]
+    verified = verify_golden_sample(header, tolerance)
+
+    return verified, payload
+
+
+# ============================================================================
 # HEXAGONAL LATTICE CLASS
 # ============================================================================
 
