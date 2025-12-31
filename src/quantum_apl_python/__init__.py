@@ -71,6 +71,17 @@ from .l4_hexagonal_lattice import (
     # Validation
     L4HexLatticeValidation,
     validate_hex_lattice_system,
+    # Self-Reflective Bloom Learning System
+    BloomEventType,
+    BloomEvent,
+    PatternBuffer,
+    BloomDetector,
+    SeedMemory,
+    BloomMetrics,
+    CoherentSeeder,
+    ReflectionStepResult,
+    SelfReflectiveLattice,
+    demo_self_reflective_lattice,
 )
 
 # L₄-MRP Steganographic Navigation (Block 7)
@@ -284,4 +295,16 @@ __all__ = [
     "compute_rgb_output",
     "L4HexLatticeValidation",
     "validate_hex_lattice_system",
+
+    # Self-Reflective Bloom Learning System (Block 9)
+    "BloomEventType",
+    "BloomEvent",
+    "PatternBuffer",
+    "BloomDetector",
+    "SeedMemory",
+    "BloomMetrics",
+    "CoherentSeeder",
+    "ReflectionStepResult",
+    "SelfReflectiveLattice",
+    "demo_self_reflective_lattice",
 ]

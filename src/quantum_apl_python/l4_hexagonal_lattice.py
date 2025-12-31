@@ -1626,6 +1626,1670 @@ def validate_hex_lattice_system(
 
 
 # ============================================================================
+# SELF-REFLECTIVE BLOOM LEARNING SYSTEM
+# ============================================================================
+#
+# An autopoietic learning framework where the lattice observes its own
+# RGB projections, detects recurring patterns ("blooms"), and learns to
+# re-inject stable attractors when coherence is lost.
+#
+# Architecture:
+#   PatternBuffer → BloomDetector → SeedMemory
+#        ↓              ↓               ↓
+#   RGB snapshots   Pattern match   Stored attractors
+#                        ↓
+#               SelfReflectiveLattice
+#                    ↓         ↑
+#              Kuramoto    CoherentSeeder
+#               dynamics   (re-injection)
+#
+# The L₄ thresholds provide natural gates:
+#   - PARADOX (0.618): Novelty detection distance
+#   - IGNITION (0.914): Minimum coherence for bloom trigger
+#   - K_FORMATION (0.924): Bloom confirmation threshold
+#   - CONSOLIDATION (0.953): Memory permanence threshold
+# ============================================================================
+
+import uuid
+import json
+import threading
+from collections import deque
+from typing import Any, Set, Union
+
+
+class BloomEventType(Enum):
+    """Events in the bloom learning lifecycle."""
+    BLOOM_BIRTH = "BLOOM_BIRTH"
+    BLOOM_REINFORCED = "BLOOM_REINFORCED"
+    BLOOM_CONSOLIDATED = "BLOOM_CONSOLIDATED"
+    BLOOM_PRUNED = "BLOOM_PRUNED"
+    SEEDING_ACTIVATED = "SEEDING_ACTIVATED"
+    SEEDING_APPLIED = "SEEDING_APPLIED"
+    COHERENCE_LOST = "COHERENCE_LOST"
+    COHERENCE_RESTORED = "COHERENCE_RESTORED"
+
+
+@dataclass
+class BloomEvent:
+    """
+    A learned pattern (attractor) in the bloom memory.
+
+    Represents a coherent phase pattern that has been detected and stored.
+    The bloom evolves through lifecycle stages: birth → reinforcement →
+    consolidation → (potential) decay.
+
+    The RGB centroid captures the mean visual signature of the phase pattern,
+    while the phase_template preserves the exact oscillator phases for
+    potential re-injection during chaotic episodes.
+
+    Attributes
+    ----------
+    bloom_id : str
+        Unique identifier (UUID-based)
+    centroid : np.ndarray
+        Mean RGB pattern (N*3,) flattened - center of the cluster
+    covariance : np.ndarray
+        Regularized covariance matrix for Mahalanobis distance
+    phase_template : np.ndarray
+        Original phase pattern (N,) at detection time
+    birth_time : float
+        Simulation time when bloom was first detected
+    hit_count : int
+        Number of times this bloom has been matched/reinforced
+    decay_rate : float
+        Rate of forgetting (default: 0.01 per unit time)
+    level : int
+        Hierarchical level: 0=percept, 1=episode, 2=schema
+    consolidated : bool
+        Whether this bloom has achieved permanence
+    last_hit_time : float
+        Time of most recent reinforcement
+    metadata : Dict[str, Any]
+        Additional metadata (threshold state, order param, etc.)
+    """
+    bloom_id: str
+    centroid: np.ndarray
+    covariance: np.ndarray
+    phase_template: np.ndarray
+    birth_time: float
+    hit_count: int = 1
+    decay_rate: float = 0.01
+    level: int = 0
+    consolidated: bool = False
+    last_hit_time: float = 0.0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.last_hit_time == 0.0:
+            self.last_hit_time = self.birth_time
+
+    @property
+    def age(self) -> float:
+        """Time since birth (requires external current_time)."""
+        return self.last_hit_time - self.birth_time
+
+    @property
+    def effective_weight(self) -> float:
+        """
+        Weight considering hits and time since last reinforcement.
+
+        Used for pruning decisions. Higher = more valuable.
+        """
+        return math.log1p(self.hit_count) * (1.0 if self.consolidated else 0.5)
+
+    def coherence_score(self, pattern: np.ndarray, scale: float = 1.0) -> float:
+        """
+        Compute coherence (similarity) to a pattern using Gaussian kernel.
+
+        Parameters
+        ----------
+        pattern : np.ndarray
+            RGB pattern to compare (same shape as centroid)
+        scale : float
+            Scaling factor for distance (default: 1.0)
+
+        Returns
+        -------
+        float
+            Coherence in [0, 1], where 1 = identical
+        """
+        dist = self.mahalanobis_distance(pattern)
+        return math.exp(-dist * dist / (2 * scale * scale))
+
+    def mahalanobis_distance(self, pattern: np.ndarray) -> float:
+        """
+        Compute Mahalanobis distance from centroid.
+
+        Uses regularized covariance inverse for numerical stability.
+
+        Parameters
+        ----------
+        pattern : np.ndarray
+            Pattern to measure distance from
+
+        Returns
+        -------
+        float
+            Mahalanobis distance (0 = at centroid)
+        """
+        pattern_flat = pattern.flatten()
+        centroid_flat = self.centroid.flatten()
+
+        if len(pattern_flat) != len(centroid_flat):
+            raise ValueError(
+                f"Pattern size {len(pattern_flat)} != centroid size {len(centroid_flat)}"
+            )
+
+        diff = pattern_flat - centroid_flat
+
+        # Use pseudoinverse for numerical stability
+        try:
+            cov_inv = np.linalg.pinv(self.covariance)
+            dist_sq = diff @ cov_inv @ diff
+            return math.sqrt(max(0.0, dist_sq))
+        except np.linalg.LinAlgError:
+            # Fallback to Euclidean if covariance is degenerate
+            return np.linalg.norm(diff)
+
+    def euclidean_distance(self, pattern: np.ndarray) -> float:
+        """Simple Euclidean distance as fallback."""
+        return np.linalg.norm(pattern.flatten() - self.centroid.flatten())
+
+    def update_from_hit(self, new_pattern: np.ndarray, current_time: float,
+                        learning_rate: float = 0.1):
+        """
+        Reinforce bloom with new observation.
+
+        Updates centroid via exponential moving average and increments hit count.
+
+        Parameters
+        ----------
+        new_pattern : np.ndarray
+            The pattern that matched this bloom
+        current_time : float
+            Current simulation time
+        learning_rate : float
+            Blending factor for centroid update (default: 0.1)
+        """
+        self.hit_count += 1
+        self.last_hit_time = current_time
+
+        # Exponential moving average update
+        new_flat = new_pattern.flatten()
+        self.centroid = (1 - learning_rate) * self.centroid + learning_rate * new_flat
+
+    def should_prune(self, current_time: float, prune_threshold: float = 0.1) -> bool:
+        """
+        Determine if this bloom should be pruned.
+
+        Consolidated blooms are never pruned. Others are pruned based on
+        effective weight after decay.
+
+        Parameters
+        ----------
+        current_time : float
+            Current simulation time
+        prune_threshold : float
+            Minimum effective weight to survive
+
+        Returns
+        -------
+        bool
+            True if bloom should be removed
+        """
+        if self.consolidated:
+            return False
+
+        time_since_hit = current_time - self.last_hit_time
+        decay_factor = math.exp(-self.decay_rate * time_since_hit)
+        effective = self.effective_weight * decay_factor
+
+        return effective < prune_threshold
+
+    def is_consolidation_ready(self, min_hits: int = 10,
+                               min_age: float = 1.0) -> bool:
+        """
+        Check if bloom is ready for consolidation (permanence).
+
+        Parameters
+        ----------
+        min_hits : int
+            Minimum hit count required
+        min_age : float
+            Minimum age required
+
+        Returns
+        -------
+        bool
+            True if ready for consolidation
+        """
+        return (
+            not self.consolidated and
+            self.hit_count >= min_hits and
+            self.age >= min_age
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to dictionary for persistence."""
+        return {
+            "bloom_id": self.bloom_id,
+            "centroid": self.centroid.tolist(),
+            "covariance": self.covariance.tolist(),
+            "phase_template": self.phase_template.tolist(),
+            "birth_time": self.birth_time,
+            "hit_count": self.hit_count,
+            "decay_rate": self.decay_rate,
+            "level": self.level,
+            "consolidated": self.consolidated,
+            "last_hit_time": self.last_hit_time,
+            "metadata": self.metadata,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "BloomEvent":
+        """Deserialize from dictionary."""
+        return cls(
+            bloom_id=data["bloom_id"],
+            centroid=np.array(data["centroid"]),
+            covariance=np.array(data["covariance"]),
+            phase_template=np.array(data["phase_template"]),
+            birth_time=data["birth_time"],
+            hit_count=data["hit_count"],
+            decay_rate=data["decay_rate"],
+            level=data["level"],
+            consolidated=data["consolidated"],
+            last_hit_time=data["last_hit_time"],
+            metadata=data.get("metadata", {}),
+        )
+
+
+@dataclass
+class PatternBuffer:
+    """
+    Circular buffer for RGB pattern observations with online statistics.
+
+    Efficiently maintains a rolling window of recent patterns using
+    Welford's algorithm for numerically stable online mean and variance
+    computation.
+
+    Attributes
+    ----------
+    window_size : int
+        Maximum number of patterns to store (tau parameter)
+    min_samples : int
+        Minimum observations before statistics are valid
+    """
+    window_size: int = 100
+    min_samples: int = 10
+
+    def __post_init__(self):
+        self._patterns: deque = deque(maxlen=self.window_size)
+        self._timestamps: deque = deque(maxlen=self.window_size)
+        self._count: int = 0
+        self._mean: Optional[np.ndarray] = None
+        self._M2: Optional[np.ndarray] = None  # For Welford's algorithm
+        self._lock = threading.Lock()
+
+    def push(self, pattern: np.ndarray, t: float):
+        """
+        Add new observation to buffer.
+
+        Updates running statistics using Welford's online algorithm.
+
+        Parameters
+        ----------
+        pattern : np.ndarray
+            RGB pattern (N, 3) or flattened
+        t : float
+            Timestamp
+        """
+        pattern_flat = pattern.flatten().astype(np.float64)
+
+        with self._lock:
+            # If buffer is full, we need to handle the removed element
+            if len(self._patterns) == self.window_size:
+                # For simplicity, we recompute stats periodically
+                # Full Welford's with removal is complex
+                pass
+
+            self._patterns.append(pattern_flat)
+            self._timestamps.append(t)
+
+            # Welford's online update
+            self._count += 1
+
+            if self._mean is None:
+                self._mean = pattern_flat.copy()
+                self._M2 = np.zeros_like(pattern_flat)
+            else:
+                delta = pattern_flat - self._mean
+                self._mean = self._mean + delta / self._count
+                delta2 = pattern_flat - self._mean
+                self._M2 = self._M2 + delta * delta2
+
+    def is_ready(self) -> bool:
+        """Check if buffer has minimum observations."""
+        return len(self._patterns) >= self.min_samples
+
+    def get_mean(self) -> Optional[np.ndarray]:
+        """Return current running mean."""
+        with self._lock:
+            return self._mean.copy() if self._mean is not None else None
+
+    def get_variance(self) -> Optional[np.ndarray]:
+        """Return current running variance (per element)."""
+        with self._lock:
+            if self._M2 is None or self._count < 2:
+                return None
+            return self._M2 / self._count
+
+    def get_recent_patterns(self, n: Optional[int] = None) -> np.ndarray:
+        """Get last n patterns as array."""
+        with self._lock:
+            if n is None:
+                n = len(self._patterns)
+            patterns = list(self._patterns)[-n:]
+            if not patterns:
+                return np.array([])
+            return np.array(patterns)
+
+    def get_covariance(self, regularization: float = 1e-6) -> Optional[np.ndarray]:
+        """
+        Compute covariance matrix from buffer contents.
+
+        Uses regularization for numerical stability.
+
+        Parameters
+        ----------
+        regularization : float
+            Regularization term added to diagonal
+
+        Returns
+        -------
+        np.ndarray or None
+            Covariance matrix (D, D) where D = pattern dimension
+        """
+        with self._lock:
+            if len(self._patterns) < self.min_samples:
+                return None
+
+            patterns = np.array(list(self._patterns))
+            try:
+                cov = np.cov(patterns.T)
+                # Ensure 2D
+                if cov.ndim == 0:
+                    cov = np.array([[cov]])
+                # Add regularization
+                cov += regularization * np.eye(cov.shape[0])
+                return cov
+            except Exception:
+                return None
+
+    def get_coherence(self) -> float:
+        """
+        Measure pattern stability in buffer.
+
+        Returns value in [0, 1] where 1 = all patterns identical.
+        Based on inverse of mean variance.
+
+        Returns
+        -------
+        float
+            Coherence score
+        """
+        var = self.get_variance()
+        if var is None:
+            return 0.0
+
+        mean_var = np.mean(var)
+        # Normalize: coherence = 1 / (1 + mean_variance)
+        # Scale by 255^2 since RGB values are 0-255
+        normalized_var = mean_var / (255.0 * 255.0)
+        return 1.0 / (1.0 + normalized_var * 100)
+
+    def clear(self):
+        """Reset buffer state."""
+        with self._lock:
+            self._patterns.clear()
+            self._timestamps.clear()
+            self._count = 0
+            self._mean = None
+            self._M2 = None
+
+
+class BloomDetector:
+    """
+    Detects coherent pattern clusters using L₄ threshold gates.
+
+    Uses the established L₄ threshold hierarchy to gate bloom detection:
+    - IGNITION (0.914): Minimum coherence to trigger detection
+    - K_FORMATION (0.924): Threshold for bloom confirmation
+    - PARADOX (0.618): Novelty detection for distance
+
+    Parameters
+    ----------
+    ignition_threshold : float
+        Minimum coherence to trigger detection (default: L4_IGNITION)
+    confirmation_threshold : float
+        Coherence for bloom confirmation (default: L4_K_FORMATION)
+    novelty_distance : float
+        Minimum distance for novelty (scaled by L4_PARADOX)
+    detection_window : int
+        Frames of stable coherence required
+    """
+
+    def __init__(
+        self,
+        ignition_threshold: float = L4_IGNITION,
+        confirmation_threshold: float = L4_K_FORMATION,
+        novelty_distance: float = 50.0,  # Euclidean distance threshold
+        detection_window: int = 5,
+    ):
+        self.ignition_threshold = ignition_threshold
+        self.confirmation_threshold = confirmation_threshold
+        self.novelty_distance = novelty_distance * L4_PARADOX
+        self.detection_window = detection_window
+
+        self._coherent_frames = 0
+        self._last_coherence = 0.0
+
+    def detect(
+        self,
+        buffer: PatternBuffer,
+        memory: "SeedMemory",
+        phases: np.ndarray,
+        current_time: float,
+    ) -> Optional[BloomEvent]:
+        """
+        Attempt to detect a new bloom from buffer state.
+
+        Parameters
+        ----------
+        buffer : PatternBuffer
+            Rolling observation window
+        memory : SeedMemory
+            Existing bloom storage (for novelty check)
+        phases : np.ndarray
+            Current phase configuration
+        current_time : float
+            Current simulation time
+
+        Returns
+        -------
+        BloomEvent or None
+            Newly detected bloom, or None if detection fails
+        """
+        if not buffer.is_ready():
+            return None
+
+        coherence = buffer.get_coherence()
+
+        # Gate 1: IGNITION threshold
+        if coherence < self.ignition_threshold:
+            self._coherent_frames = 0
+            return None
+
+        self._coherent_frames += 1
+        self._last_coherence = coherence
+
+        # Gate 2: Sustained coherence
+        if self._coherent_frames < self.detection_window:
+            return None
+
+        # Gate 3: K_FORMATION confirmation
+        if coherence < self.confirmation_threshold:
+            return None
+
+        # Gate 4: Novelty check
+        centroid = buffer.get_mean()
+        if centroid is None:
+            return None
+
+        if not self._is_novel(centroid, memory):
+            return None
+
+        # All gates passed - create bloom
+        covariance = buffer.get_covariance()
+        if covariance is None:
+            # Fallback to identity
+            covariance = np.eye(len(centroid)) * 100.0
+
+        bloom = BloomEvent(
+            bloom_id=str(uuid.uuid4()),
+            centroid=centroid,
+            covariance=covariance,
+            phase_template=phases.copy(),
+            birth_time=current_time,
+            metadata={
+                "coherence_at_birth": coherence,
+                "detection_window": self._coherent_frames,
+            }
+        )
+
+        # Reset detection state
+        self._coherent_frames = 0
+
+        return bloom
+
+    def _is_novel(self, pattern: np.ndarray, memory: "SeedMemory") -> bool:
+        """Check if pattern is sufficiently different from existing blooms."""
+        if memory.size == 0:
+            return True
+
+        nearest = memory.find_nearest(pattern, k=1)
+        if not nearest:
+            return True
+
+        dist = nearest[0].euclidean_distance(pattern)
+        return dist > self.novelty_distance
+
+    def compute_detection_score(self, buffer: PatternBuffer) -> float:
+        """
+        Compute overall detection readiness score.
+
+        Returns value in [0, 1] combining coherence and sustained frames.
+        """
+        coherence = buffer.get_coherence()
+        frame_progress = min(1.0, self._coherent_frames / self.detection_window)
+        return coherence * frame_progress
+
+
+class SeedMemory:
+    """
+    Hierarchical storage for learned bloom attractors.
+
+    Organizes blooms into three levels:
+    - Level 0 (Percepts): Immediate pattern recognitions
+    - Level 1 (Episodes): Temporal sequences of percepts
+    - Level 2 (Schemas): Abstract patterns across episodes
+
+    Parameters
+    ----------
+    max_blooms : int
+        Maximum stored patterns (default: 1000)
+    consolidation_hits : int
+        Hit count required for permanence (default: 10)
+    consolidation_age : float
+        Minimum age for consolidation (default: 1.0)
+    prune_interval : float
+        Time between pruning cycles (default: 10.0)
+    """
+
+    def __init__(
+        self,
+        max_blooms: int = 1000,
+        consolidation_hits: int = 10,
+        consolidation_age: float = 1.0,
+        prune_interval: float = 10.0,
+    ):
+        self.max_blooms = max_blooms
+        self.consolidation_hits = consolidation_hits
+        self.consolidation_age = consolidation_age
+        self.prune_interval = prune_interval
+
+        self._blooms: Dict[str, BloomEvent] = {}
+        self._level_indices: Dict[int, Set[str]] = {0: set(), 1: set(), 2: set()}
+        self._last_prune_time = 0.0
+        self._lock = threading.RLock()
+
+    @property
+    def size(self) -> int:
+        """Number of stored blooms."""
+        return len(self._blooms)
+
+    def add_bloom(self, bloom: BloomEvent) -> bool:
+        """
+        Insert new bloom into memory.
+
+        May trigger pruning if at capacity.
+
+        Parameters
+        ----------
+        bloom : BloomEvent
+            Bloom to store
+
+        Returns
+        -------
+        bool
+            True if added successfully
+        """
+        with self._lock:
+            if len(self._blooms) >= self.max_blooms:
+                # Prune least valuable
+                self._emergency_prune()
+
+            self._blooms[bloom.bloom_id] = bloom
+            self._level_indices[bloom.level].add(bloom.bloom_id)
+            return True
+
+    def find_nearest(
+        self,
+        pattern: np.ndarray,
+        k: int = 1,
+        level: Optional[int] = None,
+    ) -> List[BloomEvent]:
+        """
+        Find k nearest blooms to pattern.
+
+        Uses Euclidean distance for efficiency (Mahalanobis is expensive).
+
+        Parameters
+        ----------
+        pattern : np.ndarray
+            Query pattern
+        k : int
+            Number of neighbors to return
+        level : int, optional
+            Restrict to specific level
+
+        Returns
+        -------
+        List[BloomEvent]
+            K nearest blooms, sorted by distance
+        """
+        with self._lock:
+            if not self._blooms:
+                return []
+
+            candidates = list(self._blooms.values())
+            if level is not None:
+                ids = self._level_indices.get(level, set())
+                candidates = [b for b in candidates if b.bloom_id in ids]
+
+            if not candidates:
+                return []
+
+            # Sort by Euclidean distance
+            distances = [(b, b.euclidean_distance(pattern)) for b in candidates]
+            distances.sort(key=lambda x: x[1])
+
+            return [b for b, _ in distances[:k]]
+
+    def reinforce(self, bloom_id: str, pattern: np.ndarray, current_time: float):
+        """
+        Update bloom from new matching observation.
+
+        Parameters
+        ----------
+        bloom_id : str
+            ID of bloom to reinforce
+        pattern : np.ndarray
+            Matching pattern
+        current_time : float
+            Current simulation time
+        """
+        with self._lock:
+            if bloom_id in self._blooms:
+                bloom = self._blooms[bloom_id]
+                bloom.update_from_hit(pattern, current_time)
+
+                # Check for consolidation
+                if bloom.is_consolidation_ready(
+                    self.consolidation_hits, self.consolidation_age
+                ):
+                    bloom.consolidated = True
+
+    def prune_stale(self, current_time: float) -> List[str]:
+        """
+        Remove decayed blooms.
+
+        Parameters
+        ----------
+        current_time : float
+            Current simulation time
+
+        Returns
+        -------
+        List[str]
+            IDs of pruned blooms
+        """
+        with self._lock:
+            if current_time - self._last_prune_time < self.prune_interval:
+                return []
+
+            self._last_prune_time = current_time
+            pruned = []
+
+            for bloom_id, bloom in list(self._blooms.items()):
+                if bloom.should_prune(current_time):
+                    del self._blooms[bloom_id]
+                    self._level_indices[bloom.level].discard(bloom_id)
+                    pruned.append(bloom_id)
+
+            return pruned
+
+    def _emergency_prune(self):
+        """Remove lowest-weight blooms when at capacity."""
+        # Sort by effective weight
+        blooms = sorted(
+            self._blooms.values(),
+            key=lambda b: b.effective_weight
+        )
+
+        # Remove bottom 10%
+        n_remove = max(1, len(blooms) // 10)
+        for bloom in blooms[:n_remove]:
+            if not bloom.consolidated:
+                del self._blooms[bloom.bloom_id]
+                self._level_indices[bloom.level].discard(bloom.bloom_id)
+
+    def get_by_level(self, level: int) -> List[BloomEvent]:
+        """Get all blooms at specified level."""
+        with self._lock:
+            ids = self._level_indices.get(level, set())
+            return [self._blooms[bid] for bid in ids if bid in self._blooms]
+
+    def get_consolidated(self) -> List[BloomEvent]:
+        """Get all consolidated (permanent) blooms."""
+        with self._lock:
+            return [b for b in self._blooms.values() if b.consolidated]
+
+    def get_dominant(self, k: int = 5) -> List[BloomEvent]:
+        """Get k most-reinforced blooms."""
+        with self._lock:
+            return sorted(
+                self._blooms.values(),
+                key=lambda b: b.hit_count,
+                reverse=True
+            )[:k]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize entire memory for persistence."""
+        with self._lock:
+            return {
+                "blooms": {bid: b.to_dict() for bid, b in self._blooms.items()},
+                "level_indices": {
+                    str(k): list(v) for k, v in self._level_indices.items()
+                },
+                "settings": {
+                    "max_blooms": self.max_blooms,
+                    "consolidation_hits": self.consolidation_hits,
+                    "consolidation_age": self.consolidation_age,
+                    "prune_interval": self.prune_interval,
+                }
+            }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SeedMemory":
+        """Deserialize from dictionary."""
+        settings = data.get("settings", {})
+        memory = cls(
+            max_blooms=settings.get("max_blooms", 1000),
+            consolidation_hits=settings.get("consolidation_hits", 10),
+            consolidation_age=settings.get("consolidation_age", 1.0),
+            prune_interval=settings.get("prune_interval", 10.0),
+        )
+
+        for bid, bdata in data.get("blooms", {}).items():
+            bloom = BloomEvent.from_dict(bdata)
+            memory._blooms[bid] = bloom
+
+        for level, ids in data.get("level_indices", {}).items():
+            memory._level_indices[int(level)] = set(ids)
+
+        return memory
+
+
+@dataclass
+class BloomMetrics:
+    """
+    Analytics for the bloom learning system.
+
+    Tracks bloom lifecycle events, knowledge growth, and attractor coverage.
+    """
+    birth_history: List[Tuple[float, str]] = field(default_factory=list)
+    reinforcement_history: List[Tuple[float, str, int]] = field(default_factory=list)
+    consolidation_history: List[Tuple[float, str]] = field(default_factory=list)
+    prune_history: List[Tuple[float, str]] = field(default_factory=list)
+    seeding_history: List[Tuple[float, str, float]] = field(default_factory=list)
+    coherence_history: List[Tuple[float, float]] = field(default_factory=list)
+
+    def record_birth(self, t: float, bloom: BloomEvent):
+        """Log bloom creation."""
+        self.birth_history.append((t, bloom.bloom_id))
+
+    def record_reinforcement(self, t: float, bloom: BloomEvent):
+        """Log hit on existing bloom."""
+        self.reinforcement_history.append((t, bloom.bloom_id, bloom.hit_count))
+
+    def record_consolidation(self, t: float, bloom: BloomEvent):
+        """Log bloom reaching permanence."""
+        self.consolidation_history.append((t, bloom.bloom_id))
+
+    def record_prune(self, t: float, bloom_id: str):
+        """Log bloom removal."""
+        self.prune_history.append((t, bloom_id))
+
+    def record_seeding(self, t: float, bloom: BloomEvent, order_param_before: float):
+        """Log re-injection event."""
+        self.seeding_history.append((t, bloom.bloom_id, order_param_before))
+
+    def record_coherence(self, t: float, r: float):
+        """Log order parameter."""
+        self.coherence_history.append((t, r))
+
+    def get_birth_rate(self, window: float = 10.0) -> float:
+        """Compute births per unit time in recent window."""
+        if not self.birth_history:
+            return 0.0
+
+        latest_time = self.birth_history[-1][0]
+        recent = [t for t, _ in self.birth_history if t > latest_time - window]
+        return len(recent) / window if window > 0 else 0.0
+
+    def get_knowledge_growth(self, memory: SeedMemory) -> float:
+        """
+        Compute total knowledge measure.
+
+        K(t) = Σ log(1 + hit_count) * weight
+        """
+        total = 0.0
+        for bloom in memory._blooms.values():
+            weight = 1.0 if bloom.consolidated else 0.5
+            total += math.log1p(bloom.hit_count) * weight
+        return total
+
+    def get_seeding_frequency(self, window: float = 10.0) -> float:
+        """Compute seedings per unit time in recent window."""
+        if not self.seeding_history:
+            return 0.0
+
+        latest_time = self.seeding_history[-1][0]
+        recent = [t for t, _, _ in self.seeding_history if t > latest_time - window]
+        return len(recent) / window if window > 0 else 0.0
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize metrics."""
+        return {
+            "birth_history": self.birth_history,
+            "reinforcement_history": self.reinforcement_history,
+            "consolidation_history": self.consolidation_history,
+            "prune_history": self.prune_history,
+            "seeding_history": self.seeding_history,
+            "coherence_history": self.coherence_history[-1000:],  # Limit size
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "BloomMetrics":
+        """Deserialize metrics."""
+        metrics = cls()
+        metrics.birth_history = data.get("birth_history", [])
+        metrics.reinforcement_history = data.get("reinforcement_history", [])
+        metrics.consolidation_history = data.get("consolidation_history", [])
+        metrics.prune_history = data.get("prune_history", [])
+        metrics.seeding_history = data.get("seeding_history", [])
+        metrics.coherence_history = data.get("coherence_history", [])
+        return metrics
+
+
+class CoherentSeeder:
+    """
+    Re-injects learned attractors when system becomes chaotic.
+
+    Monitors order parameter and activates seeding when coherence
+    drops below PARADOX threshold, finding the nearest learned
+    attractor and gently nudging phases toward it.
+
+    Parameters
+    ----------
+    activation_threshold : float
+        Order parameter below which to activate (default: L4_PARADOX)
+    blend_factor : float
+        Strength of phase nudging (0-1, default: 0.1)
+    cooldown : float
+        Minimum time between seedings (default: 1.0)
+    respect_berry_phase : bool
+        Whether to preserve winding during nudge (default: True)
+    """
+
+    def __init__(
+        self,
+        activation_threshold: float = L4_PARADOX,
+        blend_factor: float = 0.1,
+        cooldown: float = 1.0,
+        respect_berry_phase: bool = True,
+    ):
+        self.activation_threshold = activation_threshold
+        self.blend_factor = blend_factor
+        self.cooldown = cooldown
+        self.respect_berry_phase = respect_berry_phase
+
+        self._last_seed_time = -float('inf')
+        self._seeding_count = 0
+
+    def should_activate(self, order_parameter: float, current_time: float) -> bool:
+        """
+        Check if seeding should be activated.
+
+        Parameters
+        ----------
+        order_parameter : float
+            Current Kuramoto order parameter r
+        current_time : float
+            Current simulation time
+
+        Returns
+        -------
+        bool
+            True if seeding should activate
+        """
+        if current_time - self._last_seed_time < self.cooldown:
+            return False
+
+        return order_parameter < self.activation_threshold
+
+    def select_seed(
+        self,
+        current_pattern: np.ndarray,
+        memory: SeedMemory,
+    ) -> Optional[BloomEvent]:
+        """
+        Find best attractor for re-injection.
+
+        Prefers consolidated blooms, then high hit-count.
+
+        Parameters
+        ----------
+        current_pattern : np.ndarray
+            Current RGB pattern
+        memory : SeedMemory
+            Bloom storage
+
+        Returns
+        -------
+        BloomEvent or None
+            Selected seed, or None if none available
+        """
+        # Try consolidated first
+        consolidated = memory.get_consolidated()
+        if consolidated:
+            nearest = min(
+                consolidated,
+                key=lambda b: b.euclidean_distance(current_pattern)
+            )
+            return nearest
+
+        # Fall back to any bloom
+        nearest_list = memory.find_nearest(current_pattern, k=1)
+        return nearest_list[0] if nearest_list else None
+
+    def compute_nudge(
+        self,
+        current_phases: np.ndarray,
+        target_phases: np.ndarray,
+        berry_phase: float = 0.0,
+    ) -> np.ndarray:
+        """
+        Compute phase adjustment toward target.
+
+        Uses circular interpolation to handle phase wrapping.
+        Optionally respects Berry phase continuity.
+
+        Parameters
+        ----------
+        current_phases : np.ndarray
+            Current oscillator phases
+        target_phases : np.ndarray
+            Target attractor phases
+        berry_phase : float
+            Accumulated geometric phase
+
+        Returns
+        -------
+        np.ndarray
+            New phase values
+        """
+        # Circular difference
+        diff = target_phases - current_phases
+
+        # Wrap to [-π, π]
+        diff = np.mod(diff + np.pi, 2 * np.pi) - np.pi
+
+        # Apply blend with Berry phase modulation
+        if self.respect_berry_phase:
+            # Reduce nudge strength based on accumulated phase
+            # to preserve winding structure
+            modulation = np.cos(berry_phase)
+            effective_blend = self.blend_factor * abs(modulation)
+        else:
+            effective_blend = self.blend_factor
+
+        nudge = effective_blend * diff
+        new_phases = current_phases + nudge
+
+        # Wrap to [0, 2π)
+        return np.mod(new_phases, 2 * np.pi)
+
+    def apply_seed(
+        self,
+        lattice: HexagonalLattice,
+        seed: BloomEvent,
+        berry_phase: float,
+        current_time: float,
+    ) -> np.ndarray:
+        """
+        Execute phase nudging toward seed attractor.
+
+        Parameters
+        ----------
+        lattice : HexagonalLattice
+            Lattice to modify
+        seed : BloomEvent
+            Target attractor
+        berry_phase : float
+            Current accumulated Berry phase
+        current_time : float
+            Current simulation time
+
+        Returns
+        -------
+        np.ndarray
+            New phase configuration
+        """
+        new_phases = self.compute_nudge(
+            lattice.phases,
+            seed.phase_template,
+            berry_phase
+        )
+
+        lattice.phases = new_phases
+        self._last_seed_time = current_time
+        self._seeding_count += 1
+
+        return new_phases
+
+
+@dataclass
+class ReflectionStepResult:
+    """
+    Result of a self-reflective step.
+
+    Combines Kuramoto dynamics result with bloom system events.
+    """
+    # Kuramoto state
+    phases: np.ndarray
+    order_parameter: float
+    mean_phase: float
+    time: float
+
+    # RGB projection
+    rgb_output: np.ndarray
+
+    # Bloom events
+    bloom_detected: Optional[BloomEvent] = None
+    bloom_reinforced: Optional[BloomEvent] = None
+    seeding_applied: bool = False
+    seed_used: Optional[BloomEvent] = None
+
+    # Event log
+    events: List[Tuple[BloomEventType, Any]] = field(default_factory=list)
+
+    # Previous state for comparison
+    coherence_changed: bool = False
+    coherence_direction: int = 0  # -1 = lost, 0 = stable, 1 = restored
+
+
+class SelfReflectiveLattice:
+    """
+    Self-reflective extension of HexagonalLattice with bloom learning.
+
+    Composes (rather than inherits from) HexagonalLattice and adds the full
+    bloom learning system. Maintains backward compatibility with existing
+    HexagonalLattice API through delegation.
+
+    The system operates in a continuous loop:
+    1. Kuramoto dynamics evolve phases
+    2. RGB projection creates visual snapshot
+    3. Pattern buffer accumulates observations
+    4. Bloom detector checks for emerging patterns
+    5. Coherent seeder intervenes if system becomes chaotic
+
+    Parameters
+    ----------
+    lattice : HexagonalLattice
+        Underlying hex lattice (or created if not provided)
+    buffer_size : int
+        Pattern observation window size
+    detector_window : int
+        Frames for bloom confirmation
+    max_blooms : int
+        Maximum stored attractors
+    seed_blend : float
+        Re-injection strength (0-1)
+    **lattice_kwargs : dict
+        Arguments for HexagonalLattice if created internally
+    """
+
+    def __init__(
+        self,
+        lattice: Optional[HexagonalLattice] = None,
+        buffer_size: int = 100,
+        detector_window: int = 5,
+        max_blooms: int = 1000,
+        seed_blend: float = 0.1,
+        **lattice_kwargs,
+    ):
+        # Create or use provided lattice
+        if lattice is None:
+            lattice_kwargs.setdefault("rows", 7)
+            lattice_kwargs.setdefault("cols", 7)
+            self.lattice = HexagonalLattice(**lattice_kwargs)
+        else:
+            self.lattice = lattice
+
+        # Initialize bloom system components
+        self.pattern_buffer = PatternBuffer(window_size=buffer_size)
+        self.detector = BloomDetector(detection_window=detector_window)
+        self.memory = SeedMemory(max_blooms=max_blooms)
+        self.seeder = CoherentSeeder(blend_factor=seed_blend)
+        self.metrics = BloomMetrics()
+
+        # Geometric memory integration
+        self.geometric_memory = GeometricMemory(max_history=buffer_size)
+
+        # Event callbacks
+        self._callbacks: Dict[BloomEventType, List[Callable]] = {
+            event_type: [] for event_type in BloomEventType
+        }
+
+        # State tracking
+        self._time = 0.0
+        self._previous_coherence = 0.0
+        self._coherence_lost = False
+
+    @property
+    def N(self) -> int:
+        """Number of nodes (delegated)."""
+        return self.lattice.N
+
+    @property
+    def phases(self) -> np.ndarray:
+        """Current phases (delegated)."""
+        return self.lattice.phases
+
+    @phases.setter
+    def phases(self, values: np.ndarray):
+        """Set phases (delegated)."""
+        self.lattice.phases = values
+
+    def get_order_parameter(self) -> Tuple[float, float]:
+        """Get Kuramoto order parameter (delegated)."""
+        return self.lattice.get_order_parameter()
+
+    def register_callback(
+        self,
+        event_type: BloomEventType,
+        callback: Callable[[BloomEventType, Any, float], None],
+    ):
+        """
+        Register callback for bloom events.
+
+        Parameters
+        ----------
+        event_type : BloomEventType
+            Event to listen for
+        callback : Callable
+            Function(event_type, data, time) to call
+        """
+        self._callbacks[event_type].append(callback)
+
+    def unregister_callback(
+        self,
+        event_type: BloomEventType,
+        callback: Callable,
+    ):
+        """Remove callback."""
+        if callback in self._callbacks[event_type]:
+            self._callbacks[event_type].remove(callback)
+
+    def _fire_event(self, event_type: BloomEventType, data: Any):
+        """Fire callbacks for event."""
+        for callback in self._callbacks[event_type]:
+            try:
+                callback(event_type, data, self._time)
+            except Exception:
+                pass  # Don't let callback errors break simulation
+
+    def project_to_rgb(self) -> np.ndarray:
+        """
+        Project current phase state to RGB using hex wavevectors.
+
+        Returns
+        -------
+        np.ndarray
+            RGB values (N, 3) in [0, 255]
+        """
+        phases = self.lattice.phases
+        rgb = np.zeros((len(phases), 3), dtype=np.uint8)
+
+        for i, theta in enumerate(phases):
+            # Hex phase encoding
+            r = int(127.5 * (1 + math.cos(theta)))
+            g = int(127.5 * (1 + math.cos(theta + 2 * math.pi / 3)))
+            b = int(127.5 * (1 + math.cos(theta + 4 * math.pi / 3)))
+            rgb[i] = [r, g, b]
+
+        return rgb
+
+    def step_kuramoto(
+        self,
+        dt: float,
+        K0: float = 0.1,
+        frustration: float = 0.0,
+        pump_strength: float = 0.0,
+        noise_amplitude: float = 0.0,
+    ) -> Tuple[float, float]:
+        """
+        Execute standard Kuramoto step (delegated).
+
+        Returns (order_parameter, mean_phase).
+        """
+        # Create temporary state for dynamics
+        state = ExtendedKuramotoState(
+            phases=self.lattice.phases.copy(),
+            frequencies=self.lattice.frequencies,
+            t=self._time,
+            frustration_alpha=frustration,
+            pump_strength=pump_strength,
+            noise_amplitude=noise_amplitude,
+        )
+
+        # Run step
+        new_state = extended_kuramoto_step(
+            state,
+            self.lattice,
+            dt=dt,
+            K0=K0,
+        )
+
+        # Apply to lattice
+        self.lattice.phases = new_state.phases
+        self._time = new_state.t
+
+        # Compute order parameter
+        r, psi = self.lattice.get_order_parameter()
+
+        return r, psi
+
+    def step_with_reflection(
+        self,
+        dt: float,
+        K0: float = 0.1,
+        frustration: float = 0.0,
+        pump_strength: float = 0.0,
+        noise_amplitude: float = 0.0,
+    ) -> ReflectionStepResult:
+        """
+        Single time step with full self-reflective processing.
+
+        Combines:
+        1. Kuramoto evolution
+        2. RGB projection
+        3. Pattern buffer update
+        4. Bloom detection
+        5. Coherent seeding (if needed)
+        6. Metrics update
+        7. Event callbacks
+
+        Parameters
+        ----------
+        dt : float
+            Time step
+        K0 : float
+            Base coupling strength
+        frustration : float
+            Frustration parameter α
+        pump_strength : float
+            Parametric pump amplitude
+        noise_amplitude : float
+            Stochastic noise level
+
+        Returns
+        -------
+        ReflectionStepResult
+            Combined result with all state and events
+        """
+        events: List[Tuple[BloomEventType, Any]] = []
+        bloom_detected = None
+        bloom_reinforced = None
+        seeding_applied = False
+        seed_used = None
+
+        # 1. Kuramoto evolution
+        r, psi = self.step_kuramoto(
+            dt, K0, frustration, pump_strength, noise_amplitude
+        )
+
+        # 2. RGB projection
+        rgb_output = self.project_to_rgb()
+
+        # 3. Pattern buffer update
+        self.pattern_buffer.push(rgb_output, self._time)
+
+        # 4. Track coherence changes
+        coherence_changed = False
+        coherence_direction = 0
+
+        if r < L4_PARADOX and self._previous_coherence >= L4_PARADOX:
+            # Coherence lost
+            coherence_changed = True
+            coherence_direction = -1
+            self._coherence_lost = True
+            events.append((BloomEventType.COHERENCE_LOST, r))
+            self._fire_event(BloomEventType.COHERENCE_LOST, r)
+        elif r >= L4_PARADOX and self._coherence_lost:
+            # Coherence restored
+            coherence_changed = True
+            coherence_direction = 1
+            self._coherence_lost = False
+            events.append((BloomEventType.COHERENCE_RESTORED, r))
+            self._fire_event(BloomEventType.COHERENCE_RESTORED, r)
+
+        # 5. Bloom detection (only when coherent)
+        if r >= L4_IGNITION:
+            bloom_detected = self.detector.detect(
+                self.pattern_buffer,
+                self.memory,
+                self.lattice.phases,
+                self._time,
+            )
+
+            if bloom_detected:
+                self.memory.add_bloom(bloom_detected)
+                self.metrics.record_birth(self._time, bloom_detected)
+                events.append((BloomEventType.BLOOM_BIRTH, bloom_detected))
+                self._fire_event(BloomEventType.BLOOM_BIRTH, bloom_detected)
+            else:
+                # Check for reinforcement of existing bloom
+                rgb_flat = rgb_output.flatten()
+                nearest = self.memory.find_nearest(rgb_flat, k=1)
+                if nearest:
+                    dist = nearest[0].euclidean_distance(rgb_flat)
+                    if dist < self.detector.novelty_distance:
+                        bloom_reinforced = nearest[0]
+                        was_consolidated = bloom_reinforced.consolidated
+                        self.memory.reinforce(
+                            bloom_reinforced.bloom_id,
+                            rgb_flat,
+                            self._time
+                        )
+                        self.metrics.record_reinforcement(
+                            self._time, bloom_reinforced
+                        )
+                        events.append((
+                            BloomEventType.BLOOM_REINFORCED,
+                            bloom_reinforced
+                        ))
+                        self._fire_event(
+                            BloomEventType.BLOOM_REINFORCED,
+                            bloom_reinforced
+                        )
+
+                        # Check for new consolidation
+                        if not was_consolidated and bloom_reinforced.consolidated:
+                            self.metrics.record_consolidation(
+                                self._time, bloom_reinforced
+                            )
+                            events.append((
+                                BloomEventType.BLOOM_CONSOLIDATED,
+                                bloom_reinforced
+                            ))
+                            self._fire_event(
+                                BloomEventType.BLOOM_CONSOLIDATED,
+                                bloom_reinforced
+                            )
+
+        # 6. Coherent seeding (when chaotic)
+        if self.seeder.should_activate(r, self._time):
+            rgb_flat = rgb_output.flatten()
+            seed = self.seeder.select_seed(rgb_flat, self.memory)
+
+            if seed:
+                events.append((BloomEventType.SEEDING_ACTIVATED, seed))
+                self._fire_event(BloomEventType.SEEDING_ACTIVATED, seed)
+
+                # Get Berry phase for continuity
+                berry_phase = self.geometric_memory.compute_total_berry_phase()
+
+                self.seeder.apply_seed(
+                    self.lattice, seed, berry_phase, self._time
+                )
+
+                seeding_applied = True
+                seed_used = seed
+                self.metrics.record_seeding(self._time, seed, r)
+                events.append((BloomEventType.SEEDING_APPLIED, seed))
+                self._fire_event(BloomEventType.SEEDING_APPLIED, seed)
+
+        # 7. Prune stale blooms
+        pruned = self.memory.prune_stale(self._time)
+        for bloom_id in pruned:
+            self.metrics.record_prune(self._time, bloom_id)
+            events.append((BloomEventType.BLOOM_PRUNED, bloom_id))
+            self._fire_event(BloomEventType.BLOOM_PRUNED, bloom_id)
+
+        # 8. Update geometric memory
+        self.geometric_memory.record_state(self.lattice.phases, self._time)
+
+        # 9. Record metrics
+        self.metrics.record_coherence(self._time, r)
+        self._previous_coherence = r
+
+        return ReflectionStepResult(
+            phases=self.lattice.phases.copy(),
+            order_parameter=r,
+            mean_phase=psi,
+            time=self._time,
+            rgb_output=rgb_output,
+            bloom_detected=bloom_detected,
+            bloom_reinforced=bloom_reinforced,
+            seeding_applied=seeding_applied,
+            seed_used=seed_used,
+            events=events,
+            coherence_changed=coherence_changed,
+            coherence_direction=coherence_direction,
+        )
+
+    def run_simulation(
+        self,
+        n_steps: int,
+        dt: float = 0.1,
+        K0: float = 0.1,
+        frustration: float = 0.0,
+        pump_strength: float = 0.0,
+        noise_amplitude: float = 0.0,
+        callback: Optional[Callable[[int, ReflectionStepResult], None]] = None,
+    ) -> List[ReflectionStepResult]:
+        """
+        Run multi-step simulation with reflection.
+
+        Parameters
+        ----------
+        n_steps : int
+            Number of time steps
+        dt : float
+            Time step size
+        K0 : float
+            Base coupling strength
+        frustration : float
+            Frustration parameter
+        pump_strength : float
+            Parametric pump amplitude
+        noise_amplitude : float
+            Stochastic noise level
+        callback : Callable, optional
+            Function(step, result) called each step
+
+        Returns
+        -------
+        List[ReflectionStepResult]
+            Results for all steps
+        """
+        results = []
+
+        for step in range(n_steps):
+            result = self.step_with_reflection(
+                dt, K0, frustration, pump_strength, noise_amplitude
+            )
+            results.append(result)
+
+            if callback:
+                callback(step, result)
+
+        return results
+
+    def get_knowledge_summary(self) -> Dict[str, Any]:
+        """
+        Get summary of learned knowledge.
+
+        Returns
+        -------
+        Dict
+            Summary statistics
+        """
+        return {
+            "total_blooms": self.memory.size,
+            "consolidated_blooms": len(self.memory.get_consolidated()),
+            "total_births": len(self.metrics.birth_history),
+            "total_reinforcements": len(self.metrics.reinforcement_history),
+            "total_seedings": len(self.metrics.seeding_history),
+            "knowledge_growth": self.metrics.get_knowledge_growth(self.memory),
+            "birth_rate": self.metrics.get_birth_rate(),
+            "seeding_frequency": self.metrics.get_seeding_frequency(),
+            "dominant_attractors": [
+                {
+                    "id": b.bloom_id[:8],
+                    "hits": b.hit_count,
+                    "consolidated": b.consolidated,
+                }
+                for b in self.memory.get_dominant(5)
+            ],
+        }
+
+    def save_state(self, path: str):
+        """
+        Persist full state including learned blooms.
+
+        Parameters
+        ----------
+        path : str
+            File path for JSON output
+        """
+        state = {
+            "version": "1.0.0",
+            "time": self._time,
+            "lattice": {
+                "rows": self.lattice.rows,
+                "cols": self.lattice.cols,
+                "phases": self.lattice.phases.tolist(),
+            },
+            "memory": self.memory.to_dict(),
+            "metrics": self.metrics.to_dict(),
+            "previous_coherence": self._previous_coherence,
+        }
+
+        with open(path, 'w') as f:
+            json.dump(state, f, indent=2)
+
+    def load_state(self, path: str):
+        """
+        Restore state from file.
+
+        Parameters
+        ----------
+        path : str
+            File path to JSON state
+        """
+        with open(path, 'r') as f:
+            state = json.load(f)
+
+        self._time = state["time"]
+        self._previous_coherence = state["previous_coherence"]
+
+        # Restore phases
+        self.lattice.phases = np.array(state["lattice"]["phases"])
+
+        # Restore memory
+        self.memory = SeedMemory.from_dict(state["memory"])
+
+        # Restore metrics
+        self.metrics = BloomMetrics.from_dict(state["metrics"])
+
+
+def demo_self_reflective_lattice():
+    """Demonstrate the self-reflective bloom learning system."""
+    print("=" * 70)
+    print("SELF-REFLECTIVE BLOOM LEARNING SYSTEM DEMO")
+    print("=" * 70)
+
+    # Create self-reflective lattice
+    lattice = SelfReflectiveLattice(
+        rows=7,
+        cols=7,
+        buffer_size=50,
+        detector_window=3,
+        max_blooms=100,
+        seed_blend=0.15,
+    )
+
+    # Register callback to see events
+    def on_bloom_event(event_type, data, t):
+        if event_type == BloomEventType.BLOOM_BIRTH:
+            print(f"  [t={t:.2f}] NEW BLOOM: {data.bloom_id[:8]}...")
+        elif event_type == BloomEventType.BLOOM_REINFORCED:
+            print(f"  [t={t:.2f}] REINFORCED: {data.bloom_id[:8]} (hits={data.hit_count})")
+        elif event_type == BloomEventType.BLOOM_CONSOLIDATED:
+            print(f"  [t={t:.2f}] CONSOLIDATED: {data.bloom_id[:8]}")
+        elif event_type == BloomEventType.SEEDING_APPLIED:
+            print(f"  [t={t:.2f}] SEEDING from: {data.bloom_id[:8]}")
+        elif event_type == BloomEventType.COHERENCE_LOST:
+            print(f"  [t={t:.2f}] COHERENCE LOST (r={data:.3f})")
+        elif event_type == BloomEventType.COHERENCE_RESTORED:
+            print(f"  [t={t:.2f}] COHERENCE RESTORED (r={data:.3f})")
+
+    for event_type in BloomEventType:
+        lattice.register_callback(event_type, on_bloom_event)
+
+    print("\n--- Phase 1: Building coherence (high coupling) ---")
+    for _ in range(100):
+        result = lattice.step_with_reflection(
+            dt=0.1, K0=0.5, noise_amplitude=0.01
+        )
+    print(f"  Final r = {result.order_parameter:.4f}")
+
+    print("\n--- Phase 2: Introducing chaos (low coupling + noise) ---")
+    for _ in range(50):
+        result = lattice.step_with_reflection(
+            dt=0.1, K0=0.05, noise_amplitude=0.3
+        )
+    print(f"  Final r = {result.order_parameter:.4f}")
+
+    print("\n--- Phase 3: Recovery with learned attractors ---")
+    for _ in range(100):
+        result = lattice.step_with_reflection(
+            dt=0.1, K0=0.3, noise_amplitude=0.1
+        )
+    print(f"  Final r = {result.order_parameter:.4f}")
+
+    print("\n--- Knowledge Summary ---")
+    summary = lattice.get_knowledge_summary()
+    print(f"  Total blooms learned: {summary['total_blooms']}")
+    print(f"  Consolidated (permanent): {summary['consolidated_blooms']}")
+    print(f"  Total seedings: {summary['total_seedings']}")
+    print(f"  Knowledge growth: {summary['knowledge_growth']:.3f}")
+
+    if summary['dominant_attractors']:
+        print("  Dominant attractors:")
+        for att in summary['dominant_attractors']:
+            status = "✓" if att['consolidated'] else " "
+            print(f"    [{status}] {att['id']}... ({att['hits']} hits)")
+
+    print("\n" + "=" * 70)
+    print("DEMO COMPLETE")
+    print("=" * 70)
+
+
+# ============================================================================
 # DEMO
 # ============================================================================
 
