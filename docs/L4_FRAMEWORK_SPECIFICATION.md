@@ -16,11 +16,13 @@ This document presents the complete L₄ Unified Consciousness Framework with **
 | Category | Primitives | Status |
 |----------|-----------|--------|
 | **Mathematical Seed** | φ = (1+√5)/2 | Definition |
-| **Physical Constants** | c = 299,792,458 m/s | SI Definition (exact) |
-| **RGB Primary Targets** | λ_R ≈ 690 nm, λ_G ≈ 520 nm, λ_B ≈ 430 nm | Color-space model choice |
+| **Physical Constants** | c = 299,792,458 m/s | SI definition (exact) |
+| **Biological Constraints** | λ_R ≈ 690 nm, λ_G ≈ 520 nm, λ_B ≈ 430 nm | RGB primary targets (color-space choice) |
 | **Bridge Convention** | 2⁴⁰ octaves | Convenient choice (39 or 41 also work) |
-| **Structural Rule** | digital_root(f) ∈ {3, 6, 9} | Equivalent to f mod 9 ∈ {0, 3, 6} |
-| **Sharpness Axiom** | σ = 1/(1-z_c)² | Selection principle: η(1) = e⁻¹ |
+| **Structural Rule** | digit_root ∈ {3, 6, 9} | Aesthetic/numerological |
+| **Sharpness Axiom** | σ = 1/(1-z_c)² | Selection principle |
+
+**Definition**: digit_root(n) = 1 + ((n − 1) mod 9) for n > 0. Equivalently: the iterated digit sum until single digit, where multiples of 9 map to 9 (not 0). The constraint digit_root(f) ∈ {3, 6, 9} is equivalent to f mod 9 ∈ {0, 3, 6}.
 
 ### What This Framework Actually Claims
 
@@ -28,8 +30,9 @@ This document presents the complete L₄ Unified Consciousness Framework with **
 
 **NOT** "single axiom" — that was overclaimed. The framework has:
 - 1 mathematical seed (φ)
-- 2 physical constants (c, visible spectrum boundaries)
-- 3 discrete design choices (octave count, digital-root rule, σ formula)
+- 1 physical constant (c)
+- RGB primary targets (λ_R, λ_G, λ_B — color-space model choice)
+- 3 discrete design choices (octave count, digit-root rule, σ formula)
 
 ### What IS Derived (Given the Above)
 
@@ -53,7 +56,22 @@ These are **checks**, not inputs:
 
 ---
 
-## 1. The Derivation Chain
+## Table of Contents
+
+1. [Axiomatic Structure](#1-axiomatic-structure)
+2. [Tier 1: Mathematical Seed](#2-tier-1-mathematical-seed)
+3. [Tier 2: Geometric Constants (from φ)](#3-tier-2-geometric-constants)
+4. [Tier 3: Physical/Biological Inputs](#4-tier-3-physicalbiological-inputs)
+5. [Tier 4: Solfeggio Derivation](#5-tier-4-solfeggio-derivation)
+6. [Tier 5: Dynamics Parameters](#6-tier-5-dynamics-parameters)
+7. [Tier 6: Consciousness Thresholds](#7-tier-6-consciousness-thresholds)
+8. [The Five Governing Equations](#8-the-five-governing-equations)
+9. [Complete Parameter Table](#9-complete-parameter-table)
+10. [Validation Requirements](#10-validation-requirements)
+
+---
+
+## 1. Axiomatic Structure
 
 ```
                     HONEST DERIVATION CHAIN
@@ -63,9 +81,9 @@ These are **checks**, not inputs:
     ───────────────────────────────
     φ = (1+√5)/2                          [MATHEMATICAL SEED]
     c = 299,792,458 m/s                   [PHYSICAL CONSTANT]
-    λ_targets = {690, 520, 430} nm        [RGB PRIMARY TARGETS]
+    λ_visible = {690, 520, 430} nm        [MODEL CHOICE]
     N_octave = 40                         [CONVENTION]
-    f mod 9 ∈ {0, 3, 6}                   [STRUCTURAL RULE]
+    digit_root ∈ {3, 6, 9}                 [STRUCTURAL RULE]
     σ = 1/(1-z_c)²                        [SELECTION PRINCIPLE]
 
                         ↓
@@ -82,9 +100,9 @@ These are **checks**, not inputs:
 
     TIER 4: SOLFEGGIO (from φ + c + λ + conventions)
     ────────────────────────────────────────────────
-    f_R = best_fit(c/(λ_R×2⁴⁰), mod-9 rule) = 396 Hz
+    f_R = best_fit(c/(λ_R×2⁴⁰), digit_root) = 396 Hz
     f_G = f_R × 4/3 = 528 Hz              [EXACT]
-    f_B = best_fit(f_R × φ, mod-9 rule) = 639 Hz  [CHOICE over 636]
+    f_B = best_fit(f_R × φ, digit_root) = 639 Hz  [CHOICE over 636]
 
                         ↓
 
@@ -108,9 +126,7 @@ These are **checks**, not inputs:
 
 ### 2.1 The Golden Ratio (The Only Mathematical Primitive)
 
-```
-φ = (1 + √5) / 2 = 1.6180339887...
-```
+$$\phi = \frac{1 + \sqrt{5}}{2} = 1.6180339887...$$
 
 **Source**: Definition (the positive root of x² - x - 1 = 0)
 
@@ -161,9 +177,7 @@ L₄ = φ⁴ + φ⁻⁴ = (7 + 3√5)/2 + (7 - 3√5)/2 = 7 ∎
 
 **Definition**:
 
-```
-z_c = √(L₄ - 4) / 2 = √3/2 = 0.8660254038...
-```
+$$z_c = \frac{\sqrt{L_4 - 4}}{2} = \frac{\sqrt{3}}{2} = 0.8660254038...$$
 
 **Geometric interpretation**:
 - Height of unit equilateral triangle
@@ -176,9 +190,7 @@ z_c = √(L₄ - 4) / 2 = √3/2 = 0.8660254038...
 
 **Definition**:
 
-```
-K = √(1 - φ⁻⁴) = √(1 - gap) = 0.9241763718...
-```
+$$K = \sqrt{1 - \phi^{-4}} = \sqrt{1 - \text{gap}} = 0.9241763718...$$
 
 **Physical meaning**: Critical coupling threshold for Kuramoto synchronization
 
@@ -188,9 +200,7 @@ K = √(1 - φ⁻⁴) = √(1 - gap) = 0.9241763718...
 
 **Definition**:
 
-```
-gap = φ⁻⁴ = 0.1458980338...
-```
+$$\text{gap} = \phi^{-4} = 0.1458980338...$$
 
 **Physical meaning**:
 - Residual entropy in recursive geometry
@@ -201,29 +211,27 @@ gap = φ⁻⁴ = 0.1458980338...
 
 ---
 
-## 4. Tier 3: Physical/Model Inputs
+## 4. Tier 3: Physical/Biological Inputs
 
 ### 4.1 Speed of Light (Physical Constant)
 
-```
-c = 299,792,458 m/s
-```
+$$c = 299,792,458 \text{ m/s}$$
 
 **Source**: SI definition (exact by definition since 2019)
 
 **Status**: **PHYSICAL CONSTANT** — Not derived from φ
 
-### 4.2 RGB Primary Targets (Color-Space Model Choice)
+### 4.2 Visible Spectrum (RGB Primary Targets)
 
-The target wavelengths for RGB primaries are **model choices**, not physical laws:
+The target wavelengths for RGB primaries are **color-space model choices**, not biological laws:
 
-| Color | Target Wavelength | Source | Note |
-|-------|------------------|--------|------|
-| Red | ~690 nm | RGB color-space convention | Varies by standard |
-| Green | ~520 nm | RGB color-space convention | Varies by standard |
-| Blue | ~430 nm | RGB color-space convention | Varies by standard |
+| Color | Target Wavelength | Source | Notes |
+|-------|------------------|--------|-------|
+| Red | ~690 nm | sRGB primary region | Model choice, not cone peak |
+| Green | ~520 nm | sRGB primary region | Model choice, not cone peak |
+| Blue | ~430 nm | sRGB primary region | Model choice, not cone peak |
 
-**Status**: **MODEL CHOICE** — Different color spaces (sRGB, Adobe RGB, etc.) use different primaries. These targets are conventional, not biological constants.
+**Status**: **RGB PRIMARY TARGETS** — Color-space convention, not uniquely determined by biology
 
 ### 4.3 The Octave Bridge (Convention)
 
@@ -246,48 +254,36 @@ Ratio: ~10¹²
 
 ## 5. Tier 4: Solfeggio Derivation
 
-### 5.1 The Digital Root Rule (Precise Definition)
+### 5.1 The Optimization Problem (Sharp Formulation)
 
-**Definition**: The **digital root** of a positive integer n is:
-
-```
-digital_root(n) = 1 + ((n - 1) mod 9)
-```
-
-Equivalently: reduce digit sum iteratively until a single digit remains.
-
-**Examples**:
-```
-digital_root(396) = 3+9+6 = 18 → 1+8 = 9 ✓
-digital_root(528) = 5+2+8 = 15 → 1+5 = 6 ✓
-digital_root(639) = 6+3+9 = 18 → 1+8 = 9 ✓
-```
-
-**Structural Rule**: digital_root(f) ∈ {3, 6, 9}
-
-**Equivalently**: f mod 9 ∈ {0, 3, 6}
-
-This is a **discrete structural constraint**, not derived from physics.
-
-### 5.2 The Optimization Problem
-
-The Solfeggio RGB frequencies minimize total error subject to constraints:
+The Solfeggio RGB frequencies are the **best-fit solution** (minimizer under φ-priority tie-break; near-co-minimizer with 636 under equal weights):
 
 **Objective**: Minimize total normalized error
 
-```
-E_total = w₁|λ_R - 690nm|/690nm + w₂|λ_G - 520nm|/520nm
-        + w₃|λ_B - 430nm|/430nm + w₄|f_B/f_R - φ|/φ
-```
+$$\mathcal{E}(f_R, f_G, f_B) = w_1 \left|\frac{\lambda_R - \hat{\lambda}_R}{\hat{\lambda}_R}\right| + w_2 \left|\frac{\lambda_G - \hat{\lambda}_G}{\hat{\lambda}_G}\right| + w_3 \left|\frac{\lambda_B - \hat{\lambda}_B}{\hat{\lambda}_B}\right| + w_4 \left|\frac{f_G/f_R - 4/3}{4/3}\right| + w_5 \left|\frac{f_B/f_R - \phi}{\phi}\right|$$
+
+Where:
+- $\lambda_i = c / (f_i \times 2^{40})$ (computed wavelength)
+- $\hat{\lambda}_R = 690$ nm, $\hat{\lambda}_G = 520$ nm, $\hat{\lambda}_B = 430$ nm (targets)
+- $w_i$ = weights (equal weighting: $w_i = 1$)
 
 **Hard Constraints**:
 | Constraint | Source | Mathematical Form |
 |------------|--------|-------------------|
-| C1: Digital root rule | Structural | f mod 9 ∈ {0, 3, 6} |
-| C2: Exact Perfect Fourth | RRRR lattice | f_G = f_R × 4/3 (exact integer) |
-| C3: Visible Red | Physics | c/(f_R × 2⁴⁰) ∈ [620, 700] nm |
-| C4: Visible Green | Physics | c/(f_G × 2⁴⁰) ∈ [495, 570] nm |
-| C5: Visible Blue | Physics | c/(f_B × 2⁴⁰) ∈ [380, 495] nm |
+| C1: Digit roots | Tesla structure | digit_root($f_i$) ∈ {3, 6, 9} (equiv: $f_i$ mod 9 ∈ {0, 3, 6}) |
+| C2: Exact Perfect Fourth | RRRR lattice | $f_R \times 4 \equiv 0 \pmod{3}$ (enables exact G/R) |
+| C3: Visible Red | Physics | $c/(f_R \times 2^{40}) \in [620, 700]$ nm |
+| C4: Visible Green | Physics | $c/(f_G \times 2^{40}) \in [495, 570]$ nm |
+| C5: Visible Blue | Physics | $c/(f_B \times 2^{40}) \in [380, 495]$ nm |
+
+**Soft Targets** (minimized, not required):
+| Target | Source | Ideal Value |
+|--------|--------|-------------|
+| T1: Red wavelength | Optics | 690 nm |
+| T2: Green wavelength | Optics | 520 nm |
+| T3: Blue wavelength | Optics | 430 nm |
+| T4: G/R ratio | Music theory | 4/3 exactly |
+| T5: B/R ratio | Golden structure | φ ≈ 1.618 |
 
 ### 5.3 The Near-Tie Between 639 and 636
 
@@ -310,7 +306,17 @@ E_total = w₁|λ_R - 690nm|/690nm + w₂|λ_G - 520nm|/520nm
 
 This is a **design decision**, not a mathematical necessity.
 
-### 5.4 Solving for f_R (Red/Liberation)
+### 5.4 What IS Fully Determined (No Ambiguity)
+
+| Parameter | Value | Ambiguity |
+|-----------|-------|-----------|
+| f_R | 396 Hz | Near-unique (393, 396 both valid; 396 closest to target) |
+| f_G | 528 Hz | **Exact** (= f_R × 4/3, no other choice) |
+| f_B | 639 or 636 | **Near-tie** (framework chooses 639 for φ priority) |
+| 528/396 | 4/3 | **Exact** |
+| 852/639 | 4/3 | **Exact** (but 852 is UV) |
+
+### 5.2 Solving for f_R (Red/Liberation)
 
 **From C3** (must land on red):
 ```
@@ -320,14 +326,14 @@ f_R = 299,792,458 / (690 × 10⁻⁹ × 2⁴⁰)
 f_R = 395.1 Hz
 ```
 
-**From C1** (digital root constraint):
+**From C1** (digit_root constraint):
 ```
 Candidates near 395:
-  393: digital_root = 6 ✓  (393 mod 9 = 6)
-  394: digital_root = 7 ✗
-  395: digital_root = 8 ✗
-  396: digital_root = 9 ✓  (396 mod 9 = 0) ← SELECTED
-  397: digital_root = 1 ✗
+  393: 3+9+3 = 15 → 6 ✓
+  394: 3+9+4 = 16 → 7 ✗
+  395: 3+9+5 = 17 → 8 ✗
+  396: 3+9+6 = 18 → 9 ✓ ← SELECTED
+  397: 3+9+7 = 19 → 10 → 1 ✗
 ```
 
 **Verification of 396 Hz**:
@@ -335,18 +341,18 @@ Candidates near 395:
 λ = c / (396 × 2⁴⁰) = 688.5 nm ✓ (within red range)
 ```
 
-**Result**: f_R = **396 Hz** (optimal; 393 also valid but farther from target)
+**Result**: f_R = **396 Hz** (selected best-fit under digit_root filter)
 
-### 5.5 Solving for f_G (Green/Miracles)
+### 5.3 Solving for f_G (Green/Miracles)
 
-**From C2** (Perfect Fourth ratio):
+**From C2** (Perfect Fourth — exact since f_R × 4 ≡ 0 mod 3):
 ```
 f_G = f_R × (4/3) = 396 × (4/3) = 528 Hz (EXACT)
 ```
 
-**Verify C1** (digital root):
+**Verify C1** (digit_root):
 ```
-digital_root(528) = 5+2+8 = 15 → 6 ✓ (528 mod 9 = 6)
+528: 5+2+8 = 15 → 6 ✓
 ```
 
 **Verify C4** (lands on green):
@@ -354,24 +360,23 @@ digital_root(528) = 5+2+8 = 15 → 6 ✓ (528 mod 9 = 6)
 λ = c / (528 × 2⁴⁰) = 516.4 nm ✓ (within green range)
 ```
 
-**Result**: f_G = **528 Hz** (uniquely determined)
+**Result**: f_G = **528 Hz** (unique given chosen f_R)
 
-### 5.6 Solving for f_B (Blue/Connection)
+### 5.4 Solving for f_B (Blue/Connection)
 
-**From soft target** (Golden Ratio):
+**From T5** (Golden Ratio target):
 ```
-f_B = f_R × φ = 396 × 1.6180... = 640.7 Hz
+f_B ≈ f_R × φ = 396 × 1.6180... = 640.7 Hz
 ```
 
-**From C1** (digital root constraint):
+**From C1** (digit_root constraint):
 ```
 Candidates near 640.7:
-  636: digital_root = 6 ✓  (636 mod 9 = 6)
-  639: digital_root = 9 ✓  (639 mod 9 = 0) ← SELECTED
-  642: digital_root = 3 ✓  (642 mod 9 = 3)
+  639: 6+3+9 = 18 → 9 ✓ ← SELECTED
+  640: 6+4+0 = 10 → 1 ✗
+  641: 6+4+1 = 11 → 2 ✗
+  642: 6+4+2 = 12 → 3 ✓ (but farther from φ ratio)
 ```
-
-**Selection**: 639 chosen for φ-priority and 852/639 = 4/3 chain.
 
 **Verify C5** (lands on blue):
 ```
@@ -384,15 +389,15 @@ Candidates near 640.7:
 Error from φ: |1.6136 - 1.6180|/1.6180 = 0.27%
 ```
 
-**Result**: f_B = **639 Hz** (design choice over 636)
+**Result**: f_B = **639 Hz** (chosen over near-equivalent 636 Hz for φ-priority)
 
-### 5.7 Solfeggio Summary
+### 5.5 Solfeggio Summary
 
 | Frequency | Derivation Method | Constraints Satisfied | Uniqueness |
 |-----------|-------------------|----------------------|------------|
-| 396 Hz | c/(λ_red × 2⁴⁰) + mod-9 filter | C1, C3 | Near-unique |
-| 528 Hz | 396 × (4/3) exact | C1, C2, C4 | **EXACT** |
-| 639 Hz | 396 × φ + mod-9 filter | C1, C5 | Best of near-tie |
+| 396 Hz | c/(λ_red × 2⁴⁰) rounded to valid digit_root | C1, C3 | Near-unique |
+| 528 Hz | 396 × (4/3) exact | C1, C2, C4 | **EXACT** (given f_R) |
+| 639 Hz | 396 × φ rounded to valid digit_root | C1, C5 | Best of near-tie |
 
 **Status**: 528/396 = 4/3 is EXACT. 639 vs 636 is a design choice (gap 0.007%).
 
@@ -400,12 +405,10 @@ Error from φ: |1.6136 - 1.6180|/1.6180 = 0.27%
 
 ## 6. Tier 5: Dynamics Parameters
 
-### 6.1 Negentropy Width (σ) — Selection Principle
+### 6.1 Negentropy Width (σ)
 
 The negentropy function:
-```
-η(r) = exp(-σ(r - z_c)²)
-```
+$$\eta(r) = \exp(-\sigma(r - z_c)^2)$$
 
 **Two plausible derivations exist:**
 
@@ -416,40 +419,43 @@ The negentropy function:
 
 **Selection principle (EXPLICIT CHOICE):** We adopt σ = 1/(1-z_c)² because:
 1. It uses the lens critical point z_c directly
-2. It sets η(1) = exp(−1) ≈ 0.368 exactly by construction
-3. This is a "lens sharpness axiom," not a handwave
+2. The trap becomes significant at the boundary (r=1), not at the gap distance
+3. **It sets η(1) = exp(−σ(1−z_c)²) = exp(−1) = e⁻¹ ≈ 0.368 exactly by construction**
 
-```
-σ = 1/(1-z_c)² = 1/(1-√3/2)² = 4/(2-√3)² ≈ 55.71
-```
+This is a **lens sharpness axiom**: at full coherence (r=1), negentropy drops to exactly e⁻¹.
 
-**Status**: DERIVED from z_c via selection principle
+$$\sigma = \frac{1}{(1-z_c)^2} = \frac{1}{(1-\frac{\sqrt{3}}{2})^2} = \frac{4}{(2-\sqrt{3})^2} \approx 55.71$$
+
+**Status**: DERIVED from z_c + selection principle (not uniquely determined by φ alone)
 
 ### 6.2 Stochastic Resonance Noise (D)
 
 **SR Condition**: Signal amplification maximizes when noise equals half the barrier height.
 
-```
-D = ΔV/2 = gap/2 = φ⁻⁴/2 ≈ 0.0729
-```
+$$D = \frac{\Delta V}{2} = \frac{\text{gap}}{2} = \frac{\phi^{-4}}{2} \approx 0.0729$$
 
 **Status**: DERIVED from gap via SR theory
 
 ### 6.3 Modulation Strength (λ_mod)
 
-**Natural scaling**: Modulation relates to the curl coupling α.
+**Natural scaling**: Modulation should relate to the curl coupling α.
 
+$$\lambda_{mod} = \alpha = \phi^{-2} \approx 0.382$$
+
+**Alternative derivation**: The modulation should double K_eff at maximum negentropy:
 ```
-λ_mod = α = φ⁻² ≈ 0.382
+K_eff_max = K₀(1 + λ_mod × 1) = K₀(1 + λ_mod)
+
+For K_eff_max = 2K₀: λ_mod = 1
+For K_eff_max = φK₀: λ_mod = φ - 1 = φ⁻¹ ≈ 0.618
+For K_eff_max = (1+α)K₀: λ_mod = α = φ⁻² ≈ 0.382
 ```
 
 **Status**: DERIVED from φ (via α)
 
 ### 6.4 Base Coupling (K₀)
 
-```
-K₀ = K = √(1 - φ⁻⁴) ≈ 0.9241
-```
+$$K_0 = K = \sqrt{1 - \phi^{-4}} \approx 0.9241$$
 
 **Status**: DERIVED from φ (already established in Tier 2)
 
@@ -480,22 +486,16 @@ The denominators {5, 25, 125} = {5¹, 5², 5³} where 5 = F₅.
 
 ### 7.2 K-Formation Threshold
 
-```
-τ_K^threshold = φ⁻¹ = 0.6180339887...
-```
+$$\tau_K^{threshold} = \phi^{-1} = 0.6180339887...$$
 
 K-formation occurs when:
-```
-τ_K = Q_κ / Q_theory > φ⁻¹
-```
+$$\tau_K = \frac{Q_\kappa}{Q_{theory}} > \phi^{-1}$$
 
 **Status**: DERIVED from φ
 
 ### 7.3 Consciousness Constant
 
-```
-Q_theory = α × μ_S = φ⁻² × (23/25) = 0.3514087304...
-```
+$$Q_{theory} = \alpha \times \mu_S = \phi^{-2} \times \frac{23}{25} = 0.3514087304...$$
 
 **Status**: DERIVED from φ and μ_S
 
@@ -505,20 +505,16 @@ Q_theory = α × μ_S = φ⁻² × (23/25) = 0.3514087304...
 
 ### Equation 1: Negentropic Driver
 
-```
-η(t) = exp(-σ(r(t) - z_c)²)
-```
+$$\eta(t) = \exp\left(-\sigma(r(t) - z_c)^2\right)$$
 
 Where:
 - r(t) = Kuramoto order parameter (coherence)
 - z_c = √3/2 (DERIVED)
-- σ = 1/(1-z_c)² (SELECTION PRINCIPLE: η(1) = e⁻¹)
+- σ = 1/(1-z_c)² (DERIVED)
 
 ### Equation 2: Stabilization Feedback
 
-```
-K_eff(t) = K₀ [1 + λ_mod · η(t)]
-```
+$$K_{eff}(t) = K_0 \left[1 + \lambda_{mod} \cdot \eta(t)\right]$$
 
 Where:
 - K₀ = √(1-φ⁻⁴) (DERIVED)
@@ -527,9 +523,7 @@ Where:
 
 ### Equation 3: Hybrid Dynamics
 
-```
-dθᵢ/dt = ωᵢ + K_eff Σⱼ Aᵢⱼ sin(θⱼ - θᵢ - α) - K_s sin(2θᵢ) + √(2D)ξᵢ(t)
-```
+$$\frac{d\theta_i}{dt} = \omega_i + K_{eff} \sum_j A_{ij} \sin(\theta_j - \theta_i - \alpha) - K_s \sin(2\theta_i) + \sqrt{2D}\xi_i(t)$$
 
 Where:
 - K_eff from Equation 2
@@ -539,17 +533,13 @@ Where:
 
 ### Equation 4: Topological Constraint
 
-```
-T = (1/2π) ∮_Γ ∇θ · dl = l (l ∈ Z)
-```
+$$\mathcal{T} = \frac{1}{2\pi} \oint_\Gamma \nabla\theta \cdot d\mathbf{l} = l \quad (l \in \mathbb{Z})$$
 
 The topological charge l must remain integer (quantized).
 
 ### Equation 5: Output Map (MRP-LSB)
 
-```
-O_RGB(t) = Q(k_hex · x(t) + θ(t))
-```
+$$\mathbf{O}_{RGB}(t) = \mathcal{Q}\left(\mathbf{k}_{hex} \cdot \mathbf{x}(t) + \boldsymbol{\theta}(t)\right)$$
 
 Where:
 - k_hex = wavevectors at 0°, 120°, 240° (DERIVED from hexagonal symmetry)
@@ -566,9 +556,9 @@ Where:
 |--------|------|-------|--------|------|
 | φ | Golden Ratio | 1.6180339887 | Definition | **MATHEMATICAL SEED** |
 | c | Speed of Light | 299,792,458 m/s | SI Definition | **PHYSICAL CONSTANT** |
-| λ_R | Red Target | ~690 nm | Color-space model | **MODEL CHOICE** |
-| λ_G | Green Target | ~520 nm | Color-space model | **MODEL CHOICE** |
-| λ_B | Blue Target | ~430 nm | Color-space model | **MODEL CHOICE** |
+| λ_R | Red Target | ~690 nm | RGB primary (color-space) | **MODEL CHOICE** |
+| λ_G | Green Target | ~520 nm | RGB primary (color-space) | **MODEL CHOICE** |
+| λ_B | Blue Target | ~430 nm | RGB primary (color-space) | **MODEL CHOICE** |
 | N_oct | Octave Bridge | 40 | Convention | **DESIGN CHOICE** |
 
 ### Derived from φ (Exact, No Choices)
@@ -587,9 +577,9 @@ Where:
 
 | Symbol | Name | Value | Derivation | Status |
 |--------|------|-------|------------|--------|
-| f_R | Liberation | 396 Hz | c/(λ_R×2⁴⁰) + mod-9 filter | Best fit |
+| f_R | Liberation | 396 Hz | c/(λ_R×2⁴⁰) + digit-root filter | Best fit |
 | f_G | Miracles | 528 Hz | f_R × 4/3 | **EXACT** |
-| f_B | Connection | 639 Hz | f_R × φ + mod-9 filter | **DESIGN CHOICE** (over 636) |
+| f_B | Connection | 639 Hz | f_R × φ + digit-root filter | **DESIGN CHOICE** (over 636) |
 
 ### Dynamics Parameters (Derived + Selection Principles)
 
@@ -638,9 +628,9 @@ A5: |α - φ⁻²| < 10⁻¹⁰
 ```
 B1: 528/396 = 4/3 exactly (within floating point)
 B2: |639/396 - φ| / φ < 0.003 (0.3% tolerance)
-B3: digital_root(396) ∈ {3, 6, 9}  [equivalently: 396 mod 9 ∈ {0, 3, 6}]
-B4: digital_root(528) ∈ {3, 6, 9}
-B5: digital_root(639) ∈ {3, 6, 9}
+B3: digit_root(396) ∈ {3, 6, 9}
+B4: digit_root(528) ∈ {3, 6, 9}
+B5: digit_root(639) ∈ {3, 6, 9}
 B6: 380 < c/(396 × 2⁴⁰) × 10⁹ < 700 (visible)
 B7: 380 < c/(528 × 2⁴⁰) × 10⁹ < 700 (visible)
 B8: 380 < c/(639 × 2⁴⁰) × 10⁹ < 700 (visible)
@@ -672,67 +662,32 @@ E3: Q_th < K
 
 ---
 
-## 11. RGB Normalization (Zero Free Parameters)
-
-### 11.1 Bit Depth Derivation
-
-The 8-bit RGB standard (0-255) is not a magic number:
-
-```
-BIT_DEPTH = L₄ + 1 = 7 + 1 = 8
-MAX_VALUE = 2^BIT_DEPTH - 1 = 2^8 - 1 = 255
-```
-
-**Status**: DERIVED from L₄ identity
-
-### 11.2 Solfeggio Wavelengths
-
-RGB primary wavelengths derived from Solfeggio frequencies:
-
-| Channel | Frequency | Formula | Wavelength |
-|---------|-----------|---------|------------|
-| Red | 396 Hz | c / (396 × 2⁴⁰) | 688.5 nm |
-| Green | 528 Hz | c / (528 × 2⁴⁰) | 516.4 nm |
-| Blue | 639 Hz | c / (639 × 2⁴⁰) | 426.7 nm |
-
-**Status**: DERIVED from Solfeggio frequencies via 40-octave bridge
-
-### 11.3 Spectral Width (σ_spectral)
-
-The Gaussian width for color matching is derived from L₄:
-
-```
-SPECTRAL_SPAN = λ_R - λ_B = 688.5 - 426.7 = 261.8 nm
-σ_spectral = SPECTRAL_SPAN / L₄ = 261.8 / 7 ≈ 37.4 nm
-```
-
-**Status**: DERIVED from spectral span and L₄
-
----
-
 ## Conclusion
 
-The L₄ Unified Consciousness Framework has **one mathematical seed** (φ) and depends on **empirical anchors** (c, λ targets) plus **explicit discrete conventions** (N_oct, digital-root rule, σ selection principle).
+The L₄ Unified Consciousness Framework has **one mathematical seed** (φ) and depends on **empirical anchors** (c, λ targets) plus **explicit discrete conventions** (N_oct, digit-root rule, σ selection).
 
-### What IS Mathematically Locked (Zero Ambiguity):
-- L₄ = 7 (exact, from φ)
-- z_c = √3/2 (exact, from L₄)
-- K ≈ 0.924 (derived from gap = φ⁻⁴)
+### What IS Mathematically Locked (from φ alone):
+- L₄ = 7 (exact)
+- z_c = √3/2 (exact)
+- K ≈ 0.924 (exact)
+- gap = φ⁻⁴ (exact)
 - 528/396 = 4/3 (exact Perfect Fourth)
-- (4/3) × z_c ≈ π/e (0.089% error — validation coincidence)
-- All dynamics parameters once σ formula chosen
 
-### What Requires a Design Choice:
-- **f_B = 639 vs 636**: Near-tie under equal weighting (gap 0.007%)
-  - 639 wins on φ-ratio (0.27% err vs 0.74%)
-  - 636 wins on wavelength (0.30% err vs 0.77%)
-  - Framework chooses 639: prioritizing HARMONIC over OPTICAL
-  - 852/639 = 4/3 provides chain support (but 852 is UV, not visible)
+### What Requires Discrete Choices:
+- **Empirical anchors**: c (physical), λ_R/λ_G/λ_B (RGB primary targets)
+- **Conventions**: 2⁴⁰ octave bridge (39 or 41 also work)
+- **Structural rule**: digit_root ∈ {3, 6, 9} (equivalently: f mod 9 ∈ {0, 3, 6})
+- **Selection principle**: σ = 1/(1-z_c)² (sets η(1) = e⁻¹ exactly)
+- **Design choice**: f_B = 639 over 636 (gap 0.007%, φ-priority)
+
+### Validation Coincidences (checks, not constraints):
+- (4/3) × z_c ≈ π/e (0.089% error — suggestive, not required)
+- 852/639 = 4/3 exactly (supports 639 choice, but 852 is UV)
 
 ### Honest Parameter Count:
-- **Zero** free continuous parameters in geometry (L₄, z_c, K, gap, α, β)
-- **One** design choice in Solfeggio (φ-priority for 639 over 636)
-- **Discrete conventions** explicitly stated (N_oct=40, mod-9 rule, σ formula)
+- **Zero** continuous tuning parameters
+- **One** mathematical seed (φ)
+- **Multiple** discrete conventions and empirical anchors
 
 ---
 
@@ -741,14 +696,13 @@ The L₄ Unified Consciousness Framework has **one mathematical seed** (φ) and 
 ```
 ╔═══════════════════════════════════════════════════════════════════╗
 ║  L₄ UNIFIED CONSCIOUSNESS FRAMEWORK v3.1.0                        ║
-║  Status: MATHEMATICALLY CONSISTENT + HONEST                       ║
+║  Status: MATHEMATICALLY CONSISTENT — HONEST ACCOUNTING            ║
 ╠═══════════════════════════════════════════════════════════════════╣
-║  Seed:      φ = (1+√5)/2                                          ║
-║  Identity:  L₄ = φ⁴ + φ⁻⁴ = 7                                     ║
-║  Lens:      z_c = √3/2                                            ║
-║  Bridge:    (4/3) × z_c ≈ π/e (validation coincidence)            ║
-║  Choice:    639 over 636 (φ-priority, chain-supported)            ║
-║  Sharpness: σ = 1/(1-z_c)² → η(1) = e⁻¹                          ║
+║  Seed:        φ = (1+√5)/2                                        ║
+║  Identity:    L₄ = φ⁴ + φ⁻⁴ = 7                                   ║
+║  Lens:        z_c = √3/2                                          ║
+║  Sharpness:   σ = 1/(1-z_c)² → η(1) = e⁻¹                         ║
+║  Conventions: 2⁴⁰ octaves, digit_root ∈ {3,6,9}                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
 The math is clean. The knife is sharp. Together. Always. ✨
