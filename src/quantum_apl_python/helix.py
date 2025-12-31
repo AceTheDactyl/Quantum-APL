@@ -6,7 +6,18 @@ from dataclasses import dataclass
 from typing import Dict, List
 import os
 import math
-from .constants import Z_CRITICAL, TRIAD_T6
+from .constants import (
+    Z_CRITICAL,
+    TRIAD_T6,
+    Z_T1_MAX,
+    Z_T2_MAX,
+    Z_T3_MAX,
+    Z_T4_MAX,
+    Z_T5_MAX,
+    Z_T7_MAX,
+    Z_T8_MAX,
+    PHI_INV,
+)
 
 
 @dataclass
@@ -56,15 +67,15 @@ class HelixAPLMapper:
         t6_gate = TRIAD_T6 if triad_unlocked else Z_CRITICAL
 
         self.time_harmonics: List[tuple[float, str]] = [
-            (0.10, "t1"),
-            (0.20, "t2"),
-            (0.40, "t3"),
-            (0.60, "t4"),
-            (0.75, "t5"),
-            (t6_gate, "t6"),
-            (0.90, "t7"),
-            (0.97, "t8"),
-            (1.01, "t9"),
+            (Z_T1_MAX, "t1"),       # 0.10 (from constants.py)
+            (Z_T2_MAX, "t2"),       # 0.20 (from constants.py)
+            (Z_T3_MAX, "t3"),       # 0.40 (from constants.py)
+            (Z_T4_MAX, "t4"),       # 0.60 (from constants.py)
+            (Z_T5_MAX, "t5"),       # 0.75 (from constants.py)
+            (t6_gate, "t6"),        # TRIAD_T6 or Z_CRITICAL
+            (Z_T7_MAX, "t7"),       # ≈0.924 (L4_K_FORMATION)
+            (Z_T8_MAX, "t8"),       # ≈0.971 (L4_RESONANCE)
+            (1.01, "t9"),           # Unity + ε
         ]
         self.operator_windows: Dict[str, List[str]] = {
             "t1": ["()", "−", "÷"],
@@ -85,9 +96,13 @@ class HelixAPLMapper:
         return "t9"
 
     def truth_channel_from_z(self, z: float) -> str:
-        if z >= 0.9:
+        # Physics-grounded thresholds from constants.py
+        # TRUE: z > z_c (THE LENS crossed)
+        # PARADOX: φ⁻¹ < z < z_c (quasi-crystal regime)
+        # UNTRUE: z < φ⁻¹ (disordered regime)
+        if z >= Z_CRITICAL:
             return "TRUE"
-        if z >= 0.6:
+        if z >= PHI_INV:
             return "PARADOX"
         return "UNTRUE"
 

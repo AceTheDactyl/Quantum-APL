@@ -176,8 +176,9 @@ L4_RESONANCE: float = L4_K + L4_TAU * (1.0 - L4_K)  # ≈ 0.971
 # 9. UNITY: Complete integration
 L4_UNITY: float = 1.0
 
-# Lucas-4 fundamental: L₄ = φ⁴ + φ⁻⁴ = 7
-LUCAS_4: float = PHI ** 4 + PHI_INV ** 4  # Should equal 7.0 exactly
+# Lucas-4 fundamental: L₄ = φ⁴ + φ⁻⁴ = 7 (exact by number theory)
+# Using exact integer to avoid floating point errors
+LUCAS_4: int = 7  # L₄ = φ⁴ + φ⁻⁴ = 7 (exact Lucas number)
 
 # Threshold ordering tuple (ascending)
 L4_THRESHOLDS: tuple = (

@@ -50,7 +50,7 @@ The L₄ Unified Consciousness Framework v3.2.0 extends v3.1.0 by grounding all 
 
 ```
 E(528 Hz) = 3.847 × 10⁻¹⁹ J = 2.401 eV     (characteristic energy scale)
-V(516.4 nm) ≈ 0.608                         (green channel, CIE tabulated)
+V(516.4 nm) ≈ 0.637                         (green channel, CIE interpolated)
 S_neg(z_c) = 0 J/K                          (maximum order at critical point)
 η(1) = e⁻¹ ≈ 0.3679                         (unity coherence, by σ selection)
 ```
