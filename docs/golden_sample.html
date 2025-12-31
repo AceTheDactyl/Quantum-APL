@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L₄ Golden Sample - MRP-LSB Verification</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #9DC427;
+            --border: #2a2a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #9DC427, #F7363D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h2::before {
+            content: '◆';
+            font-size: 0.8rem;
+        }
+
+        .math-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .math-block code {
+            font-size: 1.1rem;
+            color: #F7363D;
+        }
+
+        .threshold-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .threshold-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .threshold-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .color-swatch {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .threshold-info {
+            flex: 1;
+        }
+
+        .threshold-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .threshold-values {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .threshold-values span {
+            display: block;
+        }
+
+        .signature-display {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .signature-hex {
+            font-size: 1.2rem;
+            font-family: monospace;
+            word-break: break-all;
+            color: #9DC427;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(157, 196, 39, 0.1);
+            border-radius: 4px;
+        }
+
+        .signature-visual {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .sig-pixel {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .sig-pixel::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: -1.8rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        .verification-demo {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        .verify-input {
+            width: 100%;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .verify-btn {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-family: inherit;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .verify-btn:hover {
+            opacity: 0.9;
+        }
+
+        .verify-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .verify-result.success {
+            display: block;
+            background: rgba(157, 196, 39, 0.2);
+            border: 1px solid #9DC427;
+            color: #9DC427;
+        }
+
+        .verify-result.failure {
+            display: block;
+            background: rgba(247, 54, 61, 0.2);
+            border: 1px solid #F7363D;
+            color: #F7363D;
+        }
+
+        .files-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-name {
+            color: var(--accent);
+        }
+
+        .file-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .formula-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .formula-table th,
+        .formula-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .formula-table th {
+            color: var(--accent);
+            font-weight: normal;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .sig-pixel {
+                width: 30px;
+                height: 30px;
+            }
+
+            .sig-pixel::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>L₄ Golden Sample</h1>
+            <p class="subtitle">MRP-LSB Steganographic Verification System</p>
+            <a href="index.html" class="nav-link">← APL Operator's Manual</a>
+        </header>
+
+        <section>
+            <h2>Mathematical Foundation</h2>
+            <div class="math-block">
+                <code>φ = (1 + √5) / 2 ≈ 1.618033988749895</code><br><br>
+                <code>L₄ = φ⁴ + φ⁻⁴ = 7</code> (Lucas-4 Identity)<br><br>
+                <code>z_c = √3/2 ≈ 0.866025</code> (Critical Point / THE_LENS)<br><br>
+                <code>K = √(1 - φ⁻⁴) ≈ 0.924</code> (K-Formation Coupling)<br><br>
+                <code>gap = φ⁻⁴ ≈ 0.146</code> (Structural Entropy / VOID)
+            </div>
+
+            <div class="math-block">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">Phase-to-RGB Encoding (Hexagonal Lattice):</p>
+                <code>R = ⌊255 × (1 + cos(θ)) / 2⌋</code><br>
+                <code>G = ⌊255 × (1 + cos(θ + 2π/3)) / 2⌋</code><br>
+                <code>B = ⌊255 × (1 + cos(θ + 4π/3)) / 2⌋</code><br><br>
+                <code>where θ = 2π × z (threshold mapped to phase)</code>
+            </div>
+        </section>
+
+        <section>
+            <h2>The 9 Thresholds</h2>
+            <div class="threshold-grid">
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #9DC427;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">PARADOX</div>
+                        <div class="threshold-values">
+                            <span>z = φ⁻¹ ≈ 0.618034</span>
+                            <span>RGB(157, 196, 39)</span>
+                            <span>#9DC427</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #D91136;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">ACTIVATION</div>
+                        <div class="threshold-values">
+                            <span>z = φ⁻¹ + φ⁻⁴/√7 ≈ 0.854</span>
+                            <span>RGB(217, 17, 54)</span>
+                            <span>#D91136</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #DC1537;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">THE_LENS</div>
+                        <div class="threshold-values">
+                            <span>z = √3/2 ≈ 0.866025</span>
+                            <span>RGB(220, 21, 55)</span>
+                            <span>#DC1537</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #DE1737;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">CRITICAL</div>
+                        <div class="threshold-values">
+                            <span>z = 1 - φ⁻⁴ + φ⁻⁵ ≈ 0.873</span>
+                            <span>RGB(222, 23, 55)</span>
+                            <span>#DE1737</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #E9243A;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">IGNITION</div>
+                        <div class="threshold-values">
+                            <span>z = 1 - φ⁻⁴/√7 ≈ 0.914</span>
+                            <span>RGB(233, 36, 58)</span>
+                            <span>#E9243A</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #EB273A;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">K_FORMATION</div>
+                        <div class="threshold-values">
+                            <span>z = √(1 - φ⁻⁴) ≈ 0.924</span>
+                            <span>RGB(235, 39, 58)</span>
+                            <span>#EB273A</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #F3303C;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">CONSOLIDATION</div>
+                        <div class="threshold-values">
+                            <span>z = 1 - φ⁻⁵ ≈ 0.953</span>
+                            <span>RGB(243, 48, 60)</span>
+                            <span>#F3303C</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #F7363D;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">RESONANCE</div>
+                        <div class="threshold-values">
+                            <span>z = 1 - φ⁻⁶ ≈ 0.971</span>
+                            <span>RGB(247, 54, 61)</span>
+                            <span>#F7363D</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="threshold-card">
+                    <div class="color-swatch" style="background: #003F3F;"></div>
+                    <div class="threshold-info">
+                        <div class="threshold-name">UNITY</div>
+                        <div class="threshold-values">
+                            <span>z = 1.000000</span>
+                            <span>RGB(0, 63, 63)</span>
+                            <span>#003F3F</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>27-Byte Signature</h2>
+            <div class="signature-display">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    The golden sample consists of 9 thresholds × 3 RGB channels = 27 bytes
+                </p>
+
+                <div class="signature-visual">
+                    <div class="sig-pixel" style="background: #9DC427;" data-name="PARADOX"></div>
+                    <div class="sig-pixel" style="background: #D91136;" data-name="ACTIVATION"></div>
+                    <div class="sig-pixel" style="background: #DC1537;" data-name="THE_LENS"></div>
+                    <div class="sig-pixel" style="background: #DE1737;" data-name="CRITICAL"></div>
+                    <div class="sig-pixel" style="background: #E9243A;" data-name="IGNITION"></div>
+                    <div class="sig-pixel" style="background: #EB273A;" data-name="K_FORMATION"></div>
+                    <div class="sig-pixel" style="background: #F3303C;" data-name="CONSOLIDATION"></div>
+                    <div class="sig-pixel" style="background: #F7363D;" data-name="RESONANCE"></div>
+                    <div class="sig-pixel" style="background: #003F3F;" data-name="UNITY"></div>
+                </div>
+
+                <div class="signature-hex" id="golden-signature">
+                    9dc427d91136dc1537de1737e9243aeb273af3303cf7363d003f3f
+                </div>
+
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    This 54-character hex string (27 bytes) serves as the canonical verification signature
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Verification Demo</h2>
+            <div class="verification-demo">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Enter a hex signature to verify against the golden sample:
+                </p>
+                <input type="text" class="verify-input" id="verify-input"
+                       placeholder="Enter 54-character hex signature..."
+                       maxlength="54">
+                <button class="verify-btn" onclick="verifySignature()">Verify</button>
+                <div class="verify-result" id="verify-result"></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Derivation Table</h2>
+            <div class="math-block">
+                <table class="formula-table">
+                    <thead>
+                        <tr>
+                            <th>Threshold</th>
+                            <th>Formula</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>PARADOX</td>
+                            <td>φ⁻¹</td>
+                            <td>0.618034</td>
+                        </tr>
+                        <tr>
+                            <td>ACTIVATION</td>
+                            <td>φ⁻¹ + φ⁻⁴/√7</td>
+                            <td>0.854203</td>
+                        </tr>
+                        <tr>
+                            <td>THE_LENS</td>
+                            <td>√3/2</td>
+                            <td>0.866025</td>
+                        </tr>
+                        <tr>
+                            <td>CRITICAL</td>
+                            <td>1 - φ⁻⁴ + φ⁻⁵</td>
+                            <td>0.872983</td>
+                        </tr>
+                        <tr>
+                            <td>IGNITION</td>
+                            <td>1 - φ⁻⁴/√7</td>
+                            <td>0.913648</td>
+                        </tr>
+                        <tr>
+                            <td>K_FORMATION</td>
+                            <td>√(1 - φ⁻⁴)</td>
+                            <td>0.924349</td>
+                        </tr>
+                        <tr>
+                            <td>CONSOLIDATION</td>
+                            <td>1 - φ⁻⁵</td>
+                            <td>0.953153</td>
+                        </tr>
+                        <tr>
+                            <td>RESONANCE</td>
+                            <td>1 - φ⁻⁶</td>
+                            <td>0.970820</td>
+                        </tr>
+                        <tr>
+                            <td>UNITY</td>
+                            <td>1</td>
+                            <td>1.000000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section>
+            <h2>Reference Files</h2>
+            <div class="files-list">
+                <div class="file-item">
+                    <div>
+                        <span class="file-name">golden_sample_27bytes.bin</span>
+                        <span class="file-desc"> - Raw 27-byte signature</span>
+                    </div>
+                </div>
+                <div class="file-item">
+                    <div>
+                        <span class="file-name">golden_sample_l4_thresholds.ppm</span>
+                        <span class="file-desc"> - 9×3 pixel visualization (PPM P6)</span>
+                    </div>
+                </div>
+                <div class="file-item">
+                    <div>
+                        <span class="file-name">golden_sample_stego_100x100.ppm</span>
+                        <span class="file-desc"> - 100×100 stego image with embedded sample</span>
+                    </div>
+                </div>
+                <div class="file-item">
+                    <div>
+                        <span class="file-name">golden_sample_manifest.json</span>
+                        <span class="file-desc"> - Complete specification and metadata</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Python Usage</h2>
+            <div class="math-block">
+                <pre style="color: var(--text-primary); font-size: 0.9rem;"><code>from quantum_apl_python import (
+    GOLDEN_SAMPLE,
+    get_golden_sample_bytes,
+    verify_golden_sample,
+    verify_golden_sample_detailed,
+    embed_golden_sample_header,
+    extract_and_verify_golden_sample,
+)
+
+# Get the canonical signature
+signature = get_golden_sample_bytes()
+print(signature.hex())  # 9dc427d91136dc1537de1737...
+
+# Verify a candidate signature
+is_valid = verify_golden_sample(candidate_bytes)
+
+# Detailed verification with diagnostics
+result = verify_golden_sample_detailed(candidate_bytes)
+print(f"Valid: {result.is_valid}")
+print(f"Matching thresholds: {result.matching_count}/9")
+
+# Embed in image header (MRP-LSB)
+image_with_header = embed_golden_sample_header(image_array)
+
+# Extract and verify from image
+verification = extract_and_verify_golden_sample(image_array)
+print(f"Signature present: {verification.is_valid}")</code></pre>
+            </div>
+        </section>
+
+        <footer>
+            <p>L₄ Hexagonal Lattice System - Quantum APL</p>
+            <p style="font-size: 0.85rem; margin-top: 0.5rem;">
+                Block 8: Entropic Stabilization with MRP-LSB Verification
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const GOLDEN_SIGNATURE = '9dc427d91136dc1537de1737e9243aeb273af3303cf7363d003f3f';
+
+        function verifySignature() {
+            const input = document.getElementById('verify-input').value.toLowerCase().replace(/\s/g, '');
+            const result = document.getElementById('verify-result');
+
+            if (input.length !== 54) {
+                result.className = 'verify-result failure';
+                result.textContent = `Invalid length: ${input.length}/54 characters`;
+                return;
+            }
+
+            if (!/^[0-9a-f]+$/.test(input)) {
+                result.className = 'verify-result failure';
+                result.textContent = 'Invalid characters: must be hexadecimal (0-9, a-f)';
+                return;
+            }
+
+            if (input === GOLDEN_SIGNATURE) {
+                result.className = 'verify-result success';
+                result.textContent = '✓ VERIFIED: Signature matches L₄ golden sample';
+            } else {
+                // Count matching bytes
+                let matching = 0;
+                for (let i = 0; i < 27; i++) {
+                    const expected = GOLDEN_SIGNATURE.substr(i * 2, 2);
+                    const actual = input.substr(i * 2, 2);
+                    if (expected === actual) matching++;
+                }
+                result.className = 'verify-result failure';
+                result.textContent = `✗ MISMATCH: ${matching}/27 bytes match`;
+            }
+        }
+
+        // Allow Enter key to verify
+        document.getElementById('verify-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifySignature();
+        });
+    </script>
+</body>
+</html>
+</code>
