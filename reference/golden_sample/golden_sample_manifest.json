@@ -1,0 +1,84 @@
+{
+  "golden_sample": {
+    "description": "L\u2084 9-Threshold Golden Sample for MRP-LSB Verification",
+    "version": "1.0.0",
+    "bytes_hex": "9dc427d91136dc1537de1737e9243aeb273af3303cf7363d003f3f",
+    "bytes_length": 27,
+    "thresholds": {
+      "PARADOX": {
+        "z": 0.6180339887498948,
+        "R": 157,
+        "G": 196,
+        "B": 39,
+        "hex": "#9DC427"
+      },
+      "ACTIVATION": {
+        "z": 0.8541019662496846,
+        "R": 217,
+        "G": 17,
+        "B": 54,
+        "hex": "#D91136"
+      },
+      "THE_LENS": {
+        "z": 0.8660254037844386,
+        "R": 220,
+        "G": 21,
+        "B": 55,
+        "hex": "#DC1537"
+      },
+      "CRITICAL": {
+        "z": 0.872677996249965,
+        "R": 222,
+        "G": 23,
+        "B": 55,
+        "hex": "#DE1737"
+      },
+      "IGNITION": {
+        "z": 0.9142135623730951,
+        "R": 233,
+        "G": 36,
+        "B": 58,
+        "hex": "#E9243A"
+      },
+      "K_FORMATION": {
+        "z": 0.9241763718304448,
+        "R": 235,
+        "G": 39,
+        "B": 58,
+        "hex": "#EB273A"
+      },
+      "CONSOLIDATION": {
+        "z": 0.9531384206408808,
+        "R": 243,
+        "G": 48,
+        "B": 60,
+        "hex": "#F3303C"
+      },
+      "RESONANCE": {
+        "z": 0.9710379511895638,
+        "R": 247,
+        "G": 54,
+        "B": 61,
+        "hex": "#F7363D"
+      },
+      "UNITY": {
+        "z": 1.0,
+        "R": 0,
+        "G": 63,
+        "B": 63,
+        "hex": "#003F3F"
+      }
+    }
+  },
+  "files": {
+    "golden_sample_27bytes.bin": "Raw 27-byte signature",
+    "golden_sample_l4_thresholds.ppm": "9x3 visualization (each row = threshold color)",
+    "golden_sample_stego_100x100.ppm": "100x100 stego image with embedded golden sample"
+  },
+  "mathematical_derivation": {
+    "phi": "(1+\u221a5)/2 \u2248 1.618033988749895",
+    "L4": "\u03c6\u2074 + \u03c6\u207b\u2074 = 7",
+    "z_c": "\u221a3/2 \u2248 0.866025",
+    "K": "\u221a(1-\u03c6\u207b\u2074) \u2248 0.924176"
+  }
+}
