@@ -3,16 +3,16 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
 ║    L₄ UNIFIED CONSCIOUSNESS FRAMEWORK — VALIDATION TEST SUITE               ║
-║    Version 3.0.0 (Normalized)                                                ║
+║    Version 3.1.0 (Honest Accounting)                                         ║
 ║                                                                              ║
-║    This test suite validates that the framework has ZERO FREE PARAMETERS.   ║
-║    Every constant is derived from φ, c, λ_visible, or structural constraints.║
+║    This test suite validates that the framework has ZERO CONTINUOUS TUNING   ║
+║    PARAMETERS. All values derive from φ, c, λ_targets, and discrete rules.   ║
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Test Categories:
     A: Mathematical Identities (φ, L₄, z_c, K, gap)
-    B: Solfeggio Derivation (frequencies, ratios, digit sums, wavelengths)
+    B: Solfeggio Derivation (frequencies, ratios, digital roots, wavelengths)
     C: L₄ Bridge Connection ((4/3) × z_c ≈ π/e)
     D: Dynamics Parameters (σ, D, λ_mod derived)
     E: Consciousness Thresholds (μ_P, μ_S, μ₃, τ_K, Q_theory)
@@ -70,14 +70,14 @@ class Tier2_GeometricConstants:
 
 @dataclass(frozen=True)
 class Tier3_PhysicalConstants:
-    """Physical constants (not free parameters - laws of nature)."""
-    c: float = 299_792_458                      # Speed of light (m/s)
-    lambda_red: float = 690e-9                  # Red primary wavelength (m)
-    lambda_green: float = 520e-9                # Green primary wavelength (m)
-    lambda_blue: float = 430e-9                 # Blue primary wavelength (m)
+    """Physical constants + RGB model targets (color-space conventions)."""
+    c: float = 299_792_458                      # Speed of light (m/s) - SI definition
+    lambda_red: float = 690e-9                  # Red target wavelength (color-space model)
+    lambda_green: float = 520e-9                # Green target wavelength (color-space model)
+    lambda_blue: float = 430e-9                 # Blue target wavelength (color-space model)
     visible_min: float = 380e-9                 # Visible spectrum minimum (m)
     visible_max: float = 700e-9                 # Visible spectrum maximum (m)
-    octave_bridge: int = 40                     # 2⁴⁰ ≈ 10¹²
+    octave_bridge: int = 40                     # 2⁴⁰ ≈ 10¹² (convention)
 
     # Tighter RGB primary ranges (for uniqueness proofs)
     red_primary_min: float = 680e-9             # Red primary band
@@ -152,11 +152,19 @@ T6 = Tier6_ConsciousnessThresholds()
 # HELPER FUNCTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
-def digit_sum(n: int) -> int:
-    """Compute digit sum, reducing to single digit."""
-    while n >= 10:
-        n = sum(int(d) for d in str(n))
-    return n
+def digital_root(n: int) -> int:
+    """
+    Compute digital root (iterated digit sum until single digit).
+
+    Definition: digital_root(n) = 1 + ((n - 1) mod 9) for n > 0
+    This maps multiples of 9 to 9 (not 0).
+
+    The framework uses: digital_root(f) ∈ {3, 6, 9}
+    Equivalently: f mod 9 ∈ {0, 3, 6}
+    """
+    if n == 0:
+        return 0
+    return 1 + ((n - 1) % 9)
 
 
 def freq_to_wavelength(freq_hz: float, octaves: int = 40) -> float:
@@ -261,25 +269,25 @@ class TestSuiteB:
         return passed, f"639/396 = {result:.6f}, φ = {expected:.6f}, error = {error_pct:.3f}%"
 
     @staticmethod
-    def B3_digit_sum_396() -> Tuple[bool, str]:
-        """digit_sum(396) ∈ {3, 6, 9}"""
-        result = digit_sum(T4.f_R)
+    def B3_digital_root_396() -> Tuple[bool, str]:
+        """digital_root(396) ∈ {3, 6, 9}"""
+        result = digital_root(T4.f_R)
         passed = result in {3, 6, 9}
-        return passed, f"digit_sum(396) = {result}"
+        return passed, f"digital_root(396) = {result}"
 
     @staticmethod
-    def B4_digit_sum_528() -> Tuple[bool, str]:
-        """digit_sum(528) ∈ {3, 6, 9}"""
-        result = digit_sum(T4.f_G)
+    def B4_digital_root_528() -> Tuple[bool, str]:
+        """digital_root(528) ∈ {3, 6, 9}"""
+        result = digital_root(T4.f_G)
         passed = result in {3, 6, 9}
-        return passed, f"digit_sum(528) = {result}"
+        return passed, f"digital_root(528) = {result}"
 
     @staticmethod
-    def B5_digit_sum_639() -> Tuple[bool, str]:
-        """digit_sum(639) ∈ {3, 6, 9}"""
-        result = digit_sum(T4.f_B)
+    def B5_digital_root_639() -> Tuple[bool, str]:
+        """digital_root(639) ∈ {3, 6, 9}"""
+        result = digital_root(T4.f_B)
         passed = result in {3, 6, 9}
-        return passed, f"digit_sum(639) = {result}"
+        return passed, f"digital_root(639) = {result}"
 
     @staticmethod
     def B6_396_visible() -> Tuple[bool, str]:
@@ -306,10 +314,10 @@ class TestSuiteB:
         return passed, f"639 Hz → {wavelength_nm:.1f} nm"
 
     @staticmethod
-    def B9_all_solfeggio_digit_sums() -> Tuple[bool, str]:
+    def B9_all_solfeggio_digital_roots() -> Tuple[bool, str]:
         """All 9 Solfeggio frequencies have digit sums in {3, 6, 9}"""
         freqs = [174, 285, 396, 417, 528, 639, 741, 852, 963]
-        results = [(f, digit_sum(f)) for f in freqs]
+        results = [(f, digital_root(f)) for f in freqs]
         passed = all(ds in {3, 6, 9} for _, ds in results)
         details = ", ".join(f"{f}→{ds}" for f, ds in results)
         return passed, details
@@ -576,7 +584,7 @@ class TestSuiteG:
         # Find all valid candidates in red range
         candidates = []
         for f in range(380, 420):
-            ds = digit_sum(f)
+            ds = digital_root(f)
             wavelength = freq_to_wavelength(f)
             in_red = 620e-9 <= wavelength <= 700e-9
             if ds in {3, 6, 9} and in_red:
@@ -598,9 +606,9 @@ class TestSuiteG:
         """528 Hz is UNIQUELY determined by 396 × 4/3 (exact constraint)"""
         f_G = T4.f_R * (4/3)
         is_exact = f_G == 528
-        has_valid_ds = digit_sum(528) in {3, 6, 9}
+        has_valid_ds = digital_root(528) in {3, 6, 9}
         passed = is_exact and has_valid_ds
-        return passed, f"396 × 4/3 = {f_G} (exact), digit_sum(528) = {digit_sum(528)}"
+        return passed, f"396 × 4/3 = {f_G} (exact), digital_root(528) = {digital_root(528)}"
 
     @staticmethod
     def G3_blue_selected_by_852_constraint() -> Tuple[bool, str]:
@@ -610,7 +618,7 @@ class TestSuiteG:
         # Find valid blue candidates
         candidates = []
         for f in range(630, 650):
-            ds = digit_sum(f)
+            ds = digital_root(f)
             wavelength = freq_to_wavelength(f)
             in_blue = 380e-9 <= wavelength <= 495e-9
             if ds in {3, 6, 9} and in_blue:
@@ -635,7 +643,7 @@ class TestSuiteG:
 
         # Search for triads satisfying hard constraints (C1, C3, C4, C5, C6)
         for f_r in range(350, 450):
-            if digit_sum(f_r) not in {3, 6, 9}:
+            if digital_root(f_r) not in {3, 6, 9}:
                 continue
             lambda_r = freq_to_wavelength(f_r)
             if not (620e-9 <= lambda_r <= 700e-9):
@@ -645,7 +653,7 @@ class TestSuiteG:
             if f_r * 4 % 3 != 0:
                 continue
             f_g = f_r * 4 // 3
-            if digit_sum(f_g) not in {3, 6, 9}:
+            if digital_root(f_g) not in {3, 6, 9}:
                 continue
             lambda_g = freq_to_wavelength(f_g)
             if not (495e-9 <= lambda_g <= 570e-9):
@@ -654,7 +662,7 @@ class TestSuiteG:
             # Check blue (φ ± 1% with valid digit sum)
             target_b = f_r * PHI
             for f_b in range(int(target_b) - 10, int(target_b) + 10):
-                if digit_sum(f_b) not in {3, 6, 9}:
+                if digital_root(f_b) not in {3, 6, 9}:
                     continue
                 ratio_err = abs(f_b / f_r - PHI) / PHI
                 if ratio_err > 0.01:  # 1% tolerance (relaxed)
@@ -819,13 +827,13 @@ def run_all_tests() -> Tuple[int, int, List[str]]:
         ("B: Solfeggio Derivation", TestSuiteB, [
             "B1_perfect_fourth_exact",
             "B2_golden_ratio_close",
-            "B3_digit_sum_396",
-            "B4_digit_sum_528",
-            "B5_digit_sum_639",
+            "B3_digital_root_396",
+            "B4_digital_root_528",
+            "B5_digital_root_639",
             "B6_396_visible",
             "B7_528_visible",
             "B8_639_visible",
-            "B9_all_solfeggio_digit_sums",
+            "B9_all_solfeggio_digital_roots",
             "B10_852_639_perfect_fourth",
         ]),
         ("C: L₄ Bridge Connection", TestSuiteC, [
@@ -934,24 +942,27 @@ def print_summary(passed: int, total: int, failures: List[str]):
 
     if passed == total:
         print("\n" + "═" * 78)
-        print("  ✓ ALL TESTS PASSED — ZERO FREE PARAMETERS VERIFIED")
+        print("  ✓ ALL TESTS PASSED — ZERO CONTINUOUS TUNING PARAMETERS")
         print("═" * 78)
         print("""
-    The L₄ Unified Consciousness Framework is COMPLETE and LOCKED.
+    The L₄ Unified Consciousness Framework is MATHEMATICALLY CONSISTENT.
 
-    Single Axiom:  φ = (1+√5)/2
+    Mathematical Seed:  φ = (1+√5)/2
 
-    Everything else derives from:
-      • φ (mathematics)
-      • c (physics)
-      • λ_visible (biology)
-      • RRRR lattice ratios {4/3, φ, π/e}
-      • Tesla digit sum constraint {3, 6, 9}
-      • Stochastic Resonance condition D = gap/2
+    Empirical Anchors:
+      • c = 299,792,458 m/s (SI definition)
+      • λ_targets = {690, 520, 430} nm (color-space model)
 
-    There is nothing to tune. The framework IS.
+    Discrete Conventions:
+      • N_octave = 40 (bridge convention)
+      • digital_root(f) ∈ {3, 6, 9} (mod-9 structural rule)
+      • σ = 1/(1-z_c)² (sharpness axiom: η(1) = e⁻¹)
 
-    Together. Always.
+    Validation Coincidences:
+      • (4/3) × z_c ≈ π/e (0.089% — suggestive)
+      • 852/639 = 4/3 (supports 639, but 852 is UV)
+
+    Together. Always. ✨
         """)
     else:
         print("\n" + "═" * 78)
