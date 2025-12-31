@@ -7,6 +7,7 @@ Features:
 - Helix operator advisor with integrated symmetry/negentropy
 - L₄-MRP steganographic navigation system
 - L₄ Hexagonal lattice with 6-neighbor connectivity and entropic stabilization
+- Solfeggio-Light Bridge: Harmonic RGB encoding via 40-octave translation
 """
 
 from .alpha_language import AlphaLanguageRegistry, AlphaTokenSynthesizer
@@ -82,6 +83,79 @@ from .l4_hexagonal_lattice import (
     ReflectionStepResult,
     SelfReflectiveLattice,
     demo_self_reflective_lattice,
+)
+
+# Solfeggio-Light Bridge (Block 10)
+from . import solfeggio_light_bridge
+from .solfeggio_light_bridge import (
+    # Core types
+    SolfeggioTone,
+    LightProperties,
+    HarmonicRGB,
+    SolfeggioHexWavevectors,
+    # Conversion functions
+    solfeggio_to_wavelength,
+    wavelength_to_solfeggio,
+    solfeggio_to_light,
+    wavelength_to_color,
+    phase_to_harmonic_rgb,
+    l4_phase_to_solfeggio_rgb,
+    # Normalized RGB (Zero Free Parameters)
+    wavelength_to_rgb_normalized,
+    wavelength_to_rgb_8bit,
+    wavelength_to_hex,
+    # L₄-Derived RGB Constants
+    L4,
+    RGB_BIT_DEPTH,
+    RGB_MAX_VALUE,
+    LAMBDA_R,
+    LAMBDA_G,
+    LAMBDA_B,
+    SIGMA_SPECTRAL,
+    SOLFEGGIO_RGB_RED,
+    SOLFEGGIO_RGB_GREEN,
+    SOLFEGGIO_RGB_BLUE,
+    SOLFEGGIO_HEX_RED,
+    SOLFEGGIO_HEX_GREEN,
+    SOLFEGGIO_HEX_BLUE,
+    # Legacy Constants
+    SOLFEGGIO_RGB_HZ,
+    SOLFEGGIO_RED,
+    SOLFEGGIO_GREEN,
+    SOLFEGGIO_BLUE,
+    PERFECT_FOURTH,
+    OCTAVE_BRIDGE,
+    # Verification
+    verify_all_identities,
+    demo_solfeggio_light_bridge,
+)
+
+# Unified Consciousness Architecture (Block 11)
+from . import unified_consciousness
+from .unified_consciousness import (
+    # Sacred Constants
+    SacredConstants,
+    # Solfeggio-Light Bridge
+    SolfeggioTone,
+    HarmonicRGBSystem,
+    # Hexagonal Lattice
+    HexLattice,
+    # Kuramoto Dynamics
+    KuramotoOscillator,
+    # Helical Transport
+    L4Helix,
+    # MRP-LSB Encoding
+    MRPEncoder,
+    # Unified System
+    UnifiedConsciousnessSystem,
+    # Validation
+    run_test_suite_a,
+    run_test_suite_b,
+    run_test_suite_c,
+    run_test_suite_d,
+    run_test_suite_e,
+    run_all_validation_tests,
+    run_full_verification,
 )
 
 # L₄-MRP Steganographic Navigation (Block 7)
@@ -271,5 +345,6 @@ __all__ = [
     "validate_l4_mrp_system",
     "validate_plane_wave_residual",
     "validate_loop_closure",
+
 
 ]
