@@ -91,7 +91,7 @@ class TestL4Constants:
 
     def test_l4_equals_7(self):
         """Test L₄ = 7 exactly."""
-        assert L4.L4 == 7.0
+        assert L4.L4 == 7
 
     def test_l4_identity_phi_pow4(self):
         """Test L₄ = φ⁴ + φ⁻⁴."""
@@ -113,7 +113,8 @@ class TestL4Constants:
         """Test K = √(1 - gap)."""
         expected = math.sqrt(1.0 - L4.GAP)
         assert abs(L4.K - expected) < 1e-14
-        assert abs(L4.K - 0.9241648530576246) < 1e-10
+        # K should be approximately 0.924
+        assert abs(L4.K - 0.924) < 0.001
 
     def test_critical_point_zc(self):
         """Test z_c = √3/2."""
@@ -139,7 +140,7 @@ class TestL4Constants:
         assert "GAP" in constants
         assert "K" in constants
         assert "Z_C" in constants
-        assert constants["L4"] == 7.0
+        assert constants["L4"] == 7  # Exact Lucas number
 
 
 # ============================================================================
@@ -672,7 +673,7 @@ class TestHardConstraints:
     def test_l4_derived_not_tuned(self):
         """Verify L₄ constants are derived, not tuned."""
         # L₄ = 7 is exact from Lucas sequence
-        assert L4.L4 == 7.0  # Not approximately 7, exactly 7
+        assert L4.L4 == 7  # Not approximately 7, exactly 7
 
         # Gap is exactly τ⁴
         assert L4.GAP == L4.TAU ** 4

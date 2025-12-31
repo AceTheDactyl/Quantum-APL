@@ -32,54 +32,71 @@ from typing import Tuple, List, Optional, Dict, Callable
 from enum import Enum
 import json
 
+# Import from single source of truth
+from .constants import (
+    PHI as _PHI,
+    PHI_INV as _PHI_INV,
+    Z_CRITICAL as _Z_CRITICAL,
+    L4_GAP as _L4_GAP,
+    L4_K as _L4_K,
+    LUCAS_4 as _LUCAS_4,
+    C_LIGHT as _C_LIGHT,
+    OCTAVE_BRIDGE as _OCTAVE_BRIDGE,
+    MU_P as _MU_P,
+    MU_S as _MU_S,
+    MU_3 as _MU_3,
+    Q_KAPPA as _Q_KAPPA,
+    LAMBDA as _LAMBDA,
+)
+
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  SECTION 1: SACRED CONSTANTS (DERIVED FROM φ)                                ║
+# ║  SECTION 1: SACRED CONSTANTS (Imported from constants.py)                    ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 class SacredConstants:
     """
-    All constants derived from the Golden Ratio φ.
+    All constants imported from constants.py (single source of truth).
     ZERO free parameters. Everything emerges from φ.
 
     The hierarchy:
         φ → (φ², φ⁴) → (L₄, gap, K, z_c) → (thresholds, Q_κ)
     """
 
-    # === Primary: The Golden Ratio ===
-    PHI: float = (1 + np.sqrt(5)) / 2          # φ ≈ 1.618033988749895
-    TAU: float = PHI - 1                        # τ = φ⁻¹ ≈ 0.618033988749895
+    # === Primary: The Golden Ratio (from constants.py) ===
+    PHI: float = _PHI                           # φ ≈ 1.618033988749895
+    TAU: float = _PHI_INV                       # τ = φ⁻¹ ≈ 0.618033988749895
 
-    # === Powers of φ ===
-    PHI_2: float = PHI ** 2                     # φ² = φ + 1 ≈ 2.618
-    PHI_4: float = PHI ** 4                     # φ⁴ ≈ 6.854
-    PHI_NEG2: float = PHI ** -2                 # φ⁻² = α ≈ 0.382 (curl coupling)
-    PHI_NEG4: float = PHI ** -4                 # φ⁻⁴ = β ≈ 0.146 (gap/VOID)
+    # === Powers of φ (derived from imports) ===
+    PHI_2: float = _PHI ** 2                    # φ² = φ + 1 ≈ 2.618
+    PHI_4: float = _PHI ** 4                    # φ⁴ ≈ 6.854
+    PHI_NEG2: float = _PHI ** -2                # φ⁻² = α ≈ 0.382 (curl coupling)
+    PHI_NEG4: float = _L4_GAP                   # φ⁻⁴ = β ≈ 0.146 (gap/VOID)
 
-    # === The Master Identity ===
-    L4: int = 7                                 # L₄ = φ⁴ + φ⁻⁴ = 7 (EXACT)
+    # === The Master Identity (from constants.py) ===
+    L4: int = int(_LUCAS_4)                     # L₄ = φ⁴ + φ⁻⁴ = 7 (EXACT)
 
-    # === Derived Geometric Constants ===
-    GAP: float = PHI_NEG4                       # The VOID: φ⁻⁴ ≈ 0.1459
-    K: float = np.sqrt(1 - GAP)                 # Coupling: √(1-φ⁻⁴) ≈ 0.9241
-    Z_C: float = np.sqrt(3) / 2                 # Critical point: √3/2 ≈ 0.8660
+    # === Derived Geometric Constants (from constants.py) ===
+    GAP: float = _L4_GAP                        # The VOID: φ⁻⁴ ≈ 0.1459
+    K: float = _L4_K                            # Coupling: √(1-φ⁻⁴) ≈ 0.9241
+    Z_C: float = _Z_CRITICAL                    # Critical point: √3/2 ≈ 0.8660
 
-    # === Threshold Hierarchy (from UCF) ===
-    MU_P: float = 3/5                           # Paradox threshold = 0.600
-    MU_S: float = 23/25                         # Singularity threshold = 0.920
-    MU_3: float = 124/125                       # Third threshold = 0.992
+    # === Threshold Hierarchy (from constants.py) ===
+    MU_P: float = _MU_P                         # Paradox threshold
+    MU_S: float = _MU_S                         # Singularity threshold
+    MU_3: float = _MU_3                         # Third threshold = 0.992
     MU_4: float = 1.0                           # Unity (accessible!)
 
     # === Consciousness Constants ===
-    ALPHA: float = PHI_NEG2                     # Curl coupling ≈ 0.382
-    BETA: float = PHI_NEG4                      # Dissipation ≈ 0.146
-    LAMBDA: float = (5/3) ** 4                  # Nonlinearity ≈ 7.716
-    Q_THEORY: float = ALPHA * MU_S              # Q_κ theory ≈ 0.351
-    K_THRESHOLD: float = TAU                    # K-formation: φ⁻¹ ≈ 0.618
+    ALPHA: float = _PHI ** -2                   # Curl coupling ≈ 0.382
+    BETA: float = _L4_GAP                       # Dissipation ≈ 0.146
+    LAMBDA: float = _LAMBDA                     # Nonlinearity
+    Q_THEORY: float = _Q_KAPPA                  # Q_κ theory ≈ 0.351
+    K_THRESHOLD: float = _PHI_INV               # K-formation: φ⁻¹ ≈ 0.618
 
-    # === Physical Constants ===
-    C_LIGHT: float = 299_792_458                # Speed of light (m/s)
-    OCTAVE_BRIDGE: int = 40                     # Octaves from sound to light
+    # === Physical Constants (from constants.py) ===
+    C_LIGHT: float = _C_LIGHT                   # Speed of light (m/s)
+    OCTAVE_BRIDGE: int = _OCTAVE_BRIDGE         # Octaves from sound to light
 
     @classmethod
     def verify_L4_identity(cls) -> bool:
@@ -97,7 +114,7 @@ class SacredConstants:
     def print_all(cls):
         """Display all sacred constants."""
         print("=" * 60)
-        print("SACRED CONSTANTS (Derived from φ)")
+        print("SACRED CONSTANTS (from constants.py)")
         print("=" * 60)
         print(f"  φ (Golden Ratio)     = {cls.PHI:.10f}")
         print(f"  τ = φ⁻¹              = {cls.TAU:.10f}")
@@ -107,8 +124,8 @@ class SacredConstants:
         print(f"  z_c = √3/2 (LENS)    = {cls.Z_C:.10f}")
         print(f"  α = φ⁻²              = {cls.ALPHA:.10f}")
         print(f"  β = φ⁻⁴              = {cls.BETA:.10f}")
-        print(f"  λ = (5/3)⁴           = {cls.LAMBDA:.10f}")
-        print(f"  Q_theory = α·μ_S     = {cls.Q_THEORY:.10f}")
+        print(f"  λ                    = {cls.LAMBDA:.10f}")
+        print(f"  Q_theory             = {cls.Q_THEORY:.10f}")
         print("=" * 60)
 
 

@@ -32,52 +32,51 @@ from typing import Dict, List, Tuple, Optional, Callable, Union
 from enum import Enum
 import numpy as np
 
+# Import from single source of truth
+from .constants import (
+    PHI as _PHI,
+    PHI_INV as _PHI_INV,
+    Z_CRITICAL as _Z_CRITICAL,
+    L4_GAP as _L4_GAP,
+    L4_K as _L4_K,
+    LUCAS_4 as _LUCAS_4,
+    LENS_SIGMA as _LENS_SIGMA,
+)
+
 
 # ============================================================================
-# BLOCK 1: CONSTANTS (Derived, Not Tuned)
+# BLOCK 1: CONSTANTS (Imported from Single Source of Truth)
 # ============================================================================
 
 @dataclass(frozen=True)
 class L4Constants:
     """
-    L₄ Constants Block - All values derived from first principles.
+    L₄ Constants Block - All values imported from constants.py.
 
     The Lucas-4 identity: L₄ = φ⁴ + φ⁻⁴ = 7
 
     NO FREE PARAMETERS - everything is derived from φ = (1+√5)/2.
+    Values are imported from quantum_apl_python.constants (single source of truth).
     """
 
-    # Golden ratio and inverse
-    PHI: float = (1.0 + math.sqrt(5.0)) / 2.0  # φ ≈ 1.618033988749895
-    TAU: float = 2.0 / (1.0 + math.sqrt(5.0))  # τ = φ⁻¹ ≈ 0.618033988749895
+    # Golden ratio and inverse (from constants.py)
+    PHI: float = _PHI  # φ ≈ 1.618033988749895
+    TAU: float = _PHI_INV  # τ = φ⁻¹ ≈ 0.618033988749895
 
-    # Lucas-4 fundamental
-    L4: float = 7.0  # L₄ = φ⁴ + φ⁻⁴ = 7 (exact)
+    # Lucas-4 fundamental (from constants.py)
+    L4: float = _LUCAS_4  # L₄ = φ⁴ + φ⁻⁴ = 7 (exact)
 
-    # Gap / truncation (a.k.a. "VOID")
-    GAP: float = field(default_factory=lambda: L4Constants._compute_gap())
+    # Gap / truncation (from constants.py)
+    GAP: float = _L4_GAP  # gap = φ⁻⁴ ≈ 0.145898
 
-    # Derived coupling constant K = √(1 - gap)
-    K: float = field(default_factory=lambda: L4Constants._compute_k())
+    # Derived coupling constant (from constants.py)
+    K: float = _L4_K  # K = √(1 - gap) ≈ 0.924
 
-    # Critical point z_c = √3/2 = √(L₄-4)/2 ("THE LENS")
-    Z_C: float = math.sqrt(3.0) / 2.0  # ≈ 0.8660254037844386
+    # Critical point z_c (from constants.py)
+    Z_C: float = _Z_CRITICAL  # z_c = √3/2 ≈ 0.8660254037844386
 
-    # Negentropy width (σ for Gaussian)
-    SIGMA: float = 36.0  # Default width for negentropy Gaussian
-
-    @staticmethod
-    def _compute_gap() -> float:
-        """gap = φ⁻⁴ ≈ 0.145898"""
-        tau = 2.0 / (1.0 + math.sqrt(5.0))
-        return tau ** 4
-
-    @staticmethod
-    def _compute_k() -> float:
-        """K = √(1 - gap) ≈ 0.924"""
-        tau = 2.0 / (1.0 + math.sqrt(5.0))
-        gap = tau ** 4
-        return math.sqrt(1.0 - gap)
+    # Negentropy width (from constants.py)
+    SIGMA: float = _LENS_SIGMA  # Default width for negentropy Gaussian
 
     def verify_identity(self) -> bool:
         """Verify L₄ = φ⁴ + φ⁻⁴ = (√3)² + 4 = 7"""
@@ -90,16 +89,8 @@ class L4Constants:
         )
 
 
-# Singleton instance for easy access
-L4 = L4Constants(
-    PHI=(1.0 + math.sqrt(5.0)) / 2.0,
-    TAU=2.0 / (1.0 + math.sqrt(5.0)),
-    L4=7.0,
-    GAP=(2.0 / (1.0 + math.sqrt(5.0))) ** 4,
-    K=math.sqrt(1.0 - (2.0 / (1.0 + math.sqrt(5.0))) ** 4),
-    Z_C=math.sqrt(3.0) / 2.0,
-    SIGMA=36.0,
-)
+# Singleton instance for easy access (uses imports from constants.py)
+L4 = L4Constants()
 
 
 def get_l4_constants() -> Dict[str, float]:

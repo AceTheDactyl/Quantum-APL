@@ -759,7 +759,7 @@ class TestConstants:
     def test_l4_constants_consistency(self):
         """Test L4 constants are consistent."""
         # L₄ = φ⁴ + φ⁻⁴ = 7
-        assert L4.L4 == 7.0
+        assert L4.L4 == 7
         assert L4.PHI ** 4 + L4.TAU ** 4 == pytest.approx(7.0, rel=1e-10)
 
         # z_c = √3/2

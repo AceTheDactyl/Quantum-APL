@@ -36,22 +36,19 @@ from dataclasses import dataclass, field
 from typing import Tuple, Optional, List, Dict, Any
 from enum import Enum
 
+# Import constants from single source of truth
+from .constants import (
+    C_LIGHT,
+    OCTAVE_BRIDGE,
+    OCTAVE_FACTOR,
+    PHI,
+    PHI_INV,
+    Z_CRITICAL as Z_C,
+    L4_K_FORMATION as K_FORMATION,
+    LUCAS_4 as L4,
+)
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PHYSICAL CONSTANTS
-# ═══════════════════════════════════════════════════════════════════════════
-
-C_LIGHT = 299_792_458  # Speed of light (m/s)
-OCTAVE_BRIDGE = 40     # Octaves between audio and optical
-OCTAVE_FACTOR = 2 ** OCTAVE_BRIDGE  # ≈ 1.1 × 10¹²
-
-# L₄ Sacred Constants (derived from φ)
-PHI = (1 + math.sqrt(5)) / 2
-PHI_INV = 1 / PHI
-Z_C = math.sqrt(3) / 2              # Critical point (THE LENS) ≈ 0.866
-K_FORMATION = math.sqrt(1 - PHI**-4)  # Coupling threshold ≈ 0.924
-
-# Transcendental connection
+# Transcendental connection (derived, not a fundamental constant)
 PI_OVER_E = math.pi / math.e  # ≈ 1.1557
 
 
@@ -127,9 +124,8 @@ GOLDEN_APPROX = 639 / 396  # ≈ φ with 0.27% error
 # All RGB values are derived from Solfeggio wavelengths and L₄ constants.
 # No arbitrary hex codes or magic numbers.
 
-# L₄ Identity provides bit depth
-L4 = 7  # φ⁴ + φ⁻⁴ = 7 (exact)
-RGB_BIT_DEPTH = L4 + 1  # = 8 bits (derived from L₄)
+# L₄ Identity provides bit depth (L4 imported from constants.py)
+RGB_BIT_DEPTH = int(L4) + 1  # = 8 bits (derived from L₄ = 7)
 RGB_MAX_VALUE = (2 ** RGB_BIT_DEPTH) - 1  # = 255 (derived)
 
 # Solfeggio wavelengths (nm) - derived from frequencies via 40-octave bridge
